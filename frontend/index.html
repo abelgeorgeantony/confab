@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - Secure Chat</title>
+  <link rel="stylesheet" href="base.css">
+  <script src="utils.js" defer></script>
+  <script src="auth.js" defer></script>
+</head>
+<body class="index-page" onload="redirectIfAuthenticated()">
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;">←</button>
+      <span class="connection-status" id="connection-status"></span>
+    </div>
+    <label class="theme-toggle-switch">
+      <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="page-wrapper">
+  <div class="form-container">
+    <h1>Welcome to Perfect Chat</h1>
+    <p>Secure, Encrypted, and Fun Communication.</p>
+    <button onclick="location.href='./login.html'">Login</button>
+    <button onclick="location.href='./register.html'">Sign Up</button>
+  </div>
+  </div>
+</body>
+</html>
+

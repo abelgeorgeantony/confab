@@ -1,0 +1,242 @@
+/* === Chat Page Specific Styles using Theme Variables === */
+
+#chat-app {
+  display: flex;
+  height: 100%;
+  min-height: 0; /* Crucial for flex children to shrink correctly */
+}
+
+/* Sidebar - Chat List */
+#chat-list {
+  position: relative;
+  width: 30%;
+  min-width: 280px; /* Slightly wider for buttons */
+  background-color: var(--chat-list-bg);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chat Header */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--chat-header-bg);
+  flex-shrink: 0;
+}
+
+/* FIX: New container for header buttons */
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* FIX: Styling for header buttons */
+.chat-header-actions button {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: var(--text-color-light);
+  padding: 5px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+.chat-header-actions button:hover {
+  color: var(--primary-color);
+}
+#add-contact-btn {
+  font-weight: bold;
+}
+
+/* Add Contact Form styling */
+#add-contact-form {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--chat-header-bg);
+}
+#add-contact-form input {
+  width: 100%;
+}
+.add-contact-buttons {
+  display: flex;
+  gap: 10px;
+}
+.add-contact-buttons button {
+  flex: 1;
+}
+.add-contact-buttons .cancel-btn {
+  background-color: var(--text-color-light);
+}
+.add-contact-buttons .cancel-btn:hover {
+  background-color: var(--text-color);
+}
+
+
+/* Contact cards */
+.contact-card {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.contact-card:hover {
+  background: var(--input-bg);
+}
+.contact-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.contact-name {
+  font-weight: bold;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.contact-lastmsg {
+  font-size: 0.85em;
+  color: var(--text-color-light);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Chat Window Area */
+/* FIX: Added flex properties to ensure correct layout */
+#chat-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: var(--form-bg);
+}
+
+#chat-view header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--chat-header-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+#back-btn {
+  display: none;
+  margin: 0;
+  margin-right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: var(--text-color);
+}
+#chat-title {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+/* FIX: Added flex: 1 to make the message area grow */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#message-form {
+  flex-shrink: 0;
+  display: flex;
+  border-top: 1px solid var(--border-color);
+  padding: 10px;
+  gap: 10px;
+  background-color: var(--chat-header-bg);
+}
+
+#message-input {
+  flex: 1;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 1em;
+  resize: none;
+}
+
+#send-button {
+  margin: 0;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Message Bubbles */
+.message {
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 18px;
+  overflow-wrap: break-word;
+}
+.message.incoming {
+  background: var(--chat-incoming-msg-bg);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.message.outgoing {
+  background: var(--chat-outgoing-msg-bg);
+  color: var(--chat-outgoing-msg-text);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+/* === Mobile Responsive for Chat Layout === */
+@media (max-width: 768px) {
+  #chat-app {
+    flex-direction: column;
+  }
+  #chat-list {
+    width: 100%;
+    height: 100%;
+    min-width: unset;
+  }
+  #chat-view {
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+  #chat-view.active {
+    display: flex;
+  }
+  #chat-list.hidden {
+    display: none;
+  }
+  #back-btn {
+    display: inline-block;
+  }
+}
+

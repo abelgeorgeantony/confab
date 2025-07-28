@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Perfect Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="chat.css">
+  <script src="utils.js" defer></script>
+  <script src="auth.js" defer></script>
+  <script src="chat.js" defer></script>
+</head>
+<body class="chat-page">
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;">←</button>
+      <span class="connection-status" id="connection-status"></span>
+    </div>
+    <label class="theme-toggle-switch">
+      <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
+      <span class="slider"></span>
+    </label>
+  </div>
+  
+  <div class="page-wrapper">
+  <div id="chat-app">
+    <!-- Sidebar: Chat List -->
+    <aside id="chat-list">
+      <div class="chat-header">
+        <h2>Chats</h2>
+        <!-- New container for header buttons -->
+        <div class="chat-header-actions">
+          <button id="add-contact-btn" onclick="showAddContactForm()">+</button>
+          <button id="profile-btn" onclick="goToProfile()">👤</button>
+        </div>
+      </div>
+      <div id="add-contact-form" style="display: none;">
+        <input type="text" id="new-contact-username" placeholder="Enter username">
+        <div class="add-contact-buttons">
+          <button onclick="addContact()">Add</button>
+          <button onclick="hideAddContactForm()" class="cancel-btn">Cancel</button>
+        </div>
+      </div>
+      <div id="user-list">
+        <!-- Contacts will be injected here by chat.js -->
+      </div>
+    </aside>
+
+    <!-- Chat Window -->
+    <main id="chat-view">
+      <header>
+        <div id="chat-view-titlebar">
+            <h3 id="chat-title">Select a chat</h3>
+            <p id="chat-subtitle">or add a new contact to start messaging!</p>
+        </div>
+      </header>
+      <div id="messages">
+        <!-- Messages will be injected here by chat.js -->
+      </div>
+      <form id="message-form" onsubmit="event.preventDefault(); sendMessage(currentChatUser);">
+        <textarea id="message-input" placeholder="Type a message..." required></textarea>
+        <button type="submit" id="send-button">Send</button>
+      </form>
+    </main>
+
+  </div>
+  </div>
+</body>
+</html>
+
