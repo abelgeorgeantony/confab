@@ -76,7 +76,7 @@ body.dark-mode {
   padding: 0 8px;
   margin: 0;
   border-radius: 6px;
-  line-height: 20px;
+  line-height: 0;
   height: 22px;
   box-shadow: 0 1px 2px var(--shadow-color); /* Add a subtle shadow */
   transition: all 0.15s ease-in-out; 
