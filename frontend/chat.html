@@ -29,8 +29,7 @@
         <h2>Chats</h2>
         <!-- New container for header buttons -->
         <div class="chat-header-actions">
-          <button id="add-contact-btn" onclick="showAddContactForm()">+</button>
-          <button id="profile-btn" onclick="goToProfile()">👤</button>
+        <button id="profile-btn" onclick="goToProfile()">👤</button>
         </div>
       </div>
       <div id="add-contact-form" style="display: none;">
@@ -43,6 +42,7 @@
       <div id="user-list">
         <!-- Contacts will be injected here by chat.js -->
       </div>
+      <button id="add-contact-btn" class="add-contact-float" onclick="showAddContactForm()" title="Add Contact">+</button>
     </aside>
 
     <!-- Chat Window -->

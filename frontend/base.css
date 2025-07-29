@@ -14,6 +14,11 @@
   --status-bar-bg: #e9ecef;
   --toggle-track-bg: #ccc;
   --toggle-thumb-bg: white;
+  --chat-list-bg: #f5f5f5;
+  --chat-header-bg: #eee;
+  --chat-incoming-msg-bg: #eee;
+  --chat-outgoing-msg-bg: #007bff;
+  --chat-outgoing-msg-text: white;
 }
 
 body.dark-mode {
@@ -31,6 +36,11 @@ body.dark-mode {
   --status-bar-bg: #212529;
   --toggle-track-bg: #555;
   --toggle-thumb-bg: #171717;
+  --chat-list-bg: #1c1c1c;
+  --chat-header-bg: #2a2a2a;
+  --chat-incoming-msg-bg: #333;
+  --chat-outgoing-msg-bg: #0d6efd;
+  --chat-outgoing-msg-text: white;
 }
 
 /* === NEW Top Status Bar === */
