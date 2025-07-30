@@ -22,47 +22,45 @@
   </div>
   
   <div class="page-wrapper">
-  <div id="chat-app">
-    <!-- Sidebar: Chat List -->
-    <aside id="chat-list">
-      <div class="chat-header">
-        <h2>Chats</h2>
-        <!-- New container for header buttons -->
-        <div class="chat-header-actions">
-        <button id="profile-btn" onclick="goToProfile()">👤</button>
+    <div id="chat-app">
+      <!-- Sidebar: Chat List -->
+      <aside id="chat-list">
+        <div class="chat-header">
+          <h2>Chats</h2>
+          <div class="chat-header-actions">
+            <button id="profile-btn" onclick="goToProfile()" title="Profile">👤</button>
+          </div>
         </div>
-      </div>
-      <div id="add-contact-form" style="display: none;">
-        <input type="text" id="new-contact-username" placeholder="Enter username">
-        <div class="add-contact-buttons">
-          <button onclick="addContact()">Add</button>
-          <button onclick="hideAddContactForm()" class="cancel-btn">Cancel</button>
+        <div id="add-contact-form" style="display: none;">
+          <input type="text" id="new-contact-username" placeholder="Enter username">
+          <div class="add-contact-buttons">
+            <button onclick="addContact()">Add</button>
+            <button onclick="hideAddContactForm()" class="cancel-btn">Cancel</button>
+          </div>
         </div>
-      </div>
-      <div id="user-list">
-        <!-- Contacts will be injected here by chat.js -->
-      </div>
-      <button id="add-contact-btn" class="add-contact-float" onclick="showAddContactForm()" title="Add Contact">+</button>
-    </aside>
+        <div id="user-list">
+          <!-- Contacts will be injected here by chat.js -->
+        </div>
+        <button id="add-contact-btn" class="add-contact-float" onclick="showAddContactForm()" title="Add Contact">+</button>
+      </aside>
 
-    <!-- Chat Window -->
-    <main id="chat-view">
-      <header>
-        <div id="chat-view-titlebar">
-            <h3 id="chat-title">Select a chat</h3>
-            <p id="chat-subtitle">or add a new contact to start messaging!</p>
+      <!-- Chat Window -->
+      <main id="chat-view">
+        <header class="chat-view-header">
+          <div class="chat-view-titlebar">
+              <h3 id="chat-title">Select a chat</h3>
+              <p id="chat-subtitle">or add a new contact to start messaging!</p>
+          </div>
+        </header>
+        <div id="messages">
+          <!-- Messages will be injected here by chat.js -->
         </div>
-      </header>
-      <div id="messages">
-        <!-- Messages will be injected here by chat.js -->
-      </div>
-      <form id="message-form" onsubmit="event.preventDefault(); sendMessage(currentChatUser);">
-        <textarea id="message-input" placeholder="Type a message..." required></textarea>
-        <button type="submit" id="send-button">Send</button>
-      </form>
-    </main>
-
-  </div>
+        <form id="message-form" onsubmit="event.preventDefault(); sendMessage(currentChatUser);">
+          <textarea id="message-input" placeholder="Type a message..." required></textarea>
+          <button type="submit" id="send-button">➤</button>
+        </form>
+      </main>
+    </div>
   </div>
 </body>
 </html>
