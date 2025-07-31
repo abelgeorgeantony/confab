@@ -96,6 +96,39 @@ function applyInitialTheme() {
 }
 
 
+let statusTextTimer = null;
+function setConnectionStatus(text, status = 'default') {
+    const statusContainer = document.getElementById('connection-status');
+    if (!statusContainer) return;
+
+    const iconEl = statusContainer.querySelector('.status-icon');
+    const textEl = statusContainer.querySelector('.status-text');
+    if (!iconEl || !textEl) return;
+
+    // 1. Set the icon and class based on status
+    statusContainer.className = `connection-status ${status}`;
+    if (status === 'connected') {
+        iconEl.textContent = 'sentiment_very_satisfied'; // Material icon for connected
+    } else if (status === 'disconnected') {
+        iconEl.textContent = 'sentiment_very_dissatisfied'; // Material icon for disconnected
+    } else {
+        iconEl.textContent = 'sync'; // Material icon for connecting/default
+    }
+
+    // 2. Set the text and make it visible
+    textEl.textContent = text;
+    textEl.style.opacity = 1;
+
+    // 3. Clear any previous fade-out timer
+    clearTimeout(statusTextTimer);
+
+    // 4. Set a new timer to fade the text out after 4 seconds
+    statusTextTimer = setTimeout(() => {
+	statusContainer.classList.add('icon-only');
+        //textEl.style.opacity = 0;
+    }, 4000); // 4 seconds
+}
+
 /* * Shows a back button in the status bar.
    * @param {function} onClickAction - The function to call when the button is clicked.*/
 function showStatusBarBackButton(onClickAction) {

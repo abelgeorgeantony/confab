@@ -121,11 +121,14 @@ function connectWebSocket() {
     console.error("No auth token, not connecting WS");
     return;
   }
+  
+  setConnectionStatus("CONNECTING...", "default");
 
   ws = new WebSocket(WS_URL);
 
   ws.onopen = () => {
     console.log("✅ WebSocket connected");
+    setConnectionStatus("CONNECTED!", "connected");
     ws.send(JSON.stringify({ type: "register", token: token }));
   };
 
@@ -140,8 +143,14 @@ function connectWebSocket() {
     }
   };
 
-  ws.onclose = () => console.log("❌ WebSocket disconnected");
-  ws.onerror = (err) => console.error("WS Error:", err);
+  ws.onclose = () => {
+    console.log("❌ WebSocket disconnected");
+    setConnectionStatus("DISCONNECTED!", "disconnected");
+  }
+  ws.onerror = (err) => {
+    console.error("WS Error:", err);
+    setConnectionStatus("Connection error! Try reloading!!", "disconnected");
+  }
 }
 
 // === 5. Sending messages → also emit event for UI consistency ===

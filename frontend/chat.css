@@ -37,17 +37,24 @@
   align-items: center;
 }
 
+.chat-header h2 {
+  margin: 0;
+}
+
 .chat-header-actions button {
   background: none;
   border: none;
   font-size: 1.5em;
   cursor: pointer;
+  margin: 0;
+  padding: 0;
   color: var(--text-color-light);
 }
 
 .material-icons.md-40 { font-size: 40px; }
 
 #add-contact-form {
+  margin-top: 65px;
   padding: 15px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--chat-header-bg);
@@ -69,13 +76,14 @@
 }
 
 #user-list {
-  padding-top: 80px;
+  padding-top: 65px;
   flex-grow: 1;
   overflow-y: auto;
 }
 
 .add-contact-float {
   position: absolute;
+  padding: 0;
   bottom: 20px;
   right: 20px;
   width: 50px;
@@ -94,7 +102,7 @@
 .contact-card {
   display: flex;
   align-items: center;
-  padding: 20px 15px 10px 15px;
+  padding: 10px 15px 10px 15px;
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
 }
@@ -269,6 +277,10 @@
     right: 20px;
   }
 
+  #messages {
+    padding-top: 100px;
+    padding-bottom: 60px;
+  }
   #message-form {
     width: 100vw;
   }

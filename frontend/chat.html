@@ -14,7 +14,10 @@
   <div class="status-bar">
     <div class="status-bar-left">
       <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;">←</button>
-      <span class="connection-status" id="connection-status"></span>
+      <div class="connection-status" id="connection-status">
+        <span class="status-text"></span>
+	<span class="material-icons status-icon"></span>
+      </div>
     </div>
     <label class="theme-toggle-switch">
       <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
@@ -42,7 +45,7 @@
         <div id="user-list">
           <!-- Contacts will be injected here by chat.js -->
         </div>
-        <button id="add-contact-btn" class="add-contact-float material-icons" onclick="showAddContactForm()" title="Add Contact">add</button>
+        <button id="add-contact-btn" class="add-contact-float material-icons md-40" onclick="showAddContactForm()" title="Add Contact">add</button>
       </aside>
 
       <!-- Chat Window -->
