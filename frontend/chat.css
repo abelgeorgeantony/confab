@@ -53,7 +53,7 @@
 
 .material-icons.md-40 { font-size: 40px; }
 
-#add-contact-form {
+/*#add-contact-form {
   margin-top: 65px;
   padding: 15px;
   border-bottom: 1px solid var(--border-color);
@@ -73,7 +73,39 @@
 }
 .add-contact-buttons .cancel-btn {
   background-color: var(--text-color-light);
-}
+}*/
+
+/* --- Modal Styles --- */
+.modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 40; }
+.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 448px; background-color: var(--form-bg); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+.modal-header h2 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.close-button { font-size: 1.5rem; color: var(--text-color-light); background: none; border: none; cursor: pointer; margin:0; padding:0; line-height: 1; }
+.close-button:hover { color: var(--text-color); }
+.search-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 1rem; margin: 1rem 0; }
+.search-input:focus { outline: none; box-shadow: 0 0 0 2px var(--primary-color); }
+#add-contact-modal .search-input { margin: 1rem 1.5rem; width: calc(100% - 3rem); }
+.search-results { max-height: 256px; overflow-y: auto; padding-bottom: 1rem; }
+.search-results-placeholder { text-align: center; color: var(--text-color-light); padding: 1rem; }
+.profile-modal { max-width: 384px; }
+.profile-content { padding: 1.5rem; text-align: center; }
+.profile-avatar { width: 6rem; height: 6rem; background-color: var(--primary-color); color: white; font-size: 2.25rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+.profile-content h3 { font-size: 1.5rem; font-weight: 700; }
+.profile-content .username { font-size: 1rem; color: var(--text-color-light); margin-bottom: 1rem; }
+.profile-content .bio { color: var(--text-color); margin-bottom: 1.5rem; }
+.profile-content .button-success { background-color: #22c55e; }
+.profile-content .button-success:hover { background-color: #16a34a; }
+
+/* --- Utility & Animation --- */
+.hidden { display: none; }
+.modal-enter { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #888; }
+
+
+
 
 #user-list {
   padding-top: 65px;
@@ -136,14 +168,25 @@
   overflow: hidden;
 }
 
-/* === THE FIX: Chat Window with Fixed Header/Footer === */
+.unread-badge {
+  background-color: var(--danger-color);
+  color: white;
+  font-size: 0.7em;
+  font-weight: bold;
+  padding: 3px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: none; /* Hidden by default */
+}
+
+
 #chat-view {
   flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
   background-color: var(--form-bg);
-  position: relative; /* This is the key for positioning children */
+  position: relative;
 }
 
 .chat-view-header {

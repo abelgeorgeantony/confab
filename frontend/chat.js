@@ -31,7 +31,17 @@ document.addEventListener("contactsLoaded", (e) => {
   const list = document.getElementById("user-list");
   list.innerHTML = "";
 
-  contacts.forEach(contact => {
+  const sortedContacts = contacts.map(contact => {
+    const lastMessage = getLastMessage(contact.contact_id);
+    // Add the timestamp to the contact object for sorting
+    contact.lastMessageTimestamp = lastMessage ? lastMessage.timestamp : 0;
+    return contact;
+  }).sort((a, b) => {
+    // Sort by timestamp in ascending order (newest first)
+    return a.lastMessageTimestamp - b.lastMessageTimestamp;
+  });
+
+  sortedContacts.forEach(contact => {
     const contactDiv = document.createElement("div");
     contactDiv.classList.add("contact-card");
     contactDiv.innerHTML = `
@@ -51,7 +61,7 @@ document.addEventListener("contactsLoaded", (e) => {
     // Show last message if any
     const lastmsg = getLastMessage(contact.contact_id);
     if (lastmsg) {
-      document.getElementById(`lastmsg-${contact.contact_id}`).innerText = lastmsg.message;
+      triggerEvent("lastMessageUpdated", { contactId: contact.contact_id, message: lastmsg.message});
     }
   });
 });
@@ -59,15 +69,19 @@ document.addEventListener("contactsLoaded", (e) => {
 // When the last message of a chat is updated!
 document.addEventListener("lastMessageUpdated", (e) => {
   const { contactId, message } = e.detail;
+    
+  const userList = document.getElementById('user-list');
+  
+  const contactCard = userList.querySelector(`[data-contact-id="${contactId}"]`);
 
-  // Find the last-msg element for this contact
-  const lastMsgElement = document.querySelector(`#lastmsg-${contactId}`);
-
-  if (lastMsgElement) {
-    lastMsgElement.innerText = message;
+  if (contactCard) {
+    const lastMsgElement = contactCard.querySelector('.contact-lastmsg');
+    if (lastMsgElement) {
+      lastMsgElement.innerText = message.replace(/[\n\r]/g, "");;
+    }
+    userList.insertBefore(contactCard, userList.firstChild);
   } else {
-    console.warn(`No last-msg element for contact ${contactId}`);
-    // Optional: If the contact isn’t in the list, you could trigger a refresh
+    console.warn(`No contact card found for contact ${contactId}`);
   }
 });
 
@@ -193,7 +207,7 @@ function sendMessage(contactId) {
 }
 
 // === The add contact function
-async function addContact() {
+/*async function addContact() {
   const username = document.getElementById("new-contact-username").value.trim();
   if (!username) {
     alert("Enter a username");
@@ -217,7 +231,155 @@ async function addContact() {
   } else {
     alert("Failed to add contact: " + data.error);
   }
+}*/
+
+
+// --- NEW: All logic for the "Add Contact" modals ---
+function initAddContactModals() {
+    // --- DOM Elements ---
+    const openBtn = document.getElementById('add-contact-btn');
+    const overlay = document.getElementById('modal-overlay');
+    const addContactModal = document.getElementById('add-contact-modal');
+    const closeAddContactBtn = document.getElementById('close-add-contact-modal');
+    const searchInput = document.getElementById('user-search-input');
+    const searchResultsContainer = document.getElementById('search-results');
+    const profileModal = document.getElementById('profile-view-modal');
+    const closeProfileBtn = document.getElementById('close-profile-modal');
+    const profileContent = document.getElementById('profile-content');
+    //const toast = document.getElementById('toast');
+
+    // --- Modal Control Functions ---
+    function openAddContactModal() {
+        addContactModal.classList.remove('hidden');
+        addContactModal.classList.add('modal-enter');
+        overlay.classList.remove('hidden');
+    }
+
+    function closeAddContactModal() {
+        addContactModal.classList.add('hidden');
+        overlay.classList.add('hidden');
+        searchInput.value = '';
+        searchResultsContainer.innerHTML = '<p class="search-results-placeholder">Start typing to find users.</p>';
+    }
+
+    function openProfileModal(user) {
+        profileContent.innerHTML = `
+            <div class="profile-avatar">${user.display_name.charAt(0)}</div>
+            <h3>${user.display_name}</h3>
+            <p class="username">@${user.username}</p>
+            <p class="bio">${user.bio || 'No bio provided.'}</p>
+            <button id="add-user-btn" data-username="${user.username}" class="button button-success">
+                Add ${user.display_name.split(' ')[0]} to Contacts
+            </button>
+        `;
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('modal-enter');
+        
+        document.getElementById('add-user-btn').addEventListener('click', (e) => {
+            const usernameToAdd = e.target.getAttribute('data-username');
+            addContact(usernameToAdd);
+        });
+    }
+
+    function closeProfileModal() {
+        profileModal.classList.add('hidden');
+    }
+
+    // --- Core Logic Functions ---
+    async function searchUsers(query) {
+        if (query.length < 2) {
+            searchResultsContainer.innerHTML = '<p class="search-results-placeholder">Keep typing to find users...</p>';
+            return;
+        }
+        searchResultsContainer.innerHTML = '<p class="search-results-placeholder">Searching...</p>';
+        
+        const token = getCookie("auth_token");
+        const res = await fetch(API + "search_users.php", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, query })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            displaySearchResults(data.users);
+        } else {
+            searchResultsContainer.innerHTML = `<p class="search-results-placeholder">Error: ${data.error}</p>`;
+        }
+    }
+
+    function displaySearchResults(users) {
+        if (users.length === 0) {
+            searchResultsContainer.innerHTML = '<p class="search-results-placeholder">No users found.</p>';
+            return;
+        }
+        searchResultsContainer.innerHTML = '';
+        users.forEach(user => {
+            const userCard = document.createElement('div');
+            userCard.className = 'contact-card';
+            userCard.innerHTML = `
+                <div class="contact-avatar">${user.display_name.charAt(0)}</div>
+                <div class="contact-info">
+                    <div class="contact-name">${user.display_name}</div>
+                    <div class="contact-username">@${user.username}</div>
+                </div>
+            `;
+            userCard.addEventListener('click', () => openProfileModal(user));
+            searchResultsContainer.appendChild(userCard);
+        });
+    }
+    
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    const debouncedSearch = debounce(searchUsers, 300);
+
+    async function addContact(username) {
+        const token = getCookie("auth_token");
+        const res = await fetch(API + "add_contact.php", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, username })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            closeProfileModal();
+            closeAddContactModal();
+            //showToast(`${username} has been added!`);
+            loadContacts(); // Refresh the main contact list
+        } else {
+            alert("Failed to add contact: " + data.error);
+        }
+    }
+    
+    /*function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }*/
+
+    // --- Event Listeners ---
+    openBtn.addEventListener('click', openAddContactModal);
+    closeAddContactBtn.addEventListener('click', closeAddContactModal);
+    closeProfileBtn.addEventListener('click', closeProfileModal);
+    overlay.addEventListener('click', () => {
+        closeAddContactModal();
+        closeProfileModal();
+    });
+    searchInput.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+    });
 }
+
+
 
 // === 6. UI functions remain mostly the same ===
 function goBackToList() {
@@ -322,6 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadContacts();          // will emit contactsLoaded
   loadOfflineMessages();   // will emit messageReceived for each
   connectWebSocket();
+  initAddContactModals();
 });
 
 window.addEventListener('beforeunload', (e) => {

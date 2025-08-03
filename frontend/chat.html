@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Perfect Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="chat.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -35,17 +35,10 @@
             <button id="profile-btn" class="material-icons md-40" onclick="goToProfile()" title="Profile">account_circle</button>
           </div>
         </div>
-        <div id="add-contact-form" style="display: none;">
-          <input type="text" id="new-contact-username" placeholder="Enter username">
-          <div class="add-contact-buttons">
-            <button onclick="addContact()">Add</button>
-            <button onclick="hideAddContactForm()" class="cancel-btn">Cancel</button>
-          </div>
-        </div>
         <div id="user-list">
           <!-- Contacts will be injected here by chat.js -->
         </div>
-        <button id="add-contact-btn" class="add-contact-float material-icons md-40" onclick="showAddContactForm()" title="Add Contact">add</button>
+        <button id="add-contact-btn" class="add-contact-float material-icons md-40" title="Add Contact">add</button>
       </aside>
 
       <!-- Chat Window -->
@@ -65,6 +58,33 @@
         </form>
       </main>
     </div>
+
+      <!-- Modal Overlay -->
+  <div id="modal-overlay" class="modal-overlay hidden"></div>
+
+  <!-- Add Contact Modal -->
+  <div id="add-contact-modal" class="modal hidden">
+      <div class="modal-header">
+          <h2>Find People</h2>
+          <button id="close-add-contact-modal" class="close-button">&times;</button>
+      </div>
+      <input type="search" id="user-search-input" placeholder="Search by name or username..." class="search-input">
+      <div id="search-results" class="search-results custom-scrollbar">
+          <p class="search-results-placeholder">Start typing to find users.</p>
+      </div>
+  </div>
+
+  <!-- Profile View Modal -->
+  <div id="profile-view-modal" class="modal profile-modal hidden">
+      <div class="modal-header">
+          <h2>Profile</h2>
+          <button id="close-profile-modal" class="close-button">&times;</button>
+      </div>
+      <div id="profile-content" class="profile-content">
+          <!-- Profile details will be dynamically inserted here -->
+      </div>
+  </div>
+
   </div>
 </body>
 </html>
