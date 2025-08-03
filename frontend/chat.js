@@ -160,6 +160,19 @@ function sendMessage(contactId) {
   if (!message) return;
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     console.warn("❌ WebSocket not open yet!");
+        if (navigator.vibrate) {
+            navigator.vibrate(200); // Vibrate for 200 milliseconds
+        }
+
+        // 2. Shake the status icon
+        const statusIcon = document.querySelector('.status-icon');
+        if (statusIcon) {
+            statusIcon.classList.add('shake');
+            // Remove the class after the animation is done so it can be re-triggered
+            setTimeout(() => {
+                statusIcon.classList.remove('shake');
+            }, 500); // Match the animation duration in CSS
+        }
     return;
   }
 

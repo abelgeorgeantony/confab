@@ -1,4 +1,4 @@
-SERVER_IP = "192.168.1.7";
+SERVER_IP = "localhost";
 
 FRONTEND = "http://" + SERVER_IP + ":8000/frontend/";
 API = "http://" + SERVER_IP + ":8000/backend/";
@@ -111,6 +111,9 @@ function setConnectionStatus(text, status = 'default') {
         iconEl.textContent = 'sentiment_very_satisfied'; // Material icon for connected
     } else if (status === 'disconnected') {
         iconEl.textContent = 'sentiment_very_dissatisfied'; // Material icon for disconnected
+	statusContainer.addEventListener("onclick", () => {
+		connectWebSocket();
+	});
     } else {
         iconEl.textContent = 'sync'; // Material icon for connecting/default
     }
@@ -126,7 +129,7 @@ function setConnectionStatus(text, status = 'default') {
     statusTextTimer = setTimeout(() => {
 	statusContainer.classList.add('icon-only');
         //textEl.style.opacity = 0;
-    }, 4000); // 4 seconds
+    }, 2000); // 2 seconds
 }
 
 /* * Shows a back button in the status bar.
