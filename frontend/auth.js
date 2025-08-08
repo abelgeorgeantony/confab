@@ -133,10 +133,36 @@ async function handleStep1(event) {
     messageArea.textContent = 'Creating account...';
     
     registrationState.email = document.getElementById('reg_email').value;
+
+
+
+    // 1. Generate a new RSA key pair.
+    const keyPair = await cryptoHandler.generateRsaKeyPair();
+    const publicKeyJwk = await cryptoHandler.exportKeyToJwk(keyPair.publicKey);
+
+    // 2. Generate a random salt for password key derivation.
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+
+    // 3. Derive a key from the password and salt to encrypt the private key.
+    const passwordDerivedKey = await cryptoHandler.deriveKeyFromPassword( document.getElementById('reg_pass').value, salt);
+        
+    // 4. Encrypt the private key.
+    const privateKeyJwk = await cryptoHandler.exportKeyToJwk(keyPair.privateKey);
+    const { ciphertext: encryptedPrivateKeyData, iv: privateKeyIv } = await cryptoHandler.aesEncrypt(
+            JSON.stringify(privateKeyJwk),
+            passwordDerivedKey
+        );
+
+
+
     const payload = {
         username: document.getElementById('reg_username').value,
         email: registrationState.email,
         password: document.getElementById('reg_pass').value,
+	publicKey: JSON.stringify(publicKeyJwk),
+        encryptedPrivateKey: cryptoHandler.arrayBufferToBase64(encryptedPrivateKeyData),
+        privateKeySalt: cryptoHandler.arrayBufferToBase64(salt),
+        privateKeyIv: cryptoHandler.arrayBufferToBase64(privateKeyIv)
     };
 
     // This now points to your original register.php script
@@ -263,6 +289,15 @@ async function login() {
   const data = await res.json();
 
   if (data.success) {
+    
+    const salt = cryptoHandler.base64ToArrayBuffer(data.privateKeySalt);
+    const iv = cryptoHandler.base64ToArrayBuffer(data.privateKeyIv);
+    const encryptedKeyData = cryptoHandler.base64ToArrayBuffer(data.encryptedPrivateKey);
+    const passwordDerivedKey = await cryptoHandler.deriveKeyFromPassword(password, salt);
+
+    const decryptedPrivateKeyJwkString = await cryptoHandler.aesDecrypt(encryptedKeyData, passwordDerivedKey, iv);
+
+    localStorage.setItem('decrypted_private_key', decryptedPrivateKeyJwkString);
     setCookie('auth_token', data.token, {
 	    maxAge: s_dur,
 	    sameSite: 'Strict',

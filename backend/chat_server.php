@@ -84,10 +84,10 @@ class ChatServer implements MessageComponentInterface {
 
         $sender_id = $this->userConnections[$conn->resourceId];
         $receiver_id = $data['receiver_id'] ?? null;
-	$message = $data['message'] ?? null;
+	$payload = $data['payload'] ?? null;
 	error_log("Rid: $receiver_id");
 
-        if (!$receiver_id || !$message) {
+        if (!$receiver_id || !$payload) {
             error_log("⚠️ Invalid message payload from $sender_id");
             return;
         }
@@ -97,23 +97,23 @@ class ChatServer implements MessageComponentInterface {
             $this->onlineUsers[$receiver_id]->send(json_encode([
                 'type' => 'message',
                 'from' => $sender_id,
-                'message' => $message
+                'payload' => $payload
             ]));
             error_log("📨 Delivered message from $sender_id → $receiver_id (online)");
         } else {
             // Receiver offline → save to inbox_<receiver_id>
-            $this->saveToInbox($receiver_id, $sender_id, $message);
+            $this->saveToInbox($receiver_id, $sender_id, $payload);
             error_log("💾 Receiver $receiver_id offline → message saved");
         }
     }
 
-    private function saveToInbox($receiver_id, $sender_id, $message) {
+    private function saveToInbox($receiver_id, $sender_id, $payload) {
         require_once __DIR__ . '/config.php';
         global $conn;
 
         $inbox_table = "inbox_" . intval($receiver_id);
-        $stmt = $conn->prepare("INSERT INTO $inbox_table (sender_id, message) VALUES (?, ?)");
-        $stmt->bind_param("is", $sender_id, $message);
+        $stmt = $conn->prepare("INSERT INTO $inbox_table (sender_id, payload) VALUES (?, ?)");
+        $stmt->bind_param("is", $sender_id, json_encode($payload));
         $stmt->execute();
     }
 }

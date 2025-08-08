@@ -1,6 +1,8 @@
 let ws;
 let unreadCounts = {};  // contactId => number of unread messages
 let currentChatUser = null;  // currently open chat user
+let myPrivateKey = null;
+let publicKeyCache = {};
 
 // === 1. Helper to trigger events easily ===
 function triggerEvent(name, detail = {}) {
@@ -11,17 +13,47 @@ function triggerEvent(name, detail = {}) {
 
 // When a new message is received (from WS or offline)
 document.addEventListener("messageReceived", (e) => {
-  const { senderId, message, timestamp } = e.detail;
+  const { senderId, payload } = e.detail;
+
+  let decryptedMessage;
+  try {
+    // Ensure our private key is loaded and ready.
+    if (!myPrivateKey) {
+        console.error("Your private key is not loaded. Cannot decrypt messages.");
+        // In a real app, you might prompt the user to log in again.
+        return;
+    }
+    
+    // --- DECRYPTION FLOW ---
+    // 1. Decode the payload components from Base64 back into binary data.
+    const encryptedKey = cryptoHandler.base64ToArrayBuffer(payload.encryptedKey);
+    const iv = cryptoHandler.base64ToArrayBuffer(payload.iv);
+    const ciphertext = cryptoHandler.base64ToArrayBuffer(payload.ciphertext);
+
+    // 2. Decrypt the symmetric AES key using our private RSA key.
+    const decryptedAesKeyData = await cryptoHandler.rsaDecrypt(encryptedKey, myPrivateKey);
+    
+    // We need to re-import the decrypted AES key to make it usable.
+    const aesKeyJwk = JSON.parse(new TextDecoder().decode(decryptedAesKeyData));
+    const aesKey = await cryptoHandler.importAesKeyFromJwk(aesKeyJwk); // Assumes importAesKeyFromJwk exists
+
+    // 3. Decrypt the actual message content using the now-revealed AES key.
+    decryptedMessage = await cryptoHandler.aesDecrypt(ciphertext, aesKey, iv);
+
+  } catch (error) {
+    console.error("Failed to decrypt message:", error);
+    decryptedMessage = "🔒 [This message could not be decrypted]";
+  }
 
   if (Number(currentChatUser) === Number(senderId)) {
     // Show in the chat window
-    displayMessage("them", message, timestamp);
-    saveMessageLocally(senderId, "them", message, timestamp);
+    displayMessage("them", decryptedMessage, payload.timestamp);
+    saveMessageLocally(senderId, "them", decryptedMessage, payload.timestamp);
   } else {
     // Not in this chat → increment unread count
     unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
     updateUnreadBadge(senderId);
-    saveMessageLocally(senderId, "them", message, timestamp);
+    saveMessageLocally(senderId, "them", decryptedMessage, payload.timestamp);
   }
 });
 
@@ -32,6 +64,9 @@ document.addEventListener("contactsLoaded", (e) => {
   list.innerHTML = "";
 
   const sortedContacts = contacts.map(contact => {
+    if (contact.public_key) {
+	publicKeyCache[contact.contact_id] = JSON.parse(contact.public_key);
+    }
     const lastMessage = getLastMessage(contact.contact_id);
     // Add the timestamp to the contact object for sorting
     contact.lastMessageTimestamp = lastMessage ? lastMessage.timestamp : 0;
@@ -151,8 +186,7 @@ function connectWebSocket() {
     if (data.type === "message") {
       triggerEvent("messageReceived", {
         senderId: data.from,
-        message: data.message,
-        timestamp: Date.now()
+        payload: data.payload
       });
     }
   };
@@ -190,7 +224,35 @@ function sendMessage(contactId) {
     return;
   }
 
-  // Save + show immediately
+
+  const recipientPublicKeyJwk = publicKeyCache[contactId];
+  if (!recipientPublicKeyJwk) {
+    alert("Could not find the public key for this contact. Cannot send message.");
+    return;
+  }
+  const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(recipientPublicKeyJwk);
+
+  // 2. Generate a new, one-time symmetric AES key for this single message.
+  const aesKey = await cryptoHandler.generateAesKey();
+
+  // 3. Encrypt the message text with the AES key.
+  const { ciphertext, iv } = await cryptoHandler.aesEncrypt(message, aesKey);
+
+  // 4. Encrypt the AES key with the recipient's public RSA key.
+  const exportedAesKeyJwk = await cryptoHandler.exportKeyToJwk(aesKey);
+  const encryptedAesKey = await cryptoHandler.rsaEncrypt(
+      new TextEncoder().encode(JSON.stringify(exportedAesKeyJwk)), 
+      recipientPublicKey
+  );
+
+  // 5. Prepare the payload with Base64 encoded data for safe JSON transport.
+  const payload = {
+      ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
+      encryptedKey: cryptoHandler.arrayBufferToBase64(encryptedAesKey),
+      iv: cryptoHandler.arrayBufferToBase64(iv),
+      timestamp: Date.now()
+  };
+
   saveMessageLocally(contactId, "me", message);
   displayMessage("me", message);
   input.value = "";
@@ -199,7 +261,7 @@ function sendMessage(contactId) {
   ws.send(JSON.stringify({
     type: "message",
     receiver_id: contactId,
-    message: message
+    payload: payload
   }));
 
   // Emit "messageSent" event in case you want notifications, etc.
@@ -481,6 +543,28 @@ function clearConversationLocally(contactId) {
 document.addEventListener("DOMContentLoaded", () => {
   hideStatusBarBackButton();
   requireAuth();
+  try {
+      const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
+      if (!privateKeyJwkString) {
+          alert("Your secure session has expired. Please log in again.");
+	  deleteCookie("auth_token");
+          localStorage.clear();
+          window.location.href = 'login.html';
+          return;
+      }
+        
+      const privateKeyJwk = JSON.parse(privateKeyJwkString);
+      myPrivateKey = await cryptoHandler.importPrivateKeyFromJwk(privateKeyJwk);
+      console.log("Private key loaded and ready.");
+
+  } catch (error) {
+      console.error("Fatal: Failed to load private key:", error);
+      alert("A critical error occurred while loading your security keys. Please log in again.");
+      deleteCookie("auth_token");
+      localStorage.clear();
+      window.location.href = 'login.html';
+      return;
+  }
   loadContacts();          // will emit contactsLoaded
   loadOfflineMessages();   // will emit messageReceived for each
   connectWebSocket();

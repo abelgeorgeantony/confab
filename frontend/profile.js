@@ -103,6 +103,7 @@ async function updateProfile() {
 function logoutUser() {
   if (confirm("Do you really want to logout?")) {
     deleteCookie("auth_token");
+    localStorage.clear();
     window.location.replace("login.html");
   }
 }

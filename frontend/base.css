@@ -126,11 +126,12 @@ body.dark-mode {
   overflow: hidden; /* Hide text as width shrinks */
   margin-right: 6px; /* Space between text and icon */
   max-width: 150px;
-  transition: max-width 1s ease-out, margin-right 1s ease-out;
+  transition: max-width 1s ease-out, margin-right 2s ease-out, margin-left 1s ease-out 1s;
 }
 .connection-status.icon-only .status-text {
     max-width: 0px;
     margin-right: 0px;
+    margin-left: -8px;
     gap: 0px;
 }
 .connection-status.connected .status-icon, .connection-status.connected .status-text {

@@ -5,6 +5,10 @@ CREATE TABLE users (
     display_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    public_key TEXT NOT NULL,
+    encrypted_private_key TEXT NOT NULL,
+    private_key_salt VARCHAR(255) NOT NULL,
+    private_key_iv VARCHAR(255) NOT NULL,
     bio TEXT DEFAULT NULL,
     last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_online BOOLEAN DEFAULT FALSE,
@@ -30,7 +34,7 @@ CREATE TABLE sessions (
 CREATE TABLE inbox_<user_id> (
   id INT AUTO_INCREMENT PRIMARY KEY,
   sender_id INT NOT NULL,
-  message TEXT NOT NULL,
+  payload TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );

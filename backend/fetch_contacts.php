@@ -21,7 +21,7 @@ error_log("$contacts_table",0);
 global $conn;
 
 $sql = "
-    SELECT c.contact_id, u.username, u.display_name
+    SELECT c.contact_id, u.username, u.display_name, u.public_key
     FROM $contacts_table c
     JOIN users u ON c.contact_id = u.id
     ORDER BY c.added_at DESC

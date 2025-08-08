@@ -48,6 +48,13 @@ $stmt = $conn->prepare("INSERT INTO sessions (user_id, token, created_at, expire
 $stmt->bind_param("iss", $user_id, $token, $expires_at);
 $stmt->execute();
 
-echo json_encode(["success" => true, "token" => $token, "display_name" => $user['display_name']]);
+echo json_encode([
+	"success" => true,
+	"token" => $token,
+	"display_name" => $user['display_name'],
+	'encrypted_private_key' => $user['encrypted_private_key'],
+	'private_key_salt' => $user['private_key_salt'],
+	'private_key_iv' => $user['private_key_iv']
+]);
 ?>
 

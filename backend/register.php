@@ -10,8 +10,14 @@ $default_display_name = strtoupper($username);
 $email = $conn->real_escape_string($data->email);
 $password = $data->password;
 
+$publicKey = $data->publicKey;
+$encryptedPrivateKey = $data->encryptedPrivateKey;
+$privateKeySalt = $data->privateKeySalt;
+$privateKeyIv = $data->privateKeyIv;
+
+
 // --- Basic Validation ---
-if (empty($username) || empty($email) || empty($password)) {
+if (empty($username) || empty($email) || empty($password) || empty($publicKey) || empty($encryptedPrivateKey) || empty($privateKeySalt) || empty($privateKeyIv)) {
     echo json_encode(["success" => false, "error" => "All fields are required."]);
     exit;
 }
@@ -33,8 +39,8 @@ if ($stmt->get_result()->num_rows > 0) {
 $hash = password_hash($password, PASSWORD_BCRYPT);
 
 // Insert a basic user entry, not yet fully profiled
-$stmt = $conn->prepare("INSERT INTO users (username, display_name, email, password_hash, email_verified) VALUES (?, ?, ?, ?, FALSE)");
-$stmt->bind_param("ssss", $username, $default_display_name, $email, $hash);
+$stmt = $conn->prepare("INSERT INTO users (username, display_name, email, password_hash, email_verified, public_key, encrypted_private_key, private_key_salt, private_key_iv) VALUES (?, ?, ?, ?, FALSE, ?, ?, ?, ?)");
+$stmt->bind_param("ssssssss", $username, $default_display_name, $email, $hash, $publicKey, $encryptedPrivateKey, $privateKeySalt, $privateKeyIv);
 
 if ($stmt->execute()) {
     send_verification_code($conn, $email);

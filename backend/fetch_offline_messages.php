@@ -19,7 +19,7 @@ global $conn;
 $inbox_table = "inbox_" . intval($user_id);
 
 // Fetch all offline messages
-$query = "SELECT sender_id, message, created_at FROM $inbox_table ORDER BY created_at ASC";
+$query = "SELECT sender_id, payload, created_at FROM $inbox_table ORDER BY created_at ASC";
 $result = $conn->query($query);
 
 $messages = [];
@@ -27,7 +27,7 @@ if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $messages[] = [
             "sender_id" => $row["sender_id"],
-            "message" => $row["message"],
+            "payload" => $row["payload"],
             "created_at" => $row["created_at"]
         ];
     }
