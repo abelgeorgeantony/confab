@@ -195,7 +195,7 @@ async function handleStep2(event) {
     const payload = {
         email: registrationState.email,
         code: document.getElementById('verification_code').value,
-        purpose: 'registration' // General purpose verification
+        purpose: 'registration' // Registration verification
     };
 
     const res = await fetch(API + 'verify_email.php', {
@@ -274,14 +274,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 async function login() {
+  const uname = document.getElementById('login_username').value;
+  const pass = document.getElementById('login_pass').value;
   const s_dur = parseInt(document.getElementById('session_length').value);
 
   const res = await fetch(API + 'login.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      username: document.getElementById('login_username').value,
-      password: document.getElementById('login_pass').value,
+      username: uname,
+      password: pass,
       s_duration: s_dur
     })
   });
@@ -290,10 +292,10 @@ async function login() {
 
   if (data.success) {
     
-    const salt = cryptoHandler.base64ToArrayBuffer(data.privateKeySalt);
-    const iv = cryptoHandler.base64ToArrayBuffer(data.privateKeyIv);
-    const encryptedKeyData = cryptoHandler.base64ToArrayBuffer(data.encryptedPrivateKey);
-    const passwordDerivedKey = await cryptoHandler.deriveKeyFromPassword(password, salt);
+    const salt = cryptoHandler.base64ToArrayBuffer(data.private_key_salt);
+    const iv = cryptoHandler.base64ToArrayBuffer(data.private_key_iv);
+    const encryptedKeyData = cryptoHandler.base64ToArrayBuffer(data.encrypted_private_key);
+    const passwordDerivedKey = await cryptoHandler.deriveKeyFromPassword(pass, salt);
 
     const decryptedPrivateKeyJwkString = await cryptoHandler.aesDecrypt(encryptedKeyData, passwordDerivedKey, iv);
 
@@ -386,26 +388,40 @@ async function redirectIfAuthenticated() {
 }
 // For gaining auth confirmation for protected tasks on pages like chat.html
 async function requireAuth() {
-  const token = getCookie('auth_token');
-  if (!token) {
-    window.location.replace('login.html');
-    return;
-  }
-
-  try {
-    const res = await fetch(API + 'validate_token.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token })
-    });
-
-    const data = await res.json();
-    if (!data.valid) {
+  return new Promise((resolve, reject) => {
+    const token = getCookie('auth_token');
+    if (!token) {
       window.location.replace('login.html');
+      return reject(new Error("No auth token!"));
     }
-  } catch (err) {
-    console.error('Token validation failed:', err);
-    window.location.replace('login.html');
-  }
+    const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
+    if (!privateKeyJwkString) {
+      deleteCookie("auth_token");
+      localStorage.clear();
+      window.location.replace('login.html');
+      return reject(new Error("No private key!"));
+    }
+
+    try {
+      const res = await fetch(API + 'validate_token.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+
+      const data = await res.json();
+      if (!data.valid) {
+        window.location.replace('login.html');
+	reject(new Error("Invalid auth token!"));
+      }
+      else {
+	resolve();
+      }
+    } catch (err) {
+      console.error('Token validation failed:', err);
+      window.location.replace('login.html');
+      reject(err);
+    }
+  });
 }
 

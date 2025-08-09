@@ -12,7 +12,7 @@ function triggerEvent(name, detail = {}) {
 // === 2. Listen for core events ===
 
 // When a new message is received (from WS or offline)
-document.addEventListener("messageReceived", (e) => {
+document.addEventListener("messageReceived", async (e) => {
   const { senderId, payload } = e.detail;
 
   let decryptedMessage;
@@ -202,7 +202,7 @@ function connectWebSocket() {
 }
 
 // === 5. Sending messages → also emit event for UI consistency ===
-function sendMessage(contactId) {
+async function sendMessage(contactId) {
   const input = document.getElementById("message-input");
   const message = input.value.trim();
   if (!message) return;
@@ -503,7 +503,7 @@ function updateUnreadBadge(senderId) {
   badge.style.display = unreadCounts[senderId] > 0 ? "inline-block" : "none";
 }
 
-async function openChatWith(contactId, displayname, username) {
+function openChatWith(contactId, displayname, username) {
   showStatusBarBackButton(goBackToList);
   document.getElementById("messages").innerHTML = "";
   document.getElementById("chat-title").textContent = displayname;
@@ -540,31 +540,14 @@ function clearConversationLocally(contactId) {
 }
 
 // === 8. Bootstrapping ===
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   hideStatusBarBackButton();
-  requireAuth();
-  try {
+  await requireAuth();
+	alert("hii");
       const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
-      if (!privateKeyJwkString) {
-          alert("Your secure session has expired. Please log in again.");
-	  deleteCookie("auth_token");
-          localStorage.clear();
-          window.location.href = 'login.html';
-          return;
-      }
-        
       const privateKeyJwk = JSON.parse(privateKeyJwkString);
       myPrivateKey = await cryptoHandler.importPrivateKeyFromJwk(privateKeyJwk);
       console.log("Private key loaded and ready.");
-
-  } catch (error) {
-      console.error("Fatal: Failed to load private key:", error);
-      alert("A critical error occurred while loading your security keys. Please log in again.");
-      deleteCookie("auth_token");
-      localStorage.clear();
-      window.location.href = 'login.html';
-      return;
-  }
   loadContacts();          // will emit contactsLoaded
   loadOfflineMessages();   // will emit messageReceived for each
   connectWebSocket();
