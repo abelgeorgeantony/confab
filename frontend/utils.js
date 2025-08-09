@@ -1,4 +1,4 @@
-SERVER_IP = "localhost";
+SERVER_IP = "192.168.1.2";
 
 FRONTEND = "http://" + SERVER_IP + ":8000/frontend/";
 API = "http://" + SERVER_IP + ":8000/backend/";

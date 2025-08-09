@@ -388,7 +388,7 @@ async function redirectIfAuthenticated() {
 }
 // For gaining auth confirmation for protected tasks on pages like chat.html
 async function requireAuth() {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const token = getCookie('auth_token');
     if (!token) {
       window.location.replace('login.html');

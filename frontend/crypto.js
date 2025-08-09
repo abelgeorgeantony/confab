@@ -8,6 +8,12 @@
  * ------------------------------------------------------------------------------
  */
 
+if (!window.crypto || !window.crypto.subtle) {
+    const errorMessage = "Web Crypto API is not available. This application requires a secure context (HTTPS or localhost) to function.";
+    alert(errorMessage);
+    throw new Error(errorMessage);
+}
+
 class E2EECrypto {
 
     // --- Key Generation ---

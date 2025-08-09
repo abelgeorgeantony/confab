@@ -544,10 +544,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   hideStatusBarBackButton();
   await requireAuth();
 	alert("hii");
-      const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
-      const privateKeyJwk = JSON.parse(privateKeyJwkString);
-      myPrivateKey = await cryptoHandler.importPrivateKeyFromJwk(privateKeyJwk);
-      console.log("Private key loaded and ready.");
+  const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
+  const privateKeyJwk = JSON.parse(privateKeyJwkString);
+  myPrivateKey = await cryptoHandler.importPrivateKeyFromJwk(privateKeyJwk);
+  console.log("Private key loaded and ready.");
   loadContacts();          // will emit contactsLoaded
   loadOfflineMessages();   // will emit messageReceived for each
   connectWebSocket();
