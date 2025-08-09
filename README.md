@@ -8,10 +8,17 @@ It supports **user authentication**, **per-user contacts**, and **offline messag
 ## Setup on a New Device
 
 ### 1. Requirements
-- PHP server
-- MySQL/MariaDB
-- [Composer](https://getcomposer.org/) for dependency management
-- Ratchet (Web Socket)
+- apt install:
+  - php
+  - composer
+  - mkcert
+  - caddy
+  - mariadb-server
+
+- composer install:
+  - cboden/ratchet
+  - phpmailer/phpmailer
+  - vlucas/phpdotenv
 
 ---
 
@@ -31,12 +38,17 @@ cd chat_app
    ```bash
    mysql -u root -p chat_app < backend/schema.sql
    ```
-3. Update database credentials in **backend/config.php**:
-   ```php
-   $DB_HOST = "localhost";
-   $DB_USER = "root";
-   $DB_PASS = "yourpassword";
-   $DB_NAME = "chat_app";
+3. Update credentials in **backend/.env** the file must first be created:
+   ```
+    DB_HOST=127.0.0.1
+    DB_USER=root
+    DB_PASS=
+    DB_NAME=chat_app
+
+    SMTP_HOST=smtp.gmail.com
+    SMTP_USER=abel.chatapp@gmail.com
+    SMTP_PASS=
+    SMTP_PORT=587
    ```
 
 On user registration, their **inbox_<user_id>** and **contacts_<user_id>** tables will be auto-created.

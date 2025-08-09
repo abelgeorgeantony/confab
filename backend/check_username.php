@@ -1,6 +1,9 @@
 <?php
+ob_start();
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+
 require_once "bootstrap.php";
-//header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents("php://input"), true);
 $username = $data['username'] ?? '';
@@ -20,5 +23,6 @@ if ($stmt->get_result()->num_rows > 0) {
 } else {
     echo json_encode(['available' => true]);
 }
+ob_end_flush();
 ?>
 

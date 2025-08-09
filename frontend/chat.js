@@ -534,7 +534,7 @@ function getLocalMessages(contactId) {
 function getLastMessage(contactId) {
   const messages = JSON.parse(localStorage.getItem(`chat_user_${contactId}`) || "[]");
   return messages.length > 0 ? messages[messages.length - 1] : null;
-}
+}How to make the php built in web server use the certificates
 function clearConversationLocally(contactId) {
   localStorage.removeItem(`chat_user_${contactId}`);
 }
@@ -543,7 +543,7 @@ function clearConversationLocally(contactId) {
 document.addEventListener("DOMContentLoaded", async () => {
   hideStatusBarBackButton();
   await requireAuth();
-	alert("hii");
+
   const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
   const privateKeyJwk = JSON.parse(privateKeyJwkString);
   myPrivateKey = await cryptoHandler.importPrivateKeyFromJwk(privateKeyJwk);

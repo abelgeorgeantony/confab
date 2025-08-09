@@ -1,0 +1,10 @@
+# Replace 192.168.1.2 with your actual local IP address
+https://192.168.1.2 {
+    # Tell Caddy which certificate files to use
+    tls localhost+1.pem localhost+1-key.pem
+
+    # Forward all traffic to your PHP server running on port 8000
+    reverse_proxy 192.168.1.2:8000
+}
+
+

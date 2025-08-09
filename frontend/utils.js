@@ -1,7 +1,7 @@
 SERVER_IP = "192.168.1.2";
 
-FRONTEND = "http://" + SERVER_IP + ":8000/frontend/";
-API = "http://" + SERVER_IP + ":8000/backend/";
+FRONTEND = "https://" + SERVER_IP + "/frontend/";
+API = "https://" + SERVER_IP + "/backend/";
 WS_URL = "ws://" + SERVER_IP + ":8080";
 
 // Get a cookie by name

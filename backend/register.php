@@ -1,7 +1,8 @@
 <?php
+ob_start();
 require "bootstrap.php";
 require "code_mailer.php";
-//header('Content-Type: application/json');
+
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -49,5 +50,6 @@ if ($stmt->execute()) {
     http_response_code(500);
     echo json_encode(["success" => false, "error" => "Failed to create account."]);
 }
+ob_end_flush();
 ?>
 
