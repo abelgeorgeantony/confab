@@ -153,5 +153,38 @@ function hideStatusBarBackButton() {
     }
 }
 
+
+const loader = (function() {
+            const overlay = document.getElementById('reusable-loader-overlay');
+            const svg = overlay.querySelector('.hello__svg');
+
+            function playSvgAnimation() {
+                // Clone and replace the SVG to restart its CSS animation
+                const newSvg = svg.cloneNode(true);
+                svg.parentNode.replaceChild(newSvg, svg);
+            }
+
+
+            return {
+                show: function() {
+                    overlay.classList.add('active');
+                    
+                    // 1. Play the SVG animation once at the beginning
+                    playSvgAnimation();
+
+                    // 2. Set a timeout to hide the loader after a while
+                    svgAnimationTimeout = setTimeout(() => this.hide(), 5000); // Hide after 5s total
+                },
+                hide: function() {
+                    clearTimeout(svgAnimationTimeout);
+                    overlay.classList.remove('active');
+                }
+            };
+})();
+
+
 // Run the function to apply the theme as soon as the DOM is ready
-document.addEventListener('DOMContentLoaded', applyInitialTheme);
+document.addEventListener('DOMContentLoaded', () => {
+  applyInitialTheme();
+  loader.show();
+});
