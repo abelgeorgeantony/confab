@@ -551,6 +551,8 @@ function clearConversationLocally(contactId) {
 // === 8. Bootstrapping ===
 document.addEventListener("DOMContentLoaded", async () => {
   hideStatusBarBackButton();
+  initAddContactModals();
+
   await requireAuth();
 
   const privateKeyJwkString = localStorage.getItem('decrypted_private_key');
@@ -560,7 +562,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadContacts();          // will emit contactsLoaded
   loadOfflineMessages();   // will emit messageReceived for each
   connectWebSocket();
-  initAddContactModals();
 });
 
 window.addEventListener('beforeunload', (e) => {
