@@ -1,10 +1,13 @@
 # Replace 192.168.1.2 with your actual local IP address
-https://192.168.1.2 {
+https://192.168.1.6 {
     # Tell Caddy which certificate files to use
     tls localhost+1.pem localhost+1-key.pem
+    
+    # --- WebSocket Routing ---
+    # Any request to the /ws path will be proxied to your chat server
+    # running on port 8081. Caddy handles the upgrade headers automatically.
+    reverse_proxy /ws/* localhost:8080
 
     # Forward all traffic to your PHP server running on port 8000
-    reverse_proxy 192.168.1.2:8000
+    reverse_proxy localhost:8000
 }
-
-

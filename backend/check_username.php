@@ -1,8 +1,5 @@
 <?php
 ob_start();
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-
 require_once "bootstrap.php";
 
 $data = json_decode(file_get_contents("php://input"), true);

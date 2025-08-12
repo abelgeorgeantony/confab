@@ -26,7 +26,7 @@
 
 .chat-header {
   position: fixed;
-  width: 30vw;
+  width: 29.3vw;
   padding: 10px 15px;
   border-right: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
@@ -191,7 +191,7 @@
 
 .chat-view-header {
   margin-top: 28px;
-  width: 70vw;
+  width: 70.7vw;
   position: fixed;
   top: 0;
   right: 0;
@@ -215,7 +215,7 @@
 }
 
 #message-form {
-  width: 70vw;
+  width: 70.7vw;
   position: fixed;
   bottom: 0;
   right: 0;

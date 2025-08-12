@@ -203,69 +203,74 @@ function connectWebSocket() {
 
 // === 5. Sending messages → also emit event for UI consistency ===
 async function sendMessage(contactId) {
-  const input = document.getElementById("message-input");
-  const message = input.value.trim();
-  if (!message) return;
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    console.warn("❌ WebSocket not open yet!");
-        if (navigator.vibrate) {
-            navigator.vibrate(200); // Vibrate for 200 milliseconds
-        }
+  return new Promise(async (resolve, reject) => {
+    const input = document.getElementById("message-input");
+    const message = input.value.trim();
+    if (!message) {
+      return reject(new Error("Empty message!"));
+    }
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.warn("❌ WebSocket not open yet!");
+      if (navigator.vibrate) {
+        navigator.vibrate(200); // Vibrate for 200 milliseconds
+      }
 
-        // 2. Shake the status icon
-        const statusIcon = document.querySelector('.status-icon');
-        if (statusIcon) {
-            statusIcon.classList.add('shake');
-            // Remove the class after the animation is done so it can be re-triggered
-            setTimeout(() => {
-                statusIcon.classList.remove('shake');
-            }, 500); // Match the animation duration in CSS
-        }
-    return;
-  }
+      // 2. Shake the status icon
+      const statusIcon = document.querySelector('.status-icon');
+      if (statusIcon) {
+        statusIcon.classList.add('shake');
+        // Remove the class after the animation is done so it can be re-triggered
+        setTimeout(() => {
+          statusIcon.classList.remove('shake');
+        }, 500); // Match the animation duration in CSS
+      }
+      return reject(new Error("Websocket disconnected!"));
+    }
 
 
-  const recipientPublicKeyJwk = publicKeyCache[contactId];
-  if (!recipientPublicKeyJwk) {
-    alert("Could not find the public key for this contact. Cannot send message.");
-    return;
-  }
-  const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(recipientPublicKeyJwk);
+    const recipientPublicKeyJwk = publicKeyCache[contactId];
+    if (!recipientPublicKeyJwk) {
+      alert("It seems that the user you are trying to message doesn't have an active account!");
+      return reject(new Error("Cannot find public key!"));
+    }
+    const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(recipientPublicKeyJwk);
 
-  // 2. Generate a new, one-time symmetric AES key for this single message.
-  const aesKey = await cryptoHandler.generateAesKey();
+    // 2. Generate a new, one-time symmetric AES key for this single message.
+    const aesKey = await cryptoHandler.generateAesKey();
 
-  // 3. Encrypt the message text with the AES key.
-  const { ciphertext, iv } = await cryptoHandler.aesEncrypt(message, aesKey);
+    // 3. Encrypt the message text with the AES key.
+    const { ciphertext, iv } = await cryptoHandler.aesEncrypt(message, aesKey);
 
-  // 4. Encrypt the AES key with the recipient's public RSA key.
-  const exportedAesKeyJwk = await cryptoHandler.exportKeyToJwk(aesKey);
-  const encryptedAesKey = await cryptoHandler.rsaEncrypt(
-      new TextEncoder().encode(JSON.stringify(exportedAesKeyJwk)), 
-      recipientPublicKey
-  );
+    // 4. Encrypt the AES key with the recipient's public RSA key.
+    const exportedAesKeyJwk = await cryptoHandler.exportKeyToJwk(aesKey);
+    const encryptedAesKey = await cryptoHandler.rsaEncrypt(
+        new TextEncoder().encode(JSON.stringify(exportedAesKeyJwk)), 
+        recipientPublicKey
+    );
 
-  // 5. Prepare the payload with Base64 encoded data for safe JSON transport.
-  const payload = {
-      ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
-      encryptedKey: cryptoHandler.arrayBufferToBase64(encryptedAesKey),
-      iv: cryptoHandler.arrayBufferToBase64(iv),
-      timestamp: Date.now()
-  };
+    // 5. Prepare the payload with Base64 encoded data for safe JSON transport.
+    const payload = {
+        ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
+        encryptedKey: cryptoHandler.arrayBufferToBase64(encryptedAesKey),
+        iv: cryptoHandler.arrayBufferToBase64(iv),
+        timestamp: Date.now()
+    };
 
-  saveMessageLocally(contactId, "me", message);
-  displayMessage("me", message);
-  input.value = "";
+    saveMessageLocally(contactId, "me", message);
+    displayMessage("me", message);
+    input.value = "";
 
-  // Send via WebSocket
-  ws.send(JSON.stringify({
-    type: "message",
-    receiver_id: contactId,
-    payload: payload
-  }));
+    // Send via WebSocket
+    ws.send(JSON.stringify({
+      type: "message",
+      receiver_id: contactId,
+      payload: payload
+    }));
 
-  // Emit "messageSent" event in case you want notifications, etc.
-  triggerEvent("messageSent", { contactId, message });
+    // Emit "messageSent" event in case you want notifications, etc.
+    triggerEvent("messageSent", { contactId, message });
+    resolve();
+  });
 }
 
 // === The add contact function
@@ -517,7 +522,11 @@ function openChatWith(contactId, displayname, username) {
   unreadCounts[contactId] = 0;
   updateUnreadBadge(contactId);
   currentChatUser = contactId;
-  document.getElementById("send-button").onclick = () => sendMessage(contactId);
+  document.getElementById("send-button").onclick = async () => {
+    document.getElementById("send-button").disabled = true;
+    await sendMessage(contactId);
+    document.getElementById("send-button").disabled = false;
+  };
 }
 
 // === 7. Local storage helpers unchanged ===
@@ -534,7 +543,7 @@ function getLocalMessages(contactId) {
 function getLastMessage(contactId) {
   const messages = JSON.parse(localStorage.getItem(`chat_user_${contactId}`) || "[]");
   return messages.length > 0 ? messages[messages.length - 1] : null;
-}How to make the php built in web server use the certificates
+}
 function clearConversationLocally(contactId) {
   localStorage.removeItem(`chat_user_${contactId}`);
 }

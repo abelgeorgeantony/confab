@@ -1,8 +1,9 @@
-SERVER_IP = "192.168.1.2";
+SERVER_IP = window.location.host;
+console.log(SERVER_IP);
 
 FRONTEND = "https://" + SERVER_IP + "/frontend/";
 API = "https://" + SERVER_IP + "/backend/";
-WS_URL = "ws://" + SERVER_IP + ":8080";
+WS_URL = "wss://" + SERVER_IP + "/ws/";
 
 // Get a cookie by name
 function getCookie(name) {
