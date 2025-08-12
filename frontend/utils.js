@@ -156,6 +156,7 @@ function hideStatusBarBackButton() {
 
 const loader = (function() {
             const overlay = document.getElementById('reusable-loader-overlay');
+	    if(!overlay) return;
             const svg = overlay.querySelector('.hello__svg');
 
             function playSvgAnimation() {
