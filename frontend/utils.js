@@ -173,7 +173,10 @@ const loader = (function() {
                     playSvgAnimation();
 
                     // 2. Set a timeout to hide the loader after a while
-                    svgAnimationTimeout = setTimeout(() => this.hide(), 5000); // Hide after 5s total
+                    svgAnimationTimeout = setTimeout(() => {
+		      overlay.classList.add("nobg");
+		      playSvgAnimation();
+		    }, 3000); // Hide after 3s total
                 },
                 hide: function() {
                     clearTimeout(svgAnimationTimeout);

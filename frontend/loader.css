@@ -9,21 +9,19 @@
             align-items: center;
             z-index: 9999;
             opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            background: linear-gradient(
-                217deg,
-                rgba(255, 159, 237, 0.8),
-                rgba(255, 0, 0, 0) 70.71%
-            ),
-            linear-gradient(127deg, rgba(118, 164, 255, 0.8), rgba(0, 255, 0, 0) 70.71%),
-            linear-gradient(336deg, rgba(255, 191, 138, 0.8), rgba(0, 0, 255, 0) 70.71%);
+            visibility: hidden; 
+            background: var(--bg-color);
+	    transition: opacity 0.3s ease, visibility 0.3s ease, background 1.3s ease, z-index 1.3s linear;
         }
 
         #reusable-loader-overlay.active {
             opacity: 1;
             visibility: visible;
         }
+	#reusable-loader-overlay.nobg {
+	    background: none;
+	    z-index: -1;
+	}
 
         /* Main container for both SVG and text */
         .loader-content-wrapper {
@@ -42,7 +40,7 @@
         
         .hello__svg path {
             fill: none;
-            stroke: #fff;
+            stroke: var(--text-color);
             stroke-linecap: round;
             stroke-miterlimit: 10;
             stroke-width: 35px;
