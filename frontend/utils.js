@@ -10,7 +10,7 @@ function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-    const cookieValue = parts.pop().split(';').shift();
+    const cookieValue = parts.pop().split(";").shift();
     return decodeURIComponent(cookieValue);
   }
   return null;
@@ -47,28 +47,26 @@ function setCookie(name, value, options = {}) {
 
 // Delete a cookie by name
 function deleteCookie(name) {
-  setCookie(name, '', { maxAge: 0 });
+  setCookie(name, "", { maxAge: 0 });
 }
-
 
 // Mobile viewport height fix for all pages
 function fixMobileViewport() {
-  let vh = window.innerHeight * 0.01; 
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  let vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
 }
 
 // Run on load & resize
 //window.addEventListener('load', fixMobileViewport);
 //window.addEventListener('resize', fixMobileViewport);
 
-
 // Page theme
 function toggleTheme() {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    
-    const currentTheme = body.classList.contains('dark-mode') ? 'dark' : 'light';
-    localStorage.setItem('theme', currentTheme);
+  const body = document.body;
+  body.classList.toggle("dark-mode");
+
+  const currentTheme = body.classList.contains("dark-mode") ? "dark" : "light";
+  localStorage.setItem("theme", currentTheme);
 }
 
 /**
@@ -76,119 +74,122 @@ function toggleTheme() {
  * It also sets the initial state of the toggle switch.
  */
 function applyInitialTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
-    let isDark = false;
+  const savedTheme = localStorage.getItem("theme");
+  const systemPrefersDark = window.matchMedia(
+    "(prefers-color-scheme: dark)",
+  ).matches;
+  const themeToggleCheckbox = document.getElementById("theme-toggle-checkbox");
+  let isDark = false;
 
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-        isDark = true;
-    }
+  if (savedTheme === "dark" || (!savedTheme && systemPrefersDark)) {
+    isDark = true;
+  }
 
-    if (isDark) {
-        document.body.classList.add('dark-mode');
-    } else {
-        document.body.classList.remove('dark-mode');
-    }
-    
-    if (themeToggleCheckbox) {
-        themeToggleCheckbox.checked = isDark;
-    }
+  if (isDark) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+
+  if (themeToggleCheckbox) {
+    themeToggleCheckbox.checked = isDark;
+  }
 }
 
-
 let statusTextTimer = null;
-function setConnectionStatus(text, status = 'default') {
-    const statusContainer = document.getElementById('connection-status');
-    if (!statusContainer) return;
+function setConnectionStatus(text, status = "default") {
+  const statusContainer = document.getElementById("connection-status");
+  if (!statusContainer) return;
 
-    const iconEl = statusContainer.querySelector('.status-icon');
-    const textEl = statusContainer.querySelector('.status-text');
-    if (!iconEl || !textEl) return;
+  const iconEl = statusContainer.querySelector(".status-icon");
+  const textEl = statusContainer.querySelector(".status-text");
+  if (!iconEl || !textEl) return;
 
-    // 1. Set the icon and class based on status
-    statusContainer.className = `connection-status ${status}`;
-    if (status === 'connected') {
-        iconEl.textContent = 'sentiment_very_satisfied'; // Material icon for connected
-    } else if (status === 'disconnected') {
-        iconEl.textContent = 'sentiment_very_dissatisfied'; // Material icon for disconnected
-	statusContainer.addEventListener("onclick", () => {
-		connectWebSocket();
-	});
-    } else {
-        iconEl.textContent = 'sync'; // Material icon for connecting/default
-    }
+  // 1. Set the icon and class based on status
+  statusContainer.className = `connection-status ${status}`;
+  if (status === "connected") {
+    iconEl.textContent = "sentiment_very_satisfied"; // Material icon for connected
+  } else if (status === "disconnected") {
+    iconEl.textContent = "sentiment_very_dissatisfied"; // Material icon for disconnected
+    statusContainer.addEventListener("onclick", () => {
+      connectWebSocket();
+    });
+  } else {
+    iconEl.textContent = "sync"; // Material icon for connecting/default
+  }
 
-    // 2. Set the text and make it visible
-    textEl.textContent = text;
-    textEl.style.opacity = 1;
+  // 2. Set the text and make it visible
+  textEl.textContent = text;
+  textEl.style.opacity = 1;
 
-    // 3. Clear any previous fade-out timer
-    clearTimeout(statusTextTimer);
+  // 3. Clear any previous fade-out timer
+  clearTimeout(statusTextTimer);
 
-    // 4. Set a new timer to fade the text out after 4 seconds
-    statusTextTimer = setTimeout(() => {
-	statusContainer.classList.add('icon-only');
-        //textEl.style.opacity = 0;
-    }, 2000); // 2 seconds
+  // 4. Set a new timer to fade the text out after 4 seconds
+  statusTextTimer = setTimeout(() => {
+    statusContainer.classList.add("icon-only");
+    //textEl.style.opacity = 0;
+  }, 2000); // 2 seconds
 }
 
 /* * Shows a back button in the status bar.
-   * @param {function} onClickAction - The function to call when the button is clicked.*/
+ * @param {function} onClickAction - The function to call when the button is clicked.*/
 function showStatusBarBackButton(onClickAction) {
-    const backBtn = document.getElementById('status-bar-back-btn');
-    if (backBtn) {
-        // THE FIX: We no longer hide the status element.
-        backBtn.style.display = 'block';
-        backBtn.onclick = onClickAction;
-    }
+  const backBtn = document.getElementById("status-bar-back-btn");
+  if (backBtn) {
+    // THE FIX: We no longer hide the status element.
+    backBtn.style.display = "block";
+    backBtn.onclick = onClickAction;
+  }
 }
 
 // Hides the back button in the status bar.
 function hideStatusBarBackButton() {
-    const backBtn = document.getElementById('status-bar-back-btn');
-    if (backBtn) {
-        // THE FIX: We only hide the back button.
-        backBtn.style.display = 'none';
-    }
+  const backBtn = document.getElementById("status-bar-back-btn");
+  if (backBtn) {
+    // THE FIX: We only hide the back button.
+    backBtn.style.display = "none";
+  }
 }
 
+const greeter = (function () {
+  const overlay = document.getElementById("greeter-overlay");
+  if (!overlay) return;
+  const svg = overlay.querySelector(".hello__svg");
 
-const loader = (function() {
-            const overlay = document.getElementById('reusable-loader-overlay');
-	    if(!overlay) return;
-            const svg = overlay.querySelector('.hello__svg');
+  function playSvgAnimation() {
+    // Clone and replace the SVG to restart its CSS animation
+    const newSvg = svg.cloneNode(true);
+    //const parent = svg.parentNode.cloneNode(true);
+    //parent.replaceChild(newSvg, svg);
+    svg.replaceWith(newSvg);
+    console.log(svg);
+  }
 
-            function playSvgAnimation() {
-                // Clone and replace the SVG to restart its CSS animation
-                const newSvg = svg.cloneNode(true);
-                svg.parentNode.replaceChild(newSvg, svg);
-            }
+  return {
+    show: function () {
+      overlay.classList.add("active");
 
+      // 1. Play the SVG animation once at the beginning
+      //playSvgAnimation();
 
-            return {
-                show: function() {
-                    overlay.classList.add('active');
-                    
-                    // 1. Play the SVG animation once at the beginning
-                    playSvgAnimation();
-
-                    // 2. Set a timeout to hide the loader after a while
-                    svgAnimationTimeout = setTimeout(() => {
-		      overlay.classList.add("nobg");
-		      playSvgAnimation();
-		    }, 3000); // Hide after 3s total
-                },
-                hide: function() {
-                    clearTimeout(svgAnimationTimeout);
-                    overlay.classList.remove('active');
-                }
-            };
+      // 2. Set a timeout to hide the loader after a while
+      svgAnimationTimeout = setTimeout(() => {
+        overlay.classList.add("nobg");
+        setTimeout(() => {
+          playSvgAnimation();
+        }, 1000);
+      }, 3000); // Hide after 3s total
+    },
+    hide: function () {
+      clearTimeout(svgAnimationTimeout);
+      overlay.classList.remove("active");
+    },
+  };
 })();
 
-
 // Run the function to apply the theme as soon as the DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   applyInitialTheme();
-  loader.show();
+  greeter.show();
 });

@@ -10,12 +10,13 @@ It supports **user authentication**, **per-user contacts**, and **offline messag
 ### 1. Requirements
 - apt install:
   - php
+  - php-mysql
+  - mariadb-server
   - composer
   - mkcert
   - caddy
-  - mariadb-server
 
-- composer install:
+- composer require:
   - cboden/ratchet
   - phpmailer/phpmailer
   - vlucas/phpdotenv

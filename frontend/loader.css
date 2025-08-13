@@ -1,58 +1,60 @@
-#reusable-loader-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden; 
-            background: var(--bg-color);
-	    transition: opacity 0.3s ease, visibility 0.3s ease, background 1.3s ease, z-index 1.3s linear;
-        }
+#greeter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    background: var(--bg-color);
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease,
+        background 1.3s ease,
+        z-index 1.3s linear;
+}
 
-        #reusable-loader-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-	#reusable-loader-overlay.nobg {
-	    background: none;
-	    z-index: -1;
-	}
+#greeter-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+#greeter-overlay.nobg {
+    background: none;
+    z-index: -1;
+}
 
-        /* Main container for both SVG and text */
-        .loader-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-        }
+/* Main container for both SVG and text */
+.greeter-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+}
 
-        .hello__svg {
-            width: 100%;
-        }
-        
-        .hello__svg path {
-            fill: none;
-            stroke: var(--text-color);
-            stroke-linecap: round;
-            stroke-miterlimit: 10;
-            stroke-width: 35px;
-            stroke-dasharray: 5800;
-            stroke-dashoffset: 5800;
-            animation: anim__hello 4s ease-in-out forwards;
-        }
+.hello__svg {
+    width: 100%;
+}
 
+.hello__svg path {
+    fill: none;
+    stroke: var(--text-color);
+    stroke-linecap: round;
+    stroke-miterlimit: 10;
+    stroke-width: 35px;
+    stroke-dasharray: 5800;
+    stroke-dashoffset: 5800;
+    animation: anim__hello 4s ease-in-out forwards;
+}
 
-
-        @keyframes anim__hello {
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
+@keyframes anim__hello {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
