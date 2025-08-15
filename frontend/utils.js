@@ -154,7 +154,9 @@ function hideStatusBarBackButton() {
 
 const greeter = (function () {
   const overlay = document.getElementById("greeter-overlay");
-  if (!overlay) return;
+  if (!overlay) {
+    return;
+  }
   const svg = overlay.querySelector(".hello__svg");
 
   function playSvgAnimation() {
@@ -191,5 +193,5 @@ const greeter = (function () {
 // Run the function to apply the theme as soon as the DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   applyInitialTheme();
-  greeter.show();
+  //greeter.show();
 });

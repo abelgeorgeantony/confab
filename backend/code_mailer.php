@@ -8,7 +8,8 @@ require_once "bootstrap.php";
  * @param string $email The email address of the user.
  * @return bool True on success, false on failure.
  */
-function send_verification_code(mysqli $conn, string $email): bool {
+function send_verification_code(mysqli $conn, string $email): bool
+{
     error_log("Mailing function started");
     if (empty($email)) {
         return false;
@@ -18,9 +19,11 @@ function send_verification_code(mysqli $conn, string $email): bool {
     $new_code = random_int(100000, 999999);
 
     // Update the code in the database for the given email
-    $stmt = $conn->prepare("UPDATE users SET verification_code = ? WHERE email = ?");
+    $stmt = $conn->prepare(
+        "UPDATE users SET code_verified = FALSE, verification_code = ? WHERE email = ?",
+    );
     $stmt->bind_param("ss", $new_code, $email);
-    
+
     if (!$stmt->execute()) {
         error_log("Failed to update verification code for $email in DB.");
         return false; // Database update failed
@@ -30,7 +33,7 @@ function send_verification_code(mysqli $conn, string $email): bool {
 
     $subject = "Your Verification Code - Perfect Chat";
     $body = "<h2>Welcome to Perfect Chat!</h2><p>Your verification code is: <b>$new_code</b></p>";
-    
+
     // IMPORTANT: Escape all arguments to prevent command injection vulnerabilities
     $recipient_arg = escapeshellarg($email);
     $subject_arg = escapeshellarg($subject);
@@ -38,12 +41,12 @@ function send_verification_code(mysqli $conn, string $email): bool {
 
     // Get the full path to the PHP executable and the script
     $php_executable = PHP_BINARY; // Finds the path to the 'php' command on the server
-    $script_path = __DIR__ . '/send_email_cli.php';
+    $script_path = __DIR__ . "/send_email_cli.php";
 
     // Build the command to run in the background
     // The "> /dev/null 2>&1 &" part is crucial for making it asynchronous on Linux/macOS
     $command = "$php_executable $script_path $recipient_arg $subject_arg $body_arg > /dev/null 2>&1 &";
-    
+
     // For Windows servers, the command would be slightly different:
     // $command = "start /B \"email\" $php_executable $script_path $recipient_arg $subject_arg $body_arg";
 
@@ -53,4 +56,3 @@ function send_verification_code(mysqli $conn, string $email): bool {
     // The web script does not wait for the email to be sent.
     return true;
 }
-

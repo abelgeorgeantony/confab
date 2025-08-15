@@ -1,7 +1,7 @@
 # Replace 192.168.1.2 with your actual local IP address
-https://192.168.135.40 {
-    # Tell Caddy which certificate files to use
-    tls localhost+1.pem localhost+1-key.pem
+https://192.168.1.8 {
+    # Tell Caddy which certificate files to use(Caddy does issue certificates automatically so iam disabling this for now and deleting the key files)
+    #tls localhost+1.pem localhost+1-key.pem
     
     # --- WebSocket Routing ---
     # Any request to the /ws path will be proxied to your chat server
