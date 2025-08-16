@@ -1,6 +1,7 @@
 let ws;
 let unreadCounts = {}; // contactId => number of unread messages
-let currentChatUser = null; // currently open chat user
+let currentChatUser = null; // Object: { contact_id, display_name, username, my_status, their_status }
+let allContacts = []; // Holds the full list of contacts
 let myPrivateKey = null;
 let publicKeyCache = {};
 
@@ -61,13 +62,33 @@ document.addEventListener("messageReceived", async (e) => {
   }
 });
 
+document.addEventListener("messageSent", async (e) => {
+  const { contactId, message } = e.detail;
+  const isNew = !allContacts.some((c) => c.id === contactId);
+
+  if (isNew) {
+    allContacts.unshift(contact);
+    triggerEvent("contactsLoaded");
+
+    // Add the new contact card to the top of the UI list
+    //const list = document.getElementById("user-list");
+    //const newCard = createContactCard(contact);
+    //list.prepend(newCard); // Use prepend to add it to the top
+
+    // If the placeholder text was showing, remove it
+    const placeholder = list.querySelector(".empty-list-placeholder");
+    if (placeholder) {
+      placeholder.remove();
+    }
+  }
+});
+
 // When the contact list is loaded
 document.addEventListener("contactsLoaded", (e) => {
-  const contacts = e.detail.contacts;
   const list = document.getElementById("user-list");
   list.innerHTML = "";
 
-  const sortedContacts = contacts
+  const sortedContacts = allContacts
     .map((contact) => {
       if (contact.public_key) {
         publicKeyCache[contact.contact_id] = JSON.parse(contact.public_key);
@@ -84,6 +105,7 @@ document.addEventListener("contactsLoaded", (e) => {
 
   sortedContacts.forEach((contact) => {
     const contactDiv = document.createElement("div");
+    contact.id = contact.contact_id;
     contactDiv.classList.add("contact-card");
     contactDiv.innerHTML = `
       <div class="contact-avatar">${contact.username.charAt(0)}</div>
@@ -95,8 +117,7 @@ document.addEventListener("contactsLoaded", (e) => {
     contactDiv.setAttribute("data-contact-id", contact.contact_id);
 
     // Click → open chat
-    contactDiv.onclick = () =>
-      openChatWith(contact.contact_id, contact.display_name, contact.username);
+    contactDiv.onclick = () => openChatWith(contact);
 
     list.appendChild(contactDiv);
 
@@ -109,6 +130,7 @@ document.addEventListener("contactsLoaded", (e) => {
       });
     }
   });
+  allContacts = sortedContacts;
 });
 
 // When the last message of a chat is updated!
@@ -148,8 +170,9 @@ async function loadContacts() {
     return;
   }
 
+  allContacts = data.contacts;
   // Instead of directly rendering UI → just emit event
-  triggerEvent("contactsLoaded", { contacts: data.contacts });
+  triggerEvent("contactsLoaded");
 }
 
 async function loadOfflineMessages() {
@@ -283,7 +306,7 @@ async function sendMessage(contactId) {
       }),
     );
 
-    // Emit "messageSent" event in case you want notifications, etc.
+    // Emit "messageSent" event
     triggerEvent("messageSent", { contactId, message });
     resolve();
   });
@@ -335,6 +358,7 @@ function initAddContactModals() {
     addContactModal.classList.remove("hidden");
     addContactModal.classList.add("modal-enter");
     overlay.classList.remove("hidden");
+    document.getElementById("user-search-input").focus();
   }
 
   function closeAddContactModal() {
@@ -352,8 +376,9 @@ function initAddContactModals() {
             <p class="username">@${user.username}</p>
             <p class="bio">${user.bio || "No bio provided."}</p>
             <button id="add-user-btn" data-username="${user.username}" class="button button-success">
-                Add ${user.display_name.split(" ")[0]} to Contacts
+                Add to Contacts
             </button>
+            <button id="message-user-btn" class="button">Message</button>
         `;
     profileModal.classList.remove("hidden");
     profileModal.classList.add("modal-enter");
@@ -362,6 +387,14 @@ function initAddContactModals() {
       const usernameToAdd = e.target.getAttribute("data-username");
       addContact(usernameToAdd);
     });
+    document
+      .getElementById("message-user-btn")
+      .addEventListener("click", (e) => {
+        publicKeyCache[user.id] = JSON.parse(user.public_key);
+        openChatWith(user);
+        closeProfileModal();
+        closeAddContactModal();
+      });
   }
 
   function closeProfileModal() {
@@ -534,23 +567,24 @@ function updateUnreadBadge(senderId) {
   badge.style.display = unreadCounts[senderId] > 0 ? "inline-block" : "none";
 }
 
-function openChatWith(contactId, displayname, username) {
+function openChatWith(contact) {
+  console.log(contact);
   showStatusBarBackButton(goBackToList);
   document.getElementById("messages").innerHTML = "";
-  document.getElementById("chat-title").textContent = displayname;
-  document.getElementById("chat-subtitle").textContent = "@" + username;
+  document.getElementById("chat-title").textContent = contact.display_name;
+  document.getElementById("chat-subtitle").textContent = "@" + contact.username;
   document.getElementById("chat-view").classList.add("active");
   document.getElementById("chat-list").classList.add("hidden");
 
-  const messages = getLocalMessages(contactId);
+  const messages = getLocalMessages(contact.id);
   messages.forEach((m) => displayMessage(m.sender, m.message, m.timestamp));
 
-  unreadCounts[contactId] = 0;
-  updateUnreadBadge(contactId);
-  currentChatUser = contactId;
+  unreadCounts[contact.id] = 0;
+  updateUnreadBadge(contact.id);
+  currentChatUser = contact.id;
   document.getElementById("send-button").onclick = async () => {
     document.getElementById("send-button").disabled = true;
-    await sendMessage(contactId);
+    await sendMessage(contact.id);
     document.getElementById("send-button").disabled = false;
   };
 }

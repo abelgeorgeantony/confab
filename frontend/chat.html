@@ -1,92 +1,142 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Perfect Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
-  <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="chat.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script src="utils.js" defer></script>
-  <script src="auth.js" defer></script>
-  <script src="crypto.js"></script>
-  <script src="chat.js" defer></script>
-</head>
-<body class="chat-page">
-  <div class="status-bar">
-    <div class="status-bar-left">
-      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;">←</button>
-      <div class="connection-status" id="connection-status">
-        <span class="status-text"></span>
-	<span class="material-icons status-icon"></span>
-      </div>
-    </div>
-    <label class="theme-toggle-switch">
-      <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
-      <span class="slider"></span>
-    </label>
-  </div>
-  
-  <div class="page-wrapper">
-    <div id="chat-app">
-      <!-- Sidebar: Chat List -->
-      <aside id="chat-list">
-        <div class="chat-header">
-          <h2>Chats</h2>
-          <div class="chat-header-actions">
-            <button id="profile-btn" class="material-icons md-40" onclick="goToProfile()" title="Profile">account_circle</button>
-          </div>
+    <head>
+        <title>Perfect Chat</title>
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+        />
+        <link rel="stylesheet" href="base.css" />
+        <link rel="stylesheet" href="chat.css" />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <script src="utils.js" defer></script>
+        <script src="auth.js" defer></script>
+        <script src="crypto.js"></script>
+        <script src="chat.js" defer></script>
+    </head>
+    <body class="chat-page">
+        <div class="status-bar">
+            <div class="status-bar-left">
+                <button
+                    id="status-bar-back-btn"
+                    class="status-bar-back-btn"
+                    style="display: none"
+                >
+                    ←
+                </button>
+                <div class="connection-status" id="connection-status">
+                    <span class="status-text"></span>
+                    <span class="material-icons status-icon"></span>
+                </div>
+            </div>
+            <label class="theme-toggle-switch">
+                <input
+                    type="checkbox"
+                    id="theme-toggle-checkbox"
+                    onchange="toggleTheme()"
+                />
+                <span class="slider"></span>
+            </label>
         </div>
-        <div id="user-list">
-          <!-- Contacts will be injected here by chat.js -->
+
+        <div class="page-wrapper">
+            <div id="chat-app">
+                <!-- Sidebar: Chat List -->
+                <aside id="chat-list">
+                    <div class="chat-header">
+                        <h2>Chats</h2>
+                        <div class="chat-header-actions">
+                            <button
+                                id="profile-btn"
+                                class="material-icons md-40"
+                                onclick="goToProfile()"
+                                title="Profile"
+                            >
+                                account_circle
+                            </button>
+                        </div>
+                    </div>
+                    <div id="user-list">
+                        <!-- Contacts will be injected here by chat.js -->
+                    </div>
+                    <button
+                        id="add-contact-btn"
+                        class="add-contact-float material-icons md-40"
+                        title="Add Contact"
+                    >
+                        person_search
+                    </button>
+                </aside>
+
+                <!-- Chat Window -->
+                <main id="chat-view">
+                    <header class="chat-view-header">
+                        <div class="chat-view-titlebar">
+                            <h3 id="chat-title">Select a chat</h3>
+                            <p id="chat-subtitle">
+                                or add a new contact to start messaging!
+                            </p>
+                        </div>
+                    </header>
+                    <div id="messages">
+                        <!-- Messages will be injected here by chat.js -->
+                    </div>
+                    <form
+                        id="message-form"
+                        onsubmit="event.preventDefault(); sendMessage(currentChatUser);"
+                    >
+                        <textarea
+                            id="message-input"
+                            placeholder="Type a message..."
+                            required
+                        ></textarea>
+                        <button type="submit" id="send-button">➤</button>
+                    </form>
+                </main>
+            </div>
+
+            <!-- Modal Overlay -->
+            <div id="modal-overlay" class="modal-overlay hidden"></div>
+
+            <!-- Add Contact Modal -->
+            <div id="add-contact-modal" class="modal hidden">
+                <div class="modal-header">
+                    <h2>Find People</h2>
+                    <button id="close-add-contact-modal" class="close-button">
+                        &times;
+                    </button>
+                </div>
+                <input
+                    type="search"
+                    id="user-search-input"
+                    placeholder="Search by name or username..."
+                    class="search-input"
+                />
+                <div
+                    id="search-results"
+                    class="search-results custom-scrollbar"
+                >
+                    <p class="search-results-placeholder">
+                        Start typing to find users.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Profile View Modal -->
+            <div id="profile-view-modal" class="modal profile-modal hidden">
+                <div class="modal-header">
+                    <h2>Profile</h2>
+                    <button id="close-profile-modal" class="close-button">
+                        &times;
+                    </button>
+                </div>
+                <div id="profile-content" class="profile-content">
+                    <!-- Profile details will be dynamically inserted here -->
+                </div>
+            </div>
         </div>
-        <button id="add-contact-btn" class="add-contact-float material-icons md-40" title="Add Contact">add</button>
-      </aside>
-
-      <!-- Chat Window -->
-      <main id="chat-view">
-        <header class="chat-view-header">
-          <div class="chat-view-titlebar">
-              <h3 id="chat-title">Select a chat</h3>
-              <p id="chat-subtitle">or add a new contact to start messaging!</p>
-          </div>
-        </header>
-        <div id="messages">
-          <!-- Messages will be injected here by chat.js -->
-        </div>
-        <form id="message-form" onsubmit="event.preventDefault(); sendMessage(currentChatUser);">
-          <textarea id="message-input" placeholder="Type a message..." required></textarea>
-          <button type="submit" id="send-button">➤</button>
-        </form>
-      </main>
-    </div>
-
-      <!-- Modal Overlay -->
-  <div id="modal-overlay" class="modal-overlay hidden"></div>
-
-  <!-- Add Contact Modal -->
-  <div id="add-contact-modal" class="modal hidden">
-      <div class="modal-header">
-          <h2>Find People</h2>
-          <button id="close-add-contact-modal" class="close-button">&times;</button>
-      </div>
-      <input type="search" id="user-search-input" placeholder="Search by name or username..." class="search-input">
-      <div id="search-results" class="search-results custom-scrollbar">
-          <p class="search-results-placeholder">Start typing to find users.</p>
-      </div>
-  </div>
-
-  <!-- Profile View Modal -->
-  <div id="profile-view-modal" class="modal profile-modal hidden">
-      <div class="modal-header">
-          <h2>Profile</h2>
-          <button id="close-profile-modal" class="close-button">&times;</button>
-      </div>
-      <div id="profile-content" class="profile-content">
-          <!-- Profile details will be dynamically inserted here -->
-      </div>
-  </div>
-
-  </div>
-</body>
+    </body>
 </html>
-
