@@ -15,7 +15,14 @@
         <script src="utils.js" defer></script>
         <script src="auth.js" defer></script>
         <script src="crypto.js" defer></script>
-        <script src="chat.js" defer></script>
+        <!---<script src="chat.js" defer></script>--->
+        <script src="chat/state.js" defer></script>
+        <script src="chat/storage.js" defer></script>
+        <script src="chat/ui.js" defer></script>
+        <script src="chat/api.js" defer></script>
+        <script src="chat/websocket.js" defer></script>
+        <script src="chat/events.js" defer></script>
+        <script src="chat/main.js" defer></script>
     </head>
     <body class="chat-page">
         <div class="status-bar">
@@ -52,7 +59,7 @@
                             <button
                                 id="profile-btn"
                                 class="material-icons md-40"
-                                onclick="goToProfile()"
+                                onclick="app.ui.goToProfile()"
                                 title="Profile"
                             >
                                 account_circle
