@@ -67,7 +67,20 @@ document.addEventListener("messageSent", async (e) => {
   const isNew = !allContacts.some((c) => c.id === contactId);
 
   if (isNew) {
-    allContacts.unshift(contact);
+    const token = getCookie("auth_token");
+    const res = await fetch(API + "add_non_contact.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+      id_to_add: contactId,
+    });
+
+    const data = await res.json();
+    if (!data.valid) {
+      console.error("Invalid token when fetching contacts");
+      return;
+    }
+    allContacts.unshift(data.contact);
     triggerEvent("contactsLoaded");
 
     // Add the new contact card to the top of the UI list
