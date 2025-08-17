@@ -51,14 +51,14 @@ document.addEventListener("messageReceived", async (e) => {
   }
 
   if (Number(currentChatUser) === Number(senderId)) {
+    saveMessageLocally(senderId, "them", decryptedMessage, payload.timestamp);
     // Show in the chat window
     displayMessage("them", decryptedMessage, payload.timestamp);
-    saveMessageLocally(senderId, "them", decryptedMessage, payload.timestamp);
   } else {
+    saveMessageLocally(senderId, "them", decryptedMessage, payload.timestamp);
     // Not in this chat → increment unread count
     unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
     updateUnreadBadge(senderId);
-    saveMessageLocally(senderId, "them", decryptedMessage, payload.timestamp);
   }
 });
 
@@ -71,16 +71,15 @@ document.addEventListener("messageSent", async (e) => {
     const res = await fetch(API + "add_non_contact.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-      id_to_add: contactId,
+      body: JSON.stringify({ token, contactId }),
     });
 
     const data = await res.json();
-    if (!data.valid) {
-      console.error("Invalid token when fetching contacts");
+    if (!data.success) {
+      console.error("Error from backend: " + data.error);
       return;
     }
-    allContacts.unshift(data.contact);
+    allContacts.push(data.contact);
     triggerEvent("contactsLoaded");
 
     // Add the new contact card to the top of the UI list
@@ -89,10 +88,10 @@ document.addEventListener("messageSent", async (e) => {
     //list.prepend(newCard); // Use prepend to add it to the top
 
     // If the placeholder text was showing, remove it
-    const placeholder = list.querySelector(".empty-list-placeholder");
+    /*const placeholder = list.querySelector(".empty-list-placeholder");
     if (placeholder) {
       placeholder.remove();
-    }
+    }*/
   }
 });
 
@@ -107,6 +106,7 @@ document.addEventListener("contactsLoaded", (e) => {
         publicKeyCache[contact.contact_id] = JSON.parse(contact.public_key);
       }
       const lastMessage = getLastMessage(contact.contact_id);
+      console.log(lastMessage);
       // Add the timestamp to the contact object for sorting
       contact.lastMessageTimestamp = lastMessage ? lastMessage.timestamp : 0;
       return contact;
@@ -124,10 +124,10 @@ document.addEventListener("contactsLoaded", (e) => {
       <div class="contact-avatar">${contact.username.charAt(0)}</div>
       <div class="contact-info">
         <div class="contact-name">${contact.display_name}</div>
-        <div class="contact-lastmsg" id="lastmsg-${contact.contact_id}">Tap to chat</div>
+        <div class="contact-lastmsg" id="lastmsg-${contact.id}">Tap to chat</div>
       </div>
     `;
-    contactDiv.setAttribute("data-contact-id", contact.contact_id);
+    contactDiv.setAttribute("data-contact-id", contact.id);
 
     // Click → open chat
     contactDiv.onclick = () => openChatWith(contact);
@@ -135,10 +135,10 @@ document.addEventListener("contactsLoaded", (e) => {
     list.appendChild(contactDiv);
 
     // Show last message if any
-    const lastmsg = getLastMessage(contact.contact_id);
+    const lastmsg = getLastMessage(contact.id);
     if (lastmsg) {
       triggerEvent("lastMessageUpdated", {
-        contactId: contact.contact_id,
+        contactId: contact.id,
         message: lastmsg.message,
       });
     }
@@ -147,7 +147,7 @@ document.addEventListener("contactsLoaded", (e) => {
 });
 
 // When the last message of a chat is updated!
-document.addEventListener("lastMessageUpdated", (e) => {
+document.addEventListener("lastMessageUpdated", async (e) => {
   const { contactId, message } = e.detail;
 
   const userList = document.getElementById("user-list");
@@ -156,12 +156,37 @@ document.addEventListener("lastMessageUpdated", (e) => {
     `[data-contact-id="${contactId}"]`,
   );
 
+  if (!contactCard) {
+    const token = getCookie("auth_token");
+    const res = await fetch(API + "add_non_contact.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token, contactId: contactId }),
+    });
+    const data = await res.json();
+
+    if (data.success && data.contact) {
+      // Add the new contact to the master list and re-render
+      allContacts.push(data.contact);
+      console.log(allContacts);
+      triggerEvent("contactsLoaded"); // This will redraw the contact list
+
+      // After re-rendering, find the newly created element
+      contactElement = document.querySelector(
+        `[data-contact-id="${contactId}"]`,
+      );
+    } else {
+      console.error("Failed to fetch non-contact details:", data.error);
+      return; // Exit if we can't get details
+    }
+  }
   if (contactCard) {
     const lastMsgElement = contactCard.querySelector(".contact-lastmsg");
     if (lastMsgElement) {
       lastMsgElement.innerText = message.replace(/[\n\r]/g, "");
     }
     userList.insertBefore(contactCard, userList.firstChild);
+    console.log("New messager moved to top!");
   } else {
     console.warn(`No contact card found for contact ${contactId}`);
   }
@@ -561,10 +586,36 @@ function displayMessage(sender, messageText, timestamp = Date.now()) {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-function updateUnreadBadge(senderId) {
-  const contactElement = document.querySelector(
+async function updateUnreadBadge(senderId) {
+  let contactElement = document.querySelector(
     `[data-contact-id="${senderId}"]`,
   );
+  const messageExists = getLastMessage(senderId);
+  if (!contactElement && messageExists) {
+    console.log(`Contact card for ${senderId} not found. Fetching details...`);
+    /*const token = getCookie("auth_token");
+    const res = await fetch(API + "add_non_contact.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token, contactId: senderId }),
+    });
+    const data = await res.json();
+
+    if (data.success && data.contact) {
+      // Add the new contact to the master list and re-render
+      allContacts.push(data.contact);
+      triggerEvent("contactsLoaded"); // This will redraw the contact list
+
+      // After re-rendering, find the newly created element
+      contactElement = document.querySelector(
+        `[data-contact-id="${senderId}"]`,
+      );
+    } else {
+      console.error("Failed to fetch non-contact details:", data.error);
+      return; // Exit if we can't get details
+      }*/
+  }
+
   if (!contactElement) {
     return;
   }
@@ -581,7 +632,6 @@ function updateUnreadBadge(senderId) {
 }
 
 function openChatWith(contact) {
-  console.log(contact);
   showStatusBarBackButton(goBackToList);
   document.getElementById("messages").innerHTML = "";
   document.getElementById("chat-title").textContent = contact.display_name;
@@ -611,6 +661,7 @@ function saveMessageLocally(
 ) {
   const key = `chat_user_${contactId}`;
   let messages = JSON.parse(localStorage.getItem(key)) || [];
+  console.log(messages);
   messages.push({ sender, message, timestamp });
   localStorage.setItem(key, JSON.stringify(messages));
   triggerEvent("lastMessageUpdated", { contactId, message, timestamp });

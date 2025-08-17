@@ -139,7 +139,8 @@ class ChatServer implements MessageComponentInterface
         $stmt = $conn->prepare(
             "INSERT INTO $inbox_table (sender_id, payload) VALUES (?, ?)",
         );
-        $stmt->bind_param("is", $sender_id, json_encode($payload));
+        $enc_payload = json_encode($payload);
+        $stmt->bind_param("is", $sender_id, $enc_payload);
         $stmt->execute();
     }
 
@@ -169,10 +170,13 @@ class ChatServer implements MessageComponentInterface
     {
         require __DIR__ . "/config.php";
         global $conn;
-        $blocked_table = "blocked_users_" . intval($receiver_id);
 
+        // The table to check the RECEIVER'S contact list.
+        $contacts_table = "contacts_" . intval($receiver_id);
+
+        // Check if the SENDER'S ID is in the receiver's contact list with a status of 'blocked'.
         $stmt = $conn->prepare(
-            "SELECT id FROM $blocked_table WHERE blocked_user_id = ?",
+            "SELECT id FROM $contacts_table WHERE contact_id = ? AND status = 'blocked'",
         );
         $stmt->bind_param("i", $sender_id);
         $stmt->execute();
