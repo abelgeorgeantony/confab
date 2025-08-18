@@ -97,8 +97,11 @@
         const lastMsgText = lastMsg
           ? lastMsg.message.replace(/[\n\r]/g, " ")
           : "Tap to chat";
+        const useravatar = contact.profile_picture_url
+          ? `<img src="/${contact.profile_picture_url}" class="contact-avatar">`
+          : `<div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>`;
         contactDiv.innerHTML = `
-          <div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>
+          ${useravatar}
           <div class="contact-info">
               <div class="contact-name">${contact.display_name}</div>
               <div class="contact-lastmsg">${lastMsgText}</div>
@@ -145,7 +148,7 @@
         }
       }
       if (Number(app.state.currentChatUser) === Number(contactId)) {
-        app.ui.displayMessage(sender, decryptedMessage, payload.timestamp);
+        app.ui.displayMessage(sender, message, timestamp);
       } else {
         // Otherwise, increment the unread count.
         app.state.unreadCounts[contactId] =

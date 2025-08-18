@@ -30,7 +30,6 @@ $stmt = $conn->prepare("
     FROM users
     WHERE (username LIKE ? OR display_name LIKE ?)
     AND id != ?
-    AND id NOT IN (SELECT contact_id FROM $contacts_table)
 ");
 $stmt->bind_param("ssi", $search_term, $search_term, $user_id);
 $stmt->execute();

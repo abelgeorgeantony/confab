@@ -222,7 +222,7 @@
 .add-contact-float {
     position: absolute;
     padding: 0;
-    bottom: 20px;
+    bottom: 30px;
     right: 20px;
     width: 50px;
     height: 50px;
@@ -259,6 +259,7 @@
     font-weight: bold;
     margin-right: 15px;
     flex-shrink: 0;
+    object-fit: cover;
 }
 .contact-info {
     overflow: hidden;
@@ -422,12 +423,17 @@
 
     .add-contact-float {
         left: auto;
-        right: 20px;
+        right: 25px;
+        height: 75px;
+        width: 75px;
+    }
+    .add-contact-float.material-icons.md-40 {
+        font-size: 55px;
     }
 
     #messages {
         padding-top: 100px;
-        padding-bottom: 60px;
+        padding-bottom: 100px;
     }
     #message-form {
         width: 100vw;

@@ -82,8 +82,11 @@
     }
 
     function openProfileModal(user) {
+      const useravatar = user.profile_picture_url
+        ? `<img src="/${user.profile_picture_url}" class="profile-avatar">`
+        : `<div class="profile-avatar">${user.display_name.charAt(0).toUpperCase()}</div>`;
       profileContent.innerHTML = `
-            <div class="profile-avatar">${user.display_name.charAt(0).toUpperCase()}</div>
+            ${useravatar}
             <h3>${user.display_name}</h3>
             <p class="username">@${user.username}</p>
             <p class="bio">${user.bio || "No bio provided."}</p>
@@ -110,6 +113,13 @@
         closeProfileModal();
         closeAddContactModal();
       };
+      if (
+        app.state.allContacts.some(
+          (contact) => Number(contact.id) === Number(user.id),
+        )
+      ) {
+        document.getElementById("add-user-btn").classList.add("hidden");
+      }
     }
 
     function closeProfileModal() {
@@ -148,8 +158,11 @@
       users.forEach((user) => {
         const userCard = document.createElement("div");
         userCard.className = "contact-card";
+        const contactavatar = user.profile_picture_url
+          ? `<img src="/${user.profile_picture_url}" class="contact-avatar">`
+          : `<div class="contact-avatar">${user.display_name.charAt(0).toUpperCase()}</div>`;
         userCard.innerHTML = `
-                <div class="contact-avatar">${user.display_name.charAt(0).toUpperCase()}</div>
+                ${contactavatar}
                 <div class="contact-info">
                     <div class="contact-name">${user.display_name}</div>
                     <div class="contact-username">@${user.username}</div>
