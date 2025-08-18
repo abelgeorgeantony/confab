@@ -48,60 +48,78 @@
    * @param {number} contactId - The ID of the recipient.
    */
   async function sendMessage(contactId) {
-    const input = document.getElementById("message-input");
-    const message = input.value.trim();
-    if (!message) return;
-
-    if (!app.state.ws || app.state.ws.readyState !== WebSocket.OPEN) {
-      const statusIcon = document.querySelector(".status-icon");
-      if (statusIcon) {
-        statusIcon.classList.add("shake");
-        setTimeout(() => statusIcon.classList.remove("shake"), 500);
+    return new Promise(async (resolve, reject) => {
+      const input = document.getElementById("message-input");
+      const message = input.value.trim();
+      if (!message) {
+        return reject(new Error("Empty message!"));
       }
-      return;
-    }
 
-    const recipientPublicKeyJwk = app.state.publicKeyCache[contactId];
-    if (!recipientPublicKeyJwk) {
-      alert(
-        "Cannot find the public key for this user. They may need to log in again to publish their key.",
+      if (!app.state.ws || app.state.ws.readyState !== WebSocket.OPEN) {
+        console.warn("WebSocket not open yet!");
+        if (navigator.vibrate) {
+          navigator.vibrate(200); // Vibrate for 200 milliseconds
+        }
+
+        const statusIcon = document.querySelector(".status-icon");
+        if (statusIcon) {
+          statusIcon.classList.add("shake");
+          setTimeout(() => statusIcon.classList.remove("shake"), 500);
+        }
+        return reject(new Error("Websocket disconnected!"));
+      }
+
+      const recipientPublicKeyJwk = app.state.publicKeyCache[contactId];
+      if (!recipientPublicKeyJwk) {
+        alert(
+          "Cannot find the public key for this user. They may need to log in again to publish their key.",
+        );
+        return reject(new Error("Cannot find public key!"));
+      }
+
+      // E2EE Encryption Flow
+      const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(
+        recipientPublicKeyJwk,
       );
-      return;
-    }
+      const aesKey = await cryptoHandler.generateAesKey();
+      const { ciphertext, iv } = await cryptoHandler.aesEncrypt(
+        message,
+        aesKey,
+      );
+      const exportedAesKeyJwk = await cryptoHandler.exportKeyToJwk(aesKey);
+      const encryptedAesKey = await cryptoHandler.rsaEncrypt(
+        new TextEncoder().encode(JSON.stringify(exportedAesKeyJwk)),
+        recipientPublicKey,
+      );
 
-    // E2EE Encryption Flow
-    const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(
-      recipientPublicKeyJwk,
-    );
-    const aesKey = await cryptoHandler.generateAesKey();
-    const { ciphertext, iv } = await cryptoHandler.aesEncrypt(message, aesKey);
-    const exportedAesKeyJwk = await cryptoHandler.exportKeyToJwk(aesKey);
-    const encryptedAesKey = await cryptoHandler.rsaEncrypt(
-      new TextEncoder().encode(JSON.stringify(exportedAesKeyJwk)),
-      recipientPublicKey,
-    );
+      const payload = {
+        ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
+        encryptedKey: cryptoHandler.arrayBufferToBase64(encryptedAesKey),
+        iv: cryptoHandler.arrayBufferToBase64(iv),
+        timestamp: Date.now(),
+      };
 
-    const payload = {
-      ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
-      encryptedKey: cryptoHandler.arrayBufferToBase64(encryptedAesKey),
-      iv: cryptoHandler.arrayBufferToBase64(iv),
-      timestamp: Date.now(),
-    };
+      // Update local UI immediately.
+      app.storage.saveMessageLocally(
+        contactId,
+        "me",
+        message,
+        payload.timestamp,
+      );
+      app.ui.displayMessage("me", message, payload.timestamp);
+      input.value = "";
 
-    // Update local UI immediately.
-    app.storage.saveMessageLocally(contactId, "me", message, payload.timestamp);
-    app.ui.displayMessage("me", message, payload.timestamp);
-    input.value = "";
-
-    // Send the encrypted payload.
-    app.state.ws.send(
-      JSON.stringify({
-        type: "message",
-        receiver_id: contactId,
-        payload: payload,
-      }),
-    );
-    app.events.trigger("messageSent", { contactId, message });
+      // Send the encrypted payload.
+      app.state.ws.send(
+        JSON.stringify({
+          type: "message",
+          receiver_id: contactId,
+          payload: payload,
+        }),
+      );
+      app.events.trigger("messageSent", { contactId, message });
+      resolve();
+    });
   }
 
   // Expose functions on the global app object.
