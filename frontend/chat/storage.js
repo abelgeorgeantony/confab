@@ -21,7 +21,12 @@
     messages.push({ sender, message, timestamp });
     localStorage.setItem(key, JSON.stringify(messages));
     // Notify the app that this contact's last message has been updated.
-    app.events.trigger("lastMessageUpdated", { contactId, message, timestamp });
+    app.events.trigger("lastMessageUpdated", {
+      contactId,
+      sender,
+      message,
+      timestamp,
+    });
   }
 
   /**

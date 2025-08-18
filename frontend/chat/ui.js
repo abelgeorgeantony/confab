@@ -61,6 +61,7 @@
     const contactElement = document.querySelector(
       `[data-contact-id="${senderId}"]`,
     );
+    console.log(contactElement);
     if (!contactElement) return;
 
     let badge = contactElement.querySelector(".unread-badge");
@@ -70,6 +71,7 @@
       // A flex container is needed to properly align badge and info
       const infoContainer = contactElement.querySelector(".contact-info");
       contactElement.insertBefore(badge, infoContainer.nextSibling);
+      badge = contactElement.querySelector(".unread-badge");
     }
 
     const count = app.state.unreadCounts[senderId];

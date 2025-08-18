@@ -50,22 +50,22 @@
         decryptedMessage = "🔒 [Could not decrypt message]";
       }
 
-      // If the message is for the currently active chat, display it.
-      if (Number(app.state.currentChatUser) === Number(senderId)) {
-        app.ui.displayMessage("them", decryptedMessage, payload.timestamp);
-      } else {
-        // Otherwise, increment the unread count.
-        app.state.unreadCounts[senderId] =
-          (app.state.unreadCounts[senderId] || 0) + 1;
-        app.ui.updateUnreadBadge(senderId);
-      }
-      // Always save the message locally.
+      // Save the message locally.
       app.storage.saveMessageLocally(
         senderId,
         "them",
         decryptedMessage,
         payload.timestamp,
       );
+      // If the message is for the currently active chat, display it.
+      /*if (Number(app.state.currentChatUser) === Number(senderId)) {
+        app.ui.displayMessage("them", decryptedMessage, payload.timestamp);
+      } else {
+        // Otherwise, increment the unread count.
+        app.state.unreadCounts[senderId] =
+          (app.state.unreadCounts[senderId] || 0) + 1;
+        app.ui.updateUnreadBadge(senderId);
+      }*/
     });
 
     // Listener to rebuild the contact list UI when contacts are loaded/updated.
@@ -73,49 +73,54 @@
       const list = document.getElementById("user-list");
       list.innerHTML = "";
 
+      app.state.allContacts.forEach((contact) => {
+        if (contact.contact_id !== undefined) {
+          contact.id = contact.contact_id;
+          delete contact.contact_id;
+        }
+      });
+
       const sortedContacts = app.state.allContacts.sort((a, b) => {
-        const lastMsgA = app.storage.getLastMessage(a.contact_id);
-        const lastMsgB = app.storage.getLastMessage(b.contact_id);
+        const lastMsgA = app.storage.getLastMessage(a.id);
+        const lastMsgB = app.storage.getLastMessage(b.id);
         return (lastMsgB?.timestamp || 0) - (lastMsgA?.timestamp || 0);
       });
 
       sortedContacts.forEach((contact) => {
         if (contact.public_key) {
-          app.state.publicKeyCache[contact.contact_id] = JSON.parse(
-            contact.public_key,
-          );
+          app.state.publicKeyCache[contact.id] = JSON.parse(contact.public_key);
         }
         const contactDiv = document.createElement("div");
         contactDiv.className = "contact-card";
-        contactDiv.setAttribute("data-contact-id", contact.contact_id);
-        const lastMsg = app.storage.getLastMessage(contact.contact_id);
+        contactDiv.setAttribute("data-contact-id", contact.id);
+        const lastMsg = app.storage.getLastMessage(contact.id);
         const lastMsgText = lastMsg
           ? lastMsg.message.replace(/[\n\r]/g, " ")
           : "Tap to chat";
         contactDiv.innerHTML = `
-                <div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>
-                <div class="contact-info">
-                    <div class="contact-name">${contact.display_name}</div>
-                    <div class="contact-lastmsg">${lastMsgText}</div>
-                </div>
-            `;
+          <div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>
+          <div class="contact-info">
+              <div class="contact-name">${contact.display_name}</div>
+              <div class="contact-lastmsg">${lastMsgText}</div>
+          </div>
+        `;
         contactDiv.onclick = () => app.init.openChatWith(contact);
         list.appendChild(contactDiv);
+        if (app.state.unreadCounts[contact.id] > 0) {
+          app.ui.updateUnreadBadge(contact.id);
+        }
       });
     });
 
     // Listener to update a contact's last message preview.
     document.addEventListener("lastMessageUpdated", (e) => {
-      const { contactId, message } = e.detail;
+      const { contactId, sender, message, timestamp } = e.detail;
       const list = document.getElementById("user-list");
       const card = list.querySelector(`[data-contact-id="${contactId}"]`);
 
-      // **FIX:** If a message arrives from a user not in our contact list,
+      // **FIX:** If the chat is of a user not in our contact list,
       // fetch their details and add them dynamically.
-      if (
-        !card &&
-        !app.state.allContacts.some((c) => c.contact_id == contactId)
-      ) {
+      if (!card && !app.state.allContacts.some((c) => c.id == contactId)) {
         const token = getCookie("auth_token");
         fetch(API + "add_non_contact.php", {
           method: "POST",
@@ -138,6 +143,14 @@
         if (list.firstChild !== card) {
           list.prepend(card);
         }
+      }
+      if (Number(app.state.currentChatUser) === Number(contactId)) {
+        app.ui.displayMessage(sender, decryptedMessage, payload.timestamp);
+      } else {
+        // Otherwise, increment the unread count.
+        app.state.unreadCounts[contactId] =
+          (app.state.unreadCounts[contactId] || 0) + 1;
+        app.ui.updateUnreadBadge(contactId);
       }
     });
   }

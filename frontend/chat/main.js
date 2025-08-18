@@ -16,15 +16,16 @@
     document.getElementById("chat-view").classList.add("active");
     document.getElementById("chat-list").classList.add("hidden");
 
-    const messages = app.storage.getLocalMessages(contact.contact_id);
+    const messages = app.storage.getLocalMessages(contact.id);
+    console.log(messages);
     messages.forEach((m) =>
       app.ui.displayMessage(m.sender, m.message, m.timestamp),
     );
 
-    app.state.currentChatUser = contact.contact_id;
+    app.state.currentChatUser = contact.id;
     // Clear unread count for this chat.
-    app.state.unreadCounts[contact.contact_id] = 0;
-    app.ui.updateUnreadBadge(contact.contact_id);
+    app.state.unreadCounts[contact.id] = 0;
+    app.ui.updateUnreadBadge(contact.id);
 
     // Set up the send button for this specific chat.
     const sendButton = document.getElementById("send-button");
@@ -32,7 +33,7 @@
 
     const sendMessageAction = async () => {
       sendButton.disabled = true;
-      await app.websocket.send(contact.contact_id);
+      await app.websocket.send(contact.id);
       sendButton.disabled = false;
       messageInput.focus();
     };
@@ -102,7 +103,7 @@
           app.state.publicKeyCache[user.id] = JSON.parse(user.public_key);
         }
         openChatWith({
-          contact_id: user.id,
+          id: user.id,
           display_name: user.display_name,
           username: user.username,
         });
