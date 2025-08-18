@@ -132,6 +132,26 @@ function setConnectionStatus(text, status = "default") {
   }, 2000); // 2 seconds
 }
 
+let currentBackAction = null;
+let isBackButtonActive = false;
+let isProgrammaticBack = false; // Flag to prevent popstate recursion
+
+const handleKeyDownForBack = (event) => {
+  if (event.key === "Escape" && isBackButtonActive && currentBackAction) {
+    currentBackAction();
+  }
+};
+
+window.addEventListener("popstate", () => {
+  if (isProgrammaticBack) {
+    isProgrammaticBack = false; // Reset the flag and do nothing
+    return;
+  }
+  if (isBackButtonActive && currentBackAction) {
+    currentBackAction();
+  }
+});
+
 /* * Shows a back button in the status bar.
  * @param {function} onClickAction - The function to call when the button is clicked.*/
 function showStatusBarBackButton(onClickAction) {
@@ -140,6 +160,15 @@ function showStatusBarBackButton(onClickAction) {
     // THE FIX: We no longer hide the status element.
     backBtn.style.display = "block";
     backBtn.onclick = onClickAction;
+
+    currentBackAction = onClickAction;
+    isBackButtonActive = true;
+
+    document.addEventListener("keydown", handleKeyDownForBack);
+    // Only push state if one doesn't already exist
+    if (!history.state || !history.state.onBack) {
+      history.pushState({ onBack: true }, "");
+    }
   }
 }
 
@@ -147,8 +176,17 @@ function showStatusBarBackButton(onClickAction) {
 function hideStatusBarBackButton() {
   const backBtn = document.getElementById("status-bar-back-btn");
   if (backBtn) {
-    // THE FIX: We only hide the back button.
     backBtn.style.display = "none";
+    backBtn.onclick = null;
+  }
+
+  document.removeEventListener("keydown", handleKeyDownForBack);
+  isBackButtonActive = false;
+  currentBackAction = null;
+
+  if (history.state && history.state.onBack) {
+    isProgrammaticBack = true;
+    history.back();
   }
 }
 
