@@ -10,6 +10,13 @@
   function openChatWith(contact) {
     showStatusBarBackButton(app.ui.goBackToList);
     document.getElementById("messages").innerHTML = "";
+    const avatarContainer = document.getElementById("chat-view-avatar");
+    if (contact.profile_picture_url) {
+      avatarContainer.innerHTML = `<img src="/${contact.profile_picture_url}" alt="${contact.display_name}">`;
+    } else {
+      avatarContainer.innerHTML = `<div>${contact.username.charAt(0).toUpperCase()}</div>`;
+    }
+    avatarContainer.classList.remove("hideavatar");
     document.getElementById("chat-title").textContent = contact.display_name;
     document.getElementById("chat-subtitle").textContent =
       "@" + contact.username;

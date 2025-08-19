@@ -11,9 +11,13 @@
     document.getElementById("chat-view").classList.remove("active");
     document.getElementById("chat-list").classList.remove("hidden");
     document.getElementById("messages").innerHTML = "";
+    document.getElementById("chat-view-avatar").classList.add("hideavatar");
     document.getElementById("chat-title").textContent = "Select a chat";
     document.getElementById("chat-subtitle").textContent =
       "or add a new contact to start messaging!";
+    document.getElementById("send-button").onclick = async () => {
+      console.log("No chat selected!");
+    };
     app.state.currentChatUser = null;
   }
 
