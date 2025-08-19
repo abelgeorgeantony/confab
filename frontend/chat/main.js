@@ -244,6 +244,7 @@
     await app.api.loadContacts();
     await app.api.loadOfflineMessages();
     app.websocket.connect();
+    app.ui.goBackToList();
   }
 
   // Expose necessary functions to the global app object.
