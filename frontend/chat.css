@@ -22,6 +22,9 @@
     flex-direction: column;
     height: 100%;
     position: relative;
+    top: 0;
+    left: 0;
+    z-index: 3;
 }
 
 .chat-header {
@@ -54,28 +57,6 @@
 .material-icons.md-40 {
     font-size: 40px;
 }
-
-/*#add-contact-form {
-  margin-top: 65px;
-  padding: 15px;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--chat-header-bg);
-}
-#add-contact-form input {
-  width: 100%;
-  margin-bottom: 10px;
-}
-.add-contact-buttons {
-  display: flex;
-  gap: 10px;
-}
-.add-contact-buttons button {
-  flex: 1;
-  margin-top: 0;
-}
-.add-contact-buttons .cancel-btn {
-  background-color: var(--text-color-light);
-}*/
 
 /* --- Modal Styles --- */
 .modal-overlay {
@@ -422,6 +403,8 @@
         top: 0;
         left: 0;
         z-index: 3;
+        transition: transform 0.3s ease-in-out; /* Animate the transform property */
+        transform: translateX(0); /* Start in the visible position */
     }
     .chat-header {
         width: 100vw;
@@ -433,7 +416,8 @@
     }
 
     #chat-list.hidden {
-        margin-left: -100%;
+        /*margin-left: -100%;*/
+        transform: translateX(-100%); /* Slide out of view */
     }
 
     #chat-view {
