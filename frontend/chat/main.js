@@ -224,9 +224,11 @@
    */
   async function main() {
     // Ensure user is authenticated before proceeding.
+    Loader.start("Ensuring you're on the VIP list");
     await requireAuth();
 
     // Load the user's decrypted private key from local storage.
+    Loader.addMessage("Selling your private key to china");
     const privateKeyJwkString = localStorage.getItem("decrypted_private_key");
     if (!privateKeyJwkString) {
       alert("Your private key is missing. Please log out and log back in.");
@@ -241,10 +243,14 @@
     initAddContactModals();
 
     // Fetch initial data and connect to the real-time server.
+    Loader.addMessage("Tickling your friends");
     await app.api.loadContacts();
+    Loader.addMessage("Reading your unread messages");
     await app.api.loadOfflineMessages();
+    Loader.addMessage("Waking up the carrier pigeon");
     app.websocket.connect();
     app.ui.goBackToList();
+    Loader.stop();
   }
 
   // Expose necessary functions to the global app object.
@@ -259,4 +265,8 @@
 
   // Run the application once the DOM is fully loaded.
   document.addEventListener("DOMContentLoaded", app.init.main);
+  window.addEventListener("load", function () {
+    // Code to execute after the entire page and all resources are loaded
+    //
+  });
 })(app);
