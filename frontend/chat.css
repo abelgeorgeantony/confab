@@ -416,7 +416,6 @@
     }
 
     #chat-list.hidden {
-        /*margin-left: -100%;*/
         transform: translateX(-100%); /* Slide out of view */
     }
 
