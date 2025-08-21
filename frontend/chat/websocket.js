@@ -35,8 +35,9 @@
       }
     };
 
-    app.state.ws.onclose = () =>
+    app.state.ws.onclose = () => {
       setConnectionStatus("DISCONNECTED!", "disconnected");
+    };
     app.state.ws.onerror = (err) => {
       console.error("WebSocket Error:", err);
       setConnectionStatus("Connection error!", "disconnected");

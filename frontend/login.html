@@ -1,48 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Perfect Chat</title>
-  <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="auth.css">
-  <script src="utils.js" defer></script>
-  <script src="crypto.js" defer></script>
-  <script src="auth.js" defer></script>
-</head>
-<body class="auth-page" onload="redirectIfAuthenticated()">
-  <div class="status-bar">
-    <div class="status-bar-left">
-      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;">←</button>
-      <span class="connection-status" id="connection-status"></span>
-    </div>
-    <label class="theme-toggle-switch">
-      <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
-      <span class="slider"></span>
-    </label>
-  </div>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - Perfect Chat</title>
+        <link rel="stylesheet" href="base.css" />
+        <link rel="stylesheet" href="auth.css" />
+        <script src="utils.js" defer></script>
+        <script src="crypto.js" defer></script>
+        <script src="auth.js" defer></script>
+    </head>
+    <body class="auth-page" onload="redirectIfAuthenticated()">
+        <div class="status-bar">
+            <div class="status-bar-left">
+                <button
+                    id="status-bar-back-btn"
+                    class="status-bar-back-btn"
+                    style="display: none"
+                >
+                    ←
+                </button>
+                <span class="connection-status" id="connection-status"></span>
+            </div>
+            <label class="theme-toggle-switch">
+                <input
+                    type="checkbox"
+                    id="theme-toggle-checkbox"
+                    onchange="toggleTheme()"
+                />
+                <span class="slider"></span>
+            </label>
+        </div>
 
-  <div class="page-wrapper">
-  <div class="form-container">
-    <h2>Login</h2>
-    <label for="login_username">Username:</label>
-    <input type="text" id="login_username" placeholder="Username">
+        <div class="page-wrapper">
+            <div class="form-container">
+                <h2>Login</h2>
+                <label for="login_username">Username:</label>
+                <input type="text" id="login_username" placeholder="Username" />
 
-    <label for="login_pass">Password:</label>
-    <input type="password" id="login_pass" placeholder="Password">
-    
-    <div>
-      <label for="session_length">Keep me logged in for:</label>
-      <select id="session_length">
-        <option value="86400">1 Day</option>
-	<option value="259200">3 Days</option>
-	<option value="604800">7 Days</option>
-      </select>
-    </div>
+                <label for="login_pass">Password:</label>
+                <input type="password" id="login_pass" placeholder="Password" />
 
-    <button onclick="login()">Login</button>
-    <p class="auth-links">Don't have an account? <a href="register.html">Sign up</a></p>
-  </div>
-  </div>
-</body>
+                <div>
+                    <label for="session_length">Keep me logged in for:</label>
+                    <select id="session_length">
+                        <option value="86400">1 Day</option>
+                        <option value="259200">3 Days</option>
+                        <option value="604800">7 Days</option>
+                    </select>
+                </div>
+
+                <button onclick="login()" style="align-self: center">
+                    Login
+                </button>
+                <p class="auth-links">
+                    Don't have an account? <a href="register.html">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </body>
 </html>
-

@@ -228,7 +228,7 @@
     await requireAuth();
 
     // Load the user's decrypted private key from local storage.
-    Loader.addMessage("Selling your private key to china");
+    Loader.addMessage("Selling your private key");
     const privateKeyJwkString = localStorage.getItem("decrypted_private_key");
     if (!privateKeyJwkString) {
       alert("Your private key is missing. Please log out and log back in.");
@@ -250,7 +250,13 @@
     Loader.addMessage("Waking up the carrier pigeon");
     app.websocket.connect();
     app.ui.goBackToList();
-    Loader.stop();
+    setTimeout(
+      () => Loader.addMessage("Smuggling-in your friend's photos"),
+      500,
+    );
+    document.addEventListener("profilePicturesReady", async () => {
+      Loader.stop();
+    });
   }
 
   // Expose necessary functions to the global app object.

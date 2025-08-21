@@ -98,7 +98,7 @@
           ? lastMsg.message.replace(/[\n\r]/g, " ")
           : "Tap to chat";
         const useravatar = contact.profile_picture_url
-          ? `<img src="/${contact.profile_picture_url}" class="contact-avatar">`
+          ? `<img src="/${contact.profile_picture_url}" class="contact-avatar" data-contact-id="${contact.id}">`
           : `<div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>`;
         contactDiv.innerHTML = `
           ${useravatar}
@@ -112,6 +112,47 @@
         if (app.state.unreadCounts[contact.id] > 0) {
           app.ui.updateUnreadBadge(contact.id);
         }
+      });
+
+      // Wait for all profile pictures to load AND RENDER ---
+      const images = list.querySelectorAll("img.contact-avatar");
+      const imageLoadPromises = Array.from(images).map((img) => {
+        return new Promise((resolve) => {
+          if (img.complete) {
+            resolve();
+          } else {
+            img.onload = () => resolve();
+            img.onerror = () => {
+              console.warn(
+                `Failed to load image for contact ID: ${img.dataset.contactId}`,
+              );
+              // Find the contact data to get the username for the fallback avatar
+              const contact = app.state.allContacts.find(
+                (c) => c.id == img.dataset.contactId,
+              );
+              if (contact && img.parentElement) {
+                const fallbackAvatar = document.createElement("div");
+                fallbackAvatar.className = "contact-avatar";
+                fallbackAvatar.textContent = contact.username
+                  .charAt(0)
+                  .toUpperCase();
+                img.replaceWith(fallbackAvatar);
+              }
+              resolve();
+            }; // Resolve on error too
+          }
+        });
+      });
+      // After all images have downloaded, wait for the next browser paint cycle.
+      Promise.all(imageLoadPromises).then(() => {
+        requestAnimationFrame(() => {
+          // This code runs just before the browser repaints the screen.
+          console.log(
+            "✅ All contacts and images are fully loaded and rendered.",
+          );
+          // --- NEW: Trigger the specific event ---
+          triggerEvent("profilePicturesReady");
+        });
       });
     });
 
