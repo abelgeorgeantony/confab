@@ -12,6 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeRegistrationFlow();
     const usernameInput = document.getElementById("reg_username");
     usernameInput.addEventListener("keyup", checkUsernameAvailability);
+    const useremailInput = document.getElementById("reg_email");
+    useremailInput.addEventListener("keyup", validateEmail);
+    const userpassInput = document.getElementById("reg_pass");
+    userpassInput.addEventListener("keyup", validatePassword);
 
     // for page 2
     const codeInputsContainer = document.getElementById("code-inputs");
@@ -123,11 +127,66 @@ async function checkUsernameAvailability() {
 
   if (data.available) {
     feedbackEl.textContent = "Username is available!";
-    feedbackEl.className = "available";
+    feedbackEl.classList.add("good");
   } else {
     feedbackEl.textContent = "Username is taken.";
-    feedbackEl.className = "taken";
+    feedbackEl.classList.add("bad");
   }
+}
+
+function validateEmail() {
+  const email = document.getElementById("reg_email").value;
+  const feedbackEl = document.getElementById("email-feedback");
+
+  const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const valid = pattern.test(email);
+  if (!valid) {
+    feedbackEl.textContent = "Enter a valid email";
+    feedbackEl.classList.add("bad");
+  } else {
+    feedbackEl.textContent = "";
+    feedbackEl.classList.remove("bad");
+  }
+}
+
+function validatePassword() {
+  const password = document.getElementById("reg_pass").value;
+  const feedbackEl = document.getElementById("password-feedback");
+
+  let pattern = /^.{8,15}$/;
+  if (!pattern.test(password)) {
+    feedbackEl.textContent = "Password too short or long! (>= 8 and <= 15)";
+    feedbackEl.classList.add("bad");
+    return;
+  }
+  pattern = /[A-Z]/;
+  if (!pattern.test(password)) {
+    feedbackEl.textContent = "Include Atleast 1 Uppercase letter!";
+    feedbackEl.classList.add("bad");
+    return;
+  }
+  pattern = /[a-z]/;
+  if (!pattern.test(password)) {
+    feedbackEl.textContent = "Include Atleast 1 Lowercase letter!";
+    feedbackEl.classList.add("bad");
+    return;
+  }
+  pattern = /\d/;
+  if (!pattern.test(password)) {
+    feedbackEl.textContent = "Include Atleast 1 number!";
+    feedbackEl.classList.add("bad");
+    return;
+  }
+  pattern = /[^a-zA-Z0-9@_]/g;
+  const disallowed = password.match(pattern);
+  if (disallowed) {
+    feedbackEl.textContent = "Disallowed characters: " + disallowed;
+    feedbackEl.classList.add("bad");
+    return;
+  }
+
+  feedbackEl.textContent = "";
+  feedbackEl.classList.remove("bad");
 }
 
 // --- Main Registration Functions ---
@@ -445,4 +504,19 @@ async function requireAuth() {
       reject(err);
     }
   });
+}
+
+function togglePassVisibility(eyebutton) {
+  console.log(eyebutton);
+  const passwordInput = eyebutton.parentElement.firstElementChild;
+  console.log(passwordInput);
+
+  const type =
+    passwordInput.getAttribute("type") === "password" ? "text" : "password";
+  if (type === "password") {
+    eyebutton.textContent = "visibility";
+  } else {
+    eyebutton.textContent = "visibility_off";
+  }
+  passwordInput.setAttribute("type", type);
 }

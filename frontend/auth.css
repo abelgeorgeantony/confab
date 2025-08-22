@@ -2,107 +2,136 @@
 
 /* Reset body for auth pages */
 body.auth-page {
-  /*height: auto;*/
-  /*overflow: auto;*/
-  background: var(--bg-color);
+    /*height: auto;*/
+    /*overflow: auto;*/
+    background: var(--bg-color);
 }
 
 /* Center the auth form */
 body.index-page {
-  display: flex;
-  justify-content: center;
-  align-center: center;
-  background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-center: center;
+    background-color: var(--bg-color);
 }
 
 .form-container {
-  max-width: 400px;
-  margin: 80px auto;
-  padding: 20px;
-  background: var(--form-bg);
-  border-radius: 8px;
-  box-shadow: 0 2px 6px var(--shadow-color);
-  text-align: center;
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 20px;
+    background: var(--form-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 6px var(--shadow-color);
+    text-align: center;
 }
 
 .form-container h2 {
-  margin-bottom: 20px;
-  font-size: 1.8em;
+    margin-bottom: 20px;
+    font-size: 1.8em;
 }
 
 .form-container p {
-  margin-bottom: 20px;
-  color: var(--text-color-light);
+    margin-bottom: 20px;
+    color: var(--text-color-light);
 }
 
 .form-container label {
-  font-size: 150%;
-  align-self: flex-start;
-  text-align: left;
+    font-size: 150%;
+    align-self: flex-start;
+    text-align: left;
 }
 
 .auth-links {
-  margin-top: 15px;
-  font-size: 0.9em;
+    margin-top: 15px;
+    font-size: 0.9em;
 }
 
 .auth-links a {
-  color: var(--primary-color);
-  text-decoration: none;
+    color: var(--primary-color);
+    text-decoration: none;
 }
 
 .auth-links a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
+.password-container {
+    display: flex;
+    margin-bottom: 15px;
+}
+.password-input {
+    margin: 0 !important;
+    width: 88%;
+    border-right: 0 !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+.password-eye {
+    background: #2a2a2a;
+    margin: 0;
+    border: 4px var(--border-color) !important;
+    border-left: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+.password-eye:hover {
+    background: #515151;
+}
 
 /* Additional styles for the multi-step form */
-        .step { display: none; }
-        .step.active { display: block; }
-        /*.form-container { max-width: 450px; }*/
-	#input-container {
-		display: flex;
-		flex-direction: column;
-	}
-        #pfp-preview {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 2px dashed #ccc;
-            margin: 10px auto;
-            display: block;
-            object-fit: cover;
-            cursor: pointer;
-            background-color: #f5f5f5;
-        }
-        /* Styles for username availability feedback */
-        #username-feedback {
-            font-size: 0.9em;
-            margin-top: -10px;
-            margin-bottom: 10px;
-            height: 1em;
-        }
-        #username-feedback.available { color: green; }
-        #username-feedback.taken { color: red; }
+.step {
+    display: none;
+}
+.step.active {
+    display: block;
+}
+/*.form-container { max-width: 450px; }*/
+#input-container {
+    display: flex;
+    flex-direction: column;
+}
+#pfp-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px dashed #ccc;
+    margin: 10px auto;
+    display: block;
+    object-fit: cover;
+    cursor: pointer;
+    background-color: #f5f5f5;
+}
+/* Styles for username availability feedback */
+.feedback {
+    font-size: 0.9em;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    height: 1em;
+}
+.feedback.good {
+    color: green;
+}
+.feedback.bad {
+    color: red;
+}
 
-
-	.code-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .code-input {
-            width: 45px;
-            height: 55px;
-            font-size: 90.5em;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            transition: border-color 0.2s;
-        }
-        .code-input:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
+.code-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.code-input {
+    width: 45px;
+    height: 55px;
+    font-size: 90.5em;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+.code-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
