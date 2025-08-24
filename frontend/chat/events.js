@@ -188,6 +188,9 @@
           list.prepend(card);
         }
       }
+      if (sender === "me") {
+        return;
+      }
       if (Number(app.state.currentChatUser) === Number(contactId)) {
         app.ui.displayMessage(sender, message, timestamp);
       } else {

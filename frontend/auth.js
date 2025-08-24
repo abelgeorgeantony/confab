@@ -6,6 +6,23 @@ let registrationState = {
 // --- Page Load Logic ---
 // This runs when the page is loaded to show the correct step.
 document.addEventListener("DOMContentLoaded", () => {
+  const passInput = document.querySelector(".password-input");
+  if (passInput) {
+    passInput.addEventListener("focus", () => {
+      const elementStyle = window.getComputedStyle(passInput);
+      document.querySelector(".password-eye").style.outline =
+        elementStyle.outline;
+    });
+    passInput.addEventListener("blur", (event) => {
+      if (event.relatedTarget == document.querySelector(".password-eye")) {
+        setTimeout(() => {
+          passInput.focus();
+        }, 10);
+      }
+      document.querySelector(".password-eye").style.outline = "";
+    });
+  }
+
   const registrationForm = document.getElementById("step1");
 
   if (registrationForm) {
@@ -507,9 +524,7 @@ async function requireAuth() {
 }
 
 function togglePassVisibility(eyebutton) {
-  console.log(eyebutton);
   const passwordInput = eyebutton.parentElement.firstElementChild;
-  console.log(passwordInput);
 
   const type =
     passwordInput.getAttribute("type") === "password" ? "text" : "password";

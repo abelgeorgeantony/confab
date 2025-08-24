@@ -63,7 +63,7 @@
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 40;
+    z-index: 100;
 }
 .modal {
     position: fixed;
@@ -75,7 +75,7 @@
     background-color: var(--form-bg);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 50;
+    z-index: 101;
 }
 .modal-header {
     display: flex;
@@ -277,6 +277,14 @@
     height: 100%;
     background-color: var(--form-bg);
     position: relative;
+}
+
+#chat-view-cover {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: var(--form-bg);
+    z-index: 99;
 }
 
 .chat-view-header {

@@ -7,6 +7,7 @@
    * Switches the view from the chat window back to the contact list on mobile.
    */
   function goBackToList() {
+    document.getElementById("chat-view-cover").classList.remove("hidden");
     hideStatusBarBackButton();
     document.getElementById("chat-view").classList.remove("active");
     document.getElementById("chat-list").classList.remove("hidden");

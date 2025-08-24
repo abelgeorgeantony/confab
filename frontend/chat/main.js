@@ -9,6 +9,7 @@
    */
   function openChatWith(contact) {
     showStatusBarBackButton(app.ui.goBackToList);
+    document.getElementById("chat-view-cover").classList.add("hidden");
     document.getElementById("messages").innerHTML = "";
     const avatarContainer = document.getElementById("chat-view-avatar");
     if (contact.profile_picture_url) {
@@ -34,6 +35,11 @@
     app.state.unreadCounts[contact.id] = 0;
     app.ui.updateUnreadBadge(contact.id);
 
+    // Make profile popup on header click
+    document.getElementById("chat-view-header").onclick = () => {
+      openProfileOf(contact);
+    };
+
     // Set up the send button for this specific chat.
     const sendButton = document.getElementById("send-button");
     const messageInput = document.getElementById("message-input");
@@ -42,7 +48,7 @@
       sendButton.disabled = true;
       await app.websocket.send(contact.id);
       sendButton.disabled = false;
-      messageInput.focus();
+      //messageInput.focus();
     };
 
     sendButton.onclick = sendMessageAction;
@@ -112,11 +118,7 @@
         if (user.public_key) {
           app.state.publicKeyCache[user.id] = JSON.parse(user.public_key);
         }
-        openChatWith({
-          id: user.id,
-          display_name: user.display_name,
-          username: user.username,
-        });
+        openChatWith(user);
         closeProfileModal();
         closeAddContactModal();
       };
@@ -125,7 +127,12 @@
           (contact) => Number(contact.id) === Number(user.id),
         )
       ) {
+        // Viewing the profile of a contact so add some contact features.
         document.getElementById("add-user-btn").classList.add("hidden");
+      }
+      if (Number(app.state.currentChatUser) === Number(user.id)) {
+        // Viewing the profile from the same chat so remove the message button.
+        document.getElementById("message-user-btn").classList.add("hidden");
       }
     }
 
@@ -217,6 +224,10 @@
     searchInput.addEventListener("input", (e) =>
       debouncedSearch(e.target.value),
     );
+    openProfileOf = (contact) => {
+      overlay.classList.remove("hidden");
+      openProfileModal(contact);
+    };
   }
 
   /**
