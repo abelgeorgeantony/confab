@@ -43,14 +43,14 @@
         <div id="input-container">
             <label for="reg_pass">Password:</label>
             <div class="password-container">
-                <input type="password" id="reg_pass" class="password-input" placeholder="Create a strong password" required>
+                <input type="password" id="reg_pass" class="password-input" placeholder="Create a strong password" onkeyup="validatePassword(this)" required>
                 <button type="button" class="password-eye material-icons" onclick="togglePassVisibility(this)">visibility</button>
             </div>
             <div id="password-feedback" class="feedback"></div>
 	    </div>
 
             <button type="submit">Continue</button>
-            <p class="auth-links">Already have an account? <a href="login.html">Login</a></p>
+            <p class="auth-links"><a href="login.html">Already have an account?</a></p>
         </form>
     </div>
 

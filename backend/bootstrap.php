@@ -1,13 +1,15 @@
 <?php
 // This file will be the single entry point for all backend scripts.
 
-// 1. Load Composer's autoloader
-require_once __DIR__ . '/vendor/autoload.php';
+// 1. Set the default timezone to UTC to ensure consistency.
+date_default_timezone_set("UTC");
 
-// 2. Load environment variables from .env file
+// 2. Load Composer's autoloader
+require_once __DIR__ . "/vendor/autoload.php";
+
+// 3. Load environment variables from .env file
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// 3. Include the database configuration
-require_once __DIR__ . '/config.php';
-
+// 4. Include the database configuration
+require_once __DIR__ . "/config.php";

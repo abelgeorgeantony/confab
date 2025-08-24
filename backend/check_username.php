@@ -3,11 +3,11 @@ ob_start();
 require_once "bootstrap.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
-$username = $data['username'] ?? '';
+$username = $data["username"] ?? "";
 
 if (strlen($username) < 3) {
-    echo json_encode(['available' => false]);
-    exit;
+    echo json_encode(["exists" => false]);
+    exit();
 }
 
 global $conn;
@@ -16,10 +16,9 @@ $stmt->bind_param("s", $username);
 $stmt->execute();
 
 if ($stmt->get_result()->num_rows > 0) {
-    echo json_encode(['available' => false]);
+    echo json_encode(["exists" => true]);
 } else {
-    echo json_encode(['available' => true]);
+    echo json_encode(["exists" => false]);
 }
 ob_end_flush();
 ?>
-
