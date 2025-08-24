@@ -567,6 +567,10 @@ async function handlePasswordResetRequest() {
       });
       // Note: We don't need to check the response of forgot_password.php
       // because it's designed to always return success.
+      alert(
+        "A password reset link has been sent to the associated email address, Redirecting to login...",
+      );
+      window.location.replace("login.html");
     } else {
       messageArea.textContent = "User doesn't exist!";
       messageArea.style.color = "var(--danger-color)";

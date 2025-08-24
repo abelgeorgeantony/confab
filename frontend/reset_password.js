@@ -91,6 +91,9 @@ async function handlePasswordReset() {
       // Hide the form and show the login link.
       document.getElementById("reset-form").style.display = "none";
       document.getElementById("login-link").style.display = "block";
+
+      alert("Password updated successfully! Redirecting to login!");
+      window.location.replace("login.html");
     } else {
       messageArea.textContent = `Error: ${data.error || "An unknown error occurred."}`;
       messageArea.style.color = "var(--danger-color)";
