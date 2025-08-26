@@ -1,4 +1,21 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("hello");
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get("token");
+  try {
+    console.log("hello");
+    // 2. Validate the token with the server, specifying the correct type.
+    await validateToken(token, "password_reset");
+    console.log("hello");
+
+    // 3. If validation succeeds, show the form.
+    resetForm.style.display = "block";
+  } catch (error) {
+    // 4. If validation fails, display the error and hide the form.
+    messageArea.textContent = `Error: ${error.message || "This link is invalid or has expired."}`;
+    messageArea.style.color = "var(--danger-color)";
+    resetForm.style.display = "none";
+  }
   // Add a listener to the password input to validate as the user types.
   const passwordInput = document.getElementById("new_password");
   if (passwordInput) {

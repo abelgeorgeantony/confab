@@ -499,27 +499,44 @@ async function requireAuth() {
       window.location.replace("login.html");
       return reject(new Error("No private key!"));
     }
-
     try {
-      const res = await fetch(API + "validate_token.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-
-      const data = await res.json();
-      if (!data.valid) {
-        window.location.replace("login.html");
-        reject(new Error("Invalid auth token!"));
-      } else {
-        resolve();
-      }
+      // This await pauses the function.
+      await validateToken(token, "login");
+      // If validateToken() succeeds, the function automatically
+      // returns a resolved promise. There's no need to write 'return resolve()'.
     } catch (err) {
-      console.error("Token validation failed:", err);
+      // If validateToken() fails, it throws an error.
+      // The 'catch' block runs, and the async function automatically
+      // returns a rejected promise containing 'err'.
       window.location.replace("login.html");
-      reject(err);
+      throw err;
     }
   });
+}
+
+// Confirms the authenticity of a given token with the server
+async function validateToken(token, type = "login") {
+  try {
+    const res = await fetch(API + "validate_token.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, type }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.valid) {
+      // Throw an error with the message from the server, or a default one.
+      throw new Error(data.error || "Invalid or expired token.");
+    }
+
+    // On success, the promise resolves with the data from the server (e.g., { valid: true, user_id: ... })
+    return data;
+  } catch (err) {
+    console.error("Token validation failed:", err.message);
+    // Re-throw the error so the calling function can handle it
+    throw err;
+  }
 }
 
 /**
