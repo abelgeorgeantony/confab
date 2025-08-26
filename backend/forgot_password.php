@@ -31,13 +31,14 @@ if ($result->num_rows === 1) {
     $token = bin2hex(random_bytes(32));
 
     // 3. Set an expiration time for the token (e.g., 1 hour from now).
-    $expires_at = date("Y-m-d H:i:s", time() + 3600);
+    //$expires_at = date("Y-m-d H:i:s", time() + 3600);
+    //error_log($expires_at);
 
     // 4. Store the token in the 'sessions' table with a 'password_reset' type.
     $insert_stmt = $conn->prepare(
-        "INSERT INTO sessions (user_id, token, expires_at, type) VALUES (?, ?, ?, 'password_reset')",
+        "INSERT INTO sessions (user_id, token, expires_at, type) VALUES (?, ?, NOW() + INTERVAL 1 HOUR, 'password_reset')",
     );
-    $insert_stmt->bind_param("iss", $user_id, $token, $expires_at);
+    $insert_stmt->bind_param("is", $user_id, $token);
     $insert_stmt->execute();
 
     // 5. Construct the full reset link and send the email.

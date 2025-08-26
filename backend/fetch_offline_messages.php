@@ -5,12 +5,12 @@ require_once "auth.php";
 
 // Parse request
 $data = json_decode(file_get_contents("php://input"), true);
-$token = $data['token'] ?? null;
+$token = $data["token"] ?? null;
 
-$user_id = validate_token($token);
+$user_id = validate_token($token, "login");
 if (!$user_id) {
     echo json_encode(["success" => false, "error" => "Invalid token"]);
-    exit;
+    exit();
 }
 
 global $conn;
@@ -28,7 +28,7 @@ if ($result && $result->num_rows > 0) {
         $messages[] = [
             "sender_id" => $row["sender_id"],
             "payload" => $row["payload"],
-            "created_at" => $row["created_at"]
+            "created_at" => $row["created_at"],
         ];
     }
 }
@@ -38,5 +38,5 @@ $conn->query("DELETE FROM $inbox_table");
 
 echo json_encode([
     "success" => true,
-    "messages" => $messages
+    "messages" => $messages,
 ]);

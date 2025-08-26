@@ -301,6 +301,9 @@
     display: flex;
     align-items: center;
 }
+.chat-view-header:hover {
+    cursor: pointer;
+}
 
 .chat-view-avatar {
     width: 50px;

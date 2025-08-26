@@ -7,7 +7,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $token = $data["token"] ?? null;
 $username = trim($data["username"] ?? "");
 
-$user_id = validate_token($token);
+$user_id = validate_token($token, "login");
 if (!$user_id || empty($username)) {
     http_response_code(400);
     echo json_encode(["success" => false, "error" => "Invalid request"]);

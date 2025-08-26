@@ -1,5 +1,5 @@
 # Replace 192.168.1.2 with your actual local IP address
-https://192.168.1.10 {
+https://10.216.42.40 {
     # Tell Caddy which certificate files to use(Caddy does issue certificates automatically so iam disabling this for now and deleting the key files)
     #tls localhost+1.pem localhost+1-key.pem
     

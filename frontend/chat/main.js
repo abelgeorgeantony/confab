@@ -122,11 +122,7 @@
         closeProfileModal();
         closeAddContactModal();
       };
-      if (
-        app.state.allContacts.some(
-          (contact) => Number(contact.id) === Number(user.id),
-        )
-      ) {
+      if (user.status === "contact") {
         // Viewing the profile of a contact so add some contact features.
         document.getElementById("add-user-btn").classList.add("hidden");
       }

@@ -5,19 +5,21 @@ require_once "auth.php";
 
 // Get token from request
 $data = json_decode(file_get_contents("php://input"), true);
-$token = $data['token'] ?? null;
+$token = $data["token"] ?? null;
 
 // Validate token and get user_id
-$user_id = validate_token($token);
+$user_id = validate_token($token, "login");
 if (!$user_id) {
     echo json_encode(["success" => false, "error" => "Invalid session"]);
-    exit;
+    exit();
 }
 
 global $conn;
 
 // Fetch user data from the database
-$stmt = $conn->prepare("SELECT display_name, username, email, bio FROM users WHERE id = ?");
+$stmt = $conn->prepare(
+    "SELECT display_name, username, email, bio, profile_picture_url FROM users WHERE id = ?",
+);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();

@@ -7,7 +7,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $token = $data["token"] ?? null;
 $query = trim($data["query"] ?? "");
 
-$user_id = validate_token($token);
+$user_id = validate_token($token, "login");
 if (!$user_id) {
     http_response_code(401);
     echo json_encode(["success" => false, "error" => "Invalid session"]);
@@ -25,12 +25,16 @@ $contacts_table = "contacts_" . intval($user_id);
 
 // This query finds users whose username or display name matches the search term,
 // excluding the user themselves and anyone already in their contacts.
-$stmt = $conn->prepare("
-    SELECT id, username, display_name, bio, profile_picture_url, public_key
-    FROM users
-    WHERE (username LIKE ? OR display_name LIKE ?)
-    AND id != ?
-");
+$stmt = $conn->prepare(
+    "SELECT u.id, u.username, u.display_name, u.bio, u.profile_picture_url, u.public_key, IFNULL(c.status, 'not_contact') AS status
+    FROM users u
+    LEFT JOIN " .
+        $contacts_table .
+        " c ON u.id = c.contact_id
+    WHERE (u.username LIKE ? OR u.display_name LIKE ?)
+    AND u.id != ?
+",
+);
 $stmt->bind_param("ssi", $search_term, $search_term, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();

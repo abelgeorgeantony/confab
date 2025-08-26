@@ -7,6 +7,14 @@ $data = json_decode(file_get_contents("php://input"));
 $token = $data->token ?? "";
 $type = $data->type ?? "";
 
+if (empty($token) || empty($type)) {
+    echo json_encode([
+        "valid" => false,
+        "error" => "All fields are required.",
+    ]);
+    exit();
+}
+
 $user_id = validate_token($token, $type);
 
 if ($user_id !== false) {

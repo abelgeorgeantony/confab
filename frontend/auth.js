@@ -470,13 +470,7 @@ async function redirectIfAuthenticated() {
   if (!token) return;
 
   try {
-    const res = await fetch(API + "validate_token.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-
-    const data = await res.json();
+    const data = await validateToken(token, "login");
     if (data.valid) {
       window.location.replace(FRONTEND + "chat.html");
     }
@@ -486,32 +480,28 @@ async function redirectIfAuthenticated() {
 }
 // For gaining auth confirmation for protected tasks on pages like chat.html
 async function requireAuth() {
-  return new Promise(async (resolve, reject) => {
-    const token = getCookie("auth_token");
-    if (!token) {
-      window.location.replace("login.html");
-      return reject(new Error("No auth token!"));
-    }
-    const privateKeyJwkString = localStorage.getItem("decrypted_private_key");
-    if (!privateKeyJwkString) {
-      deleteCookie("auth_token");
-      localStorage.clear();
-      window.location.replace("login.html");
-      return reject(new Error("No private key!"));
-    }
-    try {
-      // This await pauses the function.
-      await validateToken(token, "login");
-      // If validateToken() succeeds, the function automatically
-      // returns a resolved promise. There's no need to write 'return resolve()'.
-    } catch (err) {
-      // If validateToken() fails, it throws an error.
-      // The 'catch' block runs, and the async function automatically
-      // returns a rejected promise containing 'err'.
-      window.location.replace("login.html");
-      throw err;
-    }
-  });
+  const token = getCookie("auth_token");
+  const privateKeyJwkString = localStorage.getItem("decrypted_private_key");
+
+  if (!token || !privateKeyJwkString) {
+    deleteCookie("auth_token");
+    localStorage.clear();
+    window.location.replace("login.html");
+    throw new Error("Authentication failed: Missing token or private key.");
+  }
+
+  try {
+    // Await the validation. If it fails, the catch block will execute.
+    await validateToken(token, "login");
+    // If we reach this line, the token is valid, and the function resolves.
+  } catch (err) {
+    // If the token is invalid, clear storage and redirect.
+    deleteCookie("auth_token");
+    localStorage.clear();
+    window.location.replace("login.html");
+    // Re-throw the error to ensure the script that called requireAuth() stops executing.
+    throw err;
+  }
 }
 
 // Confirms the authenticity of a given token with the server
