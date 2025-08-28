@@ -21,7 +21,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create the sessions table for token-based login
+-- Create the sessions table for token-based authentication
 CREATE TABLE sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -32,6 +32,7 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Create the messages table for global message storage
 CREATE TABLE messages (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sender_id INT NOT NULL,
@@ -41,23 +42,4 @@ CREATE TABLE messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- TEMPLATES
--- Create a inbox table for each registered user.
-CREATE TABLE inbox_<user_id> (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  sender_id INT NOT NULL,
-  payload TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
-);
--- Create a contacts table for each registered user.
-CREATE TABLE contacts_<user_id> (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  contact_id INT NOT NULL,
-  status ENUM('pending', 'contact', 'blocked') NOT NULL DEFAULT 'pending',
-  added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY (contact_id),
-  FOREIGN KEY (contact_id) REFERENCES users(id) ON DELETE CASCADE
 );
