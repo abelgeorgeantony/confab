@@ -68,7 +68,7 @@ class ChatServer implements MessageComponentInterface
     private function handleRegister(ConnectionInterface $conn, array $data)
     {
         $token = $data["token"] ?? null;
-        $user_id = validate_token($token);
+        $user_id = validate_token($token, "login");
 
         if ($user_id) {
             $this->onlineUsers[$user_id] = $conn;
