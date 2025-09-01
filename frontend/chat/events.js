@@ -1,6 +1,12 @@
 // frontend/chat/events.js
 // Centralizes the application's event handling logic.
 // It attaches its functions to the 'app.events' namespace.
+//
+const recordButton = document.getElementById("record-button");
+const audioPlayer = document.getElementById("audio-player");
+let voicerecording = false;
+let mediaRecorder;
+let audioChunks = [];
 
 (function (app) {
   /**
@@ -198,6 +204,64 @@
         app.state.unreadCounts[contactId] =
           (app.state.unreadCounts[contactId] || 0) + 1;
         app.ui.updateUnreadBadge(contactId);
+      }
+    });
+
+    document.addEventListener("recordstart", async () => {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        // show the audio being recorded
+        document.getElementById("voice-message-ui").classList.remove("hidden");
+        document.getElementById("message-input").classList.add("hidden");
+
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
+        audioContext.resume();
+
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+
+        let seconds = 0;
+        timerInterval = setInterval(() => {
+          seconds++;
+          const minutes = Math.floor(seconds / 60);
+          const remainingSeconds = seconds % 60;
+          document.getElementById("timer").textContent =
+            `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+        }, 1000);
+
+        mediaRecorder.addEventListener("dataavailable", (event) => {
+          audioChunks.push(event.data);
+        });
+      }
+    });
+    document.addEventListener("recordend", () => {
+      mediaRecorder.stop();
+      clearInterval(timerInterval);
+      document.getElementById("timer").textContent = "0:00";
+      mediaRecorder.addEventListener("stop", () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioPlayer.src = audioUrl;
+        return;
+        // You would then encrypt and send this blob
+        audioChunks = [];
+        document.getElementById("voice-message-ui").classList.add("hidden");
+        document.getElementById("message-input").classList.remove("hidden");
+      });
+    });
+    recordButton.addEventListener("click", () => {
+      if (!voicerecording) {
+        recordButton.textContent = "mic_off";
+        triggerEvent("recordstart");
+        voicerecording = true;
+      } else {
+        recordButton.textContent = "mic";
+        triggerEvent("recordend");
+        voicerecording = false;
       }
     });
   }

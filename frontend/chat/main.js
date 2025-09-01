@@ -22,7 +22,7 @@
     document.getElementById("chat-subtitle").textContent =
       "@" + contact.username;
     document.getElementById("chat-view").classList.add("active");
-    document.getElementById("chat-list").classList.add("hidden");
+    document.getElementById("chat-list").classList.add("slideout");
 
     const messages = app.storage.getLocalMessages(contact.id);
     console.log(messages);
@@ -42,17 +42,36 @@
 
     // Set up the send button for this specific chat.
     const sendButton = document.getElementById("send-button");
+    const recordButton = document.getElementById("record-button");
     const messageInput = document.getElementById("message-input");
+
+    if (messageInput.value.trim() === "") {
+      sendButton.classList.add("hidden");
+      recordButton.classList.remove("hidden");
+    } else {
+      sendButton.classList.remove("hidden");
+      recordButton.classList.add("hidden");
+    }
+
+    messageInput.oninput = () => {
+      if (messageInput.value.trim() === "") {
+        sendButton.classList.add("hidden");
+        recordButton.classList.remove("hidden");
+      } else {
+        sendButton.classList.remove("hidden");
+        recordButton.classList.add("hidden");
+      }
+    };
 
     const sendMessageAction = async () => {
       sendButton.disabled = true;
       await app.websocket.send(contact.id);
       sendButton.disabled = false;
+      sendButton.classList.add("hidden");
+      recordButton.classList.remove("hidden");
       //messageInput.focus();
     };
-
     sendButton.onclick = sendMessageAction;
-
     // Allow sending with Enter key
     messageInput.onkeydown = (e) => {
       if (e.key === "Enter" && !e.shiftKey) {

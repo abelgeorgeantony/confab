@@ -16,6 +16,11 @@
     color: var(--text-color);
 }
 
+#profile-form {
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
 .profile-section {
     margin-bottom: 18px;
 }
@@ -72,9 +77,7 @@ textarea#profile-bio {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
-    margin-bottom: 20px;
     padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
 }
 .profile-buttons button {
     margin: 0;

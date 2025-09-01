@@ -10,7 +10,7 @@
     document.getElementById("chat-view-cover").classList.remove("hidden");
     hideStatusBarBackButton();
     document.getElementById("chat-view").classList.remove("active");
-    document.getElementById("chat-list").classList.remove("hidden");
+    document.getElementById("chat-list").classList.remove("slideout");
     document.getElementById("messages").innerHTML = "";
     document.getElementById("chat-view-avatar").classList.add("hideavatar");
     document.getElementById("chat-title").textContent = "Select a chat";

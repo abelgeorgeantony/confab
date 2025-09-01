@@ -114,6 +114,24 @@
                             placeholder="Type a message..."
                             required
                         ></textarea>
+                        <div id="voice-message-ui" class="hidden">
+                            <audio id="audio-player" controls></audio>
+                            <span id="timer">0:00</span>
+                            <button
+                                type="button"
+                                id="delete-recording-btn"
+                                class="material-icons"
+                            >
+                                delete
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            id="record-button"
+                            class="material-icons"
+                        >
+                            mic
+                        </button>
                         <button type="submit" id="send-button">➤</button>
                     </form>
                 </main>

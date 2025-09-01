@@ -169,7 +169,7 @@
 
 /* --- Utility & Animation --- */
 .hidden {
-    display: none;
+    display: none !important;
 }
 .hideavatar {
     display: none !important;
@@ -355,7 +355,8 @@
     min-height: 65px; /* Give it a fixed min-height */
 }
 
-#message-input {
+#message-input,
+#voice-message-ui {
     flex: 1;
     border-radius: 20px;
     padding: 10px;
@@ -364,7 +365,7 @@
     margin: 0;
 }
 
-#send-button {
+#message-form button {
     border-radius: 35%;
     width: 55px;
     height: 55px;
@@ -373,6 +374,22 @@
     padding: 0;
     margin: 0;
 }
+#delete-recording-btn {
+    color: var(--danger-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/*#send-button {
+    border-radius: 35%;
+    width: 55px;
+    height: 55px;
+    font-size: 1.5em;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+}*/
 
 /* === Message Bubbles === */
 .message {
@@ -427,7 +444,7 @@
         padding-top: 110px;
     }
 
-    #chat-list.hidden {
+    #chat-list.slideout {
         transform: translateX(-100%); /* Slide out of view */
     }
 

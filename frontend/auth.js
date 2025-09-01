@@ -126,8 +126,9 @@ function initializeRegistrationFlow() {
   }
 }
 
-async function checkUsernameAvailability() {
-  const username = document.getElementById("reg_username").value;
+async function checkUsernameAvailability(usernamefield = null) {
+  const username =
+    usernamefield || document.getElementById("reg_username").value;
   const feedbackEl = document.getElementById("username-feedback");
   if (username.length < 3) {
     feedbackEl.textContent = "";
@@ -143,9 +144,11 @@ async function checkUsernameAvailability() {
   if (data.exists) {
     feedbackEl.textContent = "Username is taken!";
     feedbackEl.classList.add("bad");
+    return false;
   } else {
     feedbackEl.textContent = "Username is available.";
     feedbackEl.classList.add("good");
+    return true;
   }
 }
 

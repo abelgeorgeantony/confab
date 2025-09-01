@@ -68,6 +68,9 @@ if ($result->num_rows === 1) {
     $script_path = __DIR__ . "/send_email_cli.php";
     $command = "$php_executable $script_path $recipient_arg $subject_arg $body_arg > /dev/null 2>&1 &";
     exec($command);
+    $response = ["success" => true, "link" => $reset_link];
+    echo json_encode($response);
+    exit();
 }
 
 // 7. Always send a success response to the frontend.
