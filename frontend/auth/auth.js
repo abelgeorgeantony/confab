@@ -333,9 +333,7 @@ async function handleStep3(event) {
   if (data.success) {
     // Clean up registration cookies on success
     deleteCookie("registration_step");
-    deleteCookie("registration_email"); // Just in case
-
-    window.location.replace("chat.html");
+    window.location.replace("../chat/chat.html");
   } else {
     messageArea.textContent = "Error: " + data.error;
   }
@@ -403,7 +401,7 @@ async function login() {
       sameSite: "Strict",
       secure: location.protocol === "https:",
     });
-    window.location.replace("chat.html");
+    window.location.replace("../chat/chat.html");
   } else {
     if (data.error === "not_verified") {
       alert(
@@ -475,7 +473,7 @@ async function redirectIfAuthenticated() {
   try {
     const data = await validateToken(token, "login");
     if (data.valid) {
-      window.location.replace(FRONTEND + "chat.html");
+      window.location.replace(FRONTEND + "chat/chat.html");
     }
   } catch (err) {
     console.error("Auth check failed", err);
