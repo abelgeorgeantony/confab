@@ -593,15 +593,22 @@ async function handlePasswordResetRequest() {
   }
 }
 
-function togglePassVisibility(eyebutton) {
-  const passwordInput = eyebutton.parentElement.firstElementChild;
+function togglePassVisibility(eyeIcon) {
+  const passInput = eyeIcon.previousElementSibling;
+  // Store current cursor position
+  const selectionStart = passInput.selectionStart;
+  const selectionEnd = passInput.selectionEnd;
 
-  const type =
-    passwordInput.getAttribute("type") === "password" ? "text" : "password";
-  if (type === "password") {
-    eyebutton.textContent = "visibility";
+  if (passInput.type === "password") {
+    passInput.type = "text";
+    eyeIcon.textContent = "visibility_off";
   } else {
-    eyebutton.textContent = "visibility_off";
+    passInput.type = "password";
+    eyeIcon.textContent = "visibility";
   }
-  passwordInput.setAttribute("type", type);
+  // Restore cursor position and focus
+  passInput.focus();
+  setTimeout(() => {
+    passInput.setSelectionRange(selectionStart, selectionEnd);
+  }, 0);
 }

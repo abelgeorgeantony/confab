@@ -17,6 +17,7 @@
     min-width: 280px;
     max-width: 400px;
     background-color: var(--chat-list-bg);
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M10 0l10 10-10 10-10-10z'/%3E%3C/g%3E%3C/svg%3E");
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -227,6 +228,7 @@
     padding: 10px 15px 10px 15px;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
+    background-color: var(--form-bg);
 }
 .contact-card:hover {
     background: var(--input-bg);
@@ -280,7 +282,10 @@
 }
 
 #chat-view-cover {
+    font-size: xx-large;
     position: absolute;
+    align-content: center;
+    justify-items: center;
     height: 100%;
     width: 100%;
     background-color: var(--form-bg);
@@ -469,6 +474,17 @@
     }
     .add-contact-float.material-icons.md-40 {
         font-size: 50px;
+    }
+
+    .empty-chat-list {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--text-color-light);
+    }
+
+    .empty-chat-list .material-icons {
+        font-size: 1em;
+        vertical-align: middle;
     }
 
     #messages {

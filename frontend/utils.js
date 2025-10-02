@@ -50,6 +50,16 @@ function deleteCookie(name) {
   setCookie(name, "", { maxAge: 0 });
 }
 
+function fixMobileViewport() {
+  let vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
+}
+
+window.addEventListener("resize", fixMobileViewport);
+window.addEventListener("load", fixMobileViewport);
+
+fixMobileViewport();
+
 // Mobile viewport height fix for all pages
 function fixMobileViewport() {
   let vh = window.innerHeight * 0.01;
@@ -194,4 +204,14 @@ function hideStatusBarBackButton() {
 document.addEventListener("DOMContentLoaded", () => {
   applyInitialTheme();
   //greeter.show();
+});
+
+window.addEventListener("load", () => {
+  const loadingOverlay = document.getElementById("loading-overlay");
+  if (loadingOverlay) {
+    loadingOverlay.style.opacity = "0";
+    setTimeout(() => {
+      loadingOverlay.style.display = "none";
+    }, 500);
+  }
 });

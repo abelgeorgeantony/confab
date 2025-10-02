@@ -12,6 +12,10 @@ if ($uri === "/") {
     header("Location: /frontend/index.html");
     return; // Stop the script
 }
+if ($uri === "/frontend" || $uri === "/frontend/") {
+    header("Location: /frontend/index.html");
+    return; // Stop the script
+}
 if ($uri === "/favicon.ico") {
     header("Location: /frontend/favicon.ico");
     return; // Stop the script

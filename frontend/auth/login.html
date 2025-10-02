@@ -3,14 +3,14 @@
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Login - Confab</title>
-        <link rel="stylesheet" href="base.css" />
+        <link rel="stylesheet" href="../base.css" />
         <link rel="stylesheet" href="auth.css" />
         <link
             href="https://fonts.googleapis.com/icon?family=Material+Icons"
             rel="stylesheet"
         />
-        <script src="utils.js" defer></script>
-        <script src="crypto.js" defer></script>
+        <script src="../utils.js" defer></script>
+        <script src="../crypto.js" defer></script>
         <script src="auth.js" defer></script>
     </head>
     <body class="auth-page" onload="redirectIfAuthenticated()">
@@ -21,7 +21,7 @@
                     class="status-bar-back-btn"
                     style="display: none"
                 >
-                    ←
+                    <span class="material-icons">keyboard_backspace</span>
                 </button>
                 <span class="connection-status" id="connection-status"></span>
             </div>
@@ -61,7 +61,8 @@
                 </div>
 
                 <div>
-                    <label for="session_length">Keep me logged in for:</label>
+                    <label for="session_length">Stay logged in for:</label
+                    >&nbsp;
                     <select id="session_length">
                         <option value="86400">1 Day</option>
                         <option value="259200">3 Days</option>
@@ -70,7 +71,7 @@
                 </div>
 
                 <button onclick="login()" style="align-self: center">
-                    Login
+                    Log In
                 </button>
                 <p class="auth-links">
                     <a href="forgot_password.html">Forgot Password?</a>

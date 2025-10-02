@@ -79,6 +79,14 @@ let audioChunks = [];
       const list = document.getElementById("user-list");
       list.innerHTML = "";
 
+      if (app.state.allContacts.length === 0 && window.innerWidth < 768) {
+        const emptyMessage = document.createElement("div");
+        emptyMessage.className = "empty-chat-list";
+        emptyMessage.innerHTML = `<p>No contacts yet!</p><p>Click the <span class="material-icons">person_search</span> button to find people.</p>`;
+        list.appendChild(emptyMessage);
+        return;
+      }
+
       app.state.allContacts.forEach((contact) => {
         if (contact.contact_id !== undefined) {
           contact.id = contact.contact_id;

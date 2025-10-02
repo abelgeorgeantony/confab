@@ -1,8 +1,8 @@
 # Replace 192.168.1.2 with your actual local IP address
-https://10.225.13.40 {
+https://192.168.155.40 {
     # Tell Caddy which certificate files to use(Caddy does issue certificates automatically so iam disabling this for now and deleting the key files)
     #tls localhost+1.pem localhost+1-key.pem
-    
+
     # --- WebSocket Routing ---
     # Any request to the /ws path will be proxied to your chat server
     # running on port 8081. Caddy handles the upgrade headers automatically.

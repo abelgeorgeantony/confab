@@ -1,0 +1,45 @@
+#background-scene {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.shape {
+    position: absolute;
+    stroke: var(--text-color-light);
+    fill: var(--text-color-light);
+    stroke-width: 0.1px;
+    opacity: 0.3;
+}
+
+@keyframes sway {
+    0% {
+        transform: rotate(0deg) translateX(0px);
+    }
+    50% {
+        transform: rotate(5deg) translateX(10px);
+    }
+    100% {
+        transform: rotate(0deg) translateX(0px);
+    }
+}
+
+.sway {
+    /* animation: sway 10s ease-in-out infinite alternate; */
+}
+
+@media (max-width: 768px) {
+    .shape {
+        opacity: 0.2;
+    }
+    svg.shape[style*="left: 20%"] {
+        left: 5% !important;
+    }
+    svg.shape[style*="right: 25%"] {
+        right: 5% !important;
+    }
+}

@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserProfile();
 
   showStatusBarBackButton(() => {
-    window.location.replace("chat.html");
+    window.location.replace("../chat/chat.html");
   });
   // Attach button events
   document.getElementById("logout-btn").addEventListener("click", logoutUser);
@@ -209,6 +209,6 @@ function logoutUser() {
   if (confirm("Do you really want to logout?")) {
     deleteCookie("auth_token");
     localStorage.clear();
-    window.location.replace("login.html");
+    window.location.replace("../auth/login.html");
   }
 }

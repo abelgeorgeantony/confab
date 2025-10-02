@@ -26,7 +26,7 @@
    * Navigates the user to their profile page.
    */
   function goToProfile() {
-    window.location.href = "profile.html";
+    window.location.href = "../profile/profile.html";
   }
 
   /**

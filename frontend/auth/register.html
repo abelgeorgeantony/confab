@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Confab</title>
-    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="../base.css">
     <link rel="stylesheet" href="auth.css">
     <link
         href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -14,7 +14,7 @@
 <body class="auth-page" onload="redirectIfAuthenticated()">
   <div class="status-bar">
     <div class="status-bar-left">
-      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;">←</button>
+      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;"><span class="material-icons">keyboard_backspace</span></button>
       <span class="connection-status" id="connection-status"></span>
     </div>
     <label class="theme-toggle-switch">
@@ -47,6 +47,7 @@
                 <button type="button" class="password-eye material-icons" onclick="togglePassVisibility(this)">visibility</button>
             </div>
             <div id="password-feedback" class="feedback"></div>
+            <p class="warning-text"><b>WARNING:</b> If you forget your password, you will lose access to all your old messages.</p>
 	    </div>
 
             <button type="submit">Continue</button>
@@ -104,8 +105,8 @@
     <p id="message-area" style="margin-top: 15px;"></p>
 </div>
   </div>
-<script src="utils.js" defer></script>
-<script src="crypto.js" defer></script>
+<script src="../utils.js" defer></script>
+<script src="../crypto.js" defer></script>
 <script src="auth.js" defer></script>
 </body>
 </html>

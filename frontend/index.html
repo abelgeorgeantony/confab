@@ -5,10 +5,83 @@
         <title>Welcome - Confab</title>
         <link rel="stylesheet" href="base.css" />
         <link rel="stylesheet" href="loader.css" />
+        <link rel="stylesheet" href="scene.css" />
         <script src="utils.js" defer></script>
         <script src="auth.js" defer></script>
     </head>
     <body class="index-page" onload="redirectIfAuthenticated()">
+        <div id="background-scene">
+            <svg
+                class="shape"
+                style="top: 15%; left: 10%; width: 100px; height: 100px"
+                viewBox="0 0 22 22"
+            >
+                <path
+                    d="M12 20H10V19H9V18H8V17H7V16H6V15H5V14H4V13H3V12H2V10H1V5H2V4H3V3H4V2H9V3H10V4H12V3H13V2H18V3H19V4H20V5H21V10H20V12H19V13H18V14H17V15H16V16H15V17H14V18H13V19H12V20M5 11V12H6V13H7V14H8V15H9V16H10V17H12V16H13V15H14V14H15V13H16V12H17V11H18V9H19V6H18V5H17V4H14V5H13V6H12V7H10V6H9V5H8V4H5V5H4V6H3V9H4V11H5Z"
+                />
+            </svg>
+            <svg
+                class="shape"
+                style="
+                    top: 70%;
+                    left: 20%;
+                    width: 120px;
+                    height: 120px;
+                    animation-delay: -2s;
+                "
+                viewBox="0 0 22 22"
+            >
+                <path
+                    d="M1 4H2V3H20V4H21V18H20V19H2V18H1V4M3 14H4V13H5V12H6V11H7V10H8V9H10V10H11V11H12V12H13V13H14V14H15V15H16V16H17V17H19V5H3V14M14 17V16H13V15H12V14H11V13H10V12H8V13H7V14H6V15H5V16H4V17H14M13 8H14V7H16V8H17V10H16V11H14V10H13V8Z"
+                />
+            </svg>
+            <svg
+                class="shape"
+                style="
+                    top: 25%;
+                    right: 15%;
+                    width: 140px;
+                    height: 140px;
+                    animation-delay: -4s;
+                "
+                viewBox="0 0 22 22"
+            >
+                <path
+                    d="M10 12H12V13H13V15H12V16H10V15H9V13H10V12M8 2H14V3H15V4H16V8H17V9H18V19H17V20H5V19H4V9H5V8H6V4H7V3H8V2M9 4V5H8V8H14V5H13V4H9M16 10H6V18H16V10Z"
+                />
+            </svg>
+            <svg
+                class="shape"
+                style="
+                    bottom: 10%;
+                    right: 25%;
+                    width: 150px;
+                    height: 150px;
+                    animation-delay: -6s;
+                "
+                viewBox="0 0 22 22"
+            >
+                <path
+                    d="M2 1H20V2H21V16H20V17H5V18H4V19H3V20H2V21H1V2H2V1M4 15H19V3H3V16H4V15M6 8H8V10H6V8M10 8H12V10H10V8M14 8H16V10H14V8Z"
+                />
+            </svg>
+            <svg
+                class="shape"
+                style="
+                    top: 10%;
+                    right: 5%;
+                    width: 80px;
+                    height: 80px;
+                    animation-delay: -8s;
+                "
+                viewBox="0 0 22 22"
+            >
+                <path
+                    d="M10 21V18H8V17H6V16H5V15H4V13H3V9H5V12H6V14H7V15H9V16H13V15H15V14H16V12H17V9H19V13H18V15H17V16H16V17H14V18H12V21H10M8 13V12H7V3H8V2H9V1H13V2H14V3H15V12H14V13H13V14H9V13H8M9 11H10V12H12V11H13V4H12V3H10V4H9V11Z"
+                />
+            </svg>
+        </div>
+        <div id="loading-overlay"></div>
         <div class="status-bar">
             <div class="status-bar-left">
                 <button
@@ -16,7 +89,7 @@
                     class="status-bar-back-btn"
                     style="display: none"
                 >
-                    ←
+                    <span class="material-icons">keyboard_backspace</span>
                 </button>
                 <span class="connection-status" id="connection-status"></span>
             </div>
@@ -30,17 +103,21 @@
             </label>
         </div>
         <div class="page-wrapper">
-            <div class="form-container">
-                <h1>Welcome to Confab</h1>
-                <p>Secure, Encrypted, and Fun Communication.</p>
-                <div style="display: flex; justify-content: space-around">
-                    <button onclick="location.href='./login.html'">
-                        Login
-                    </button>
-                    <button onclick="location.href='./register.html'">
-                        Sign Up
-                    </button>
-                </div>
+            <h1>Welcome to Confab</h1>
+            <p>Secure, Encrypted, and Fun communication.</p>
+            <div
+                style="
+                    display: flex;
+                    justify-content: space-around;
+                    padding-top: 10px;
+                "
+            >
+                <button onclick="location.href='./auth/login.html'">
+                    Log In
+                </button>
+                <button onclick="location.href='./auth/register.html'">
+                    Sign Up
+                </button>
             </div>
         </div>
     </body>
