@@ -45,7 +45,7 @@ if ($result->num_rows === 1) {
     $reset_link =
         "https://" .
         $_SERVER["HTTP_HOST"] .
-        "/frontend/reset_password.html?token=" .
+        "/frontend/auth/reset_password.html?token=" .
         $token;
 
     $subject = "Your Password Reset Link for Perfect Chat";

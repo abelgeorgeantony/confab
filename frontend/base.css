@@ -102,11 +102,11 @@ body.dark-mode {
     color: var(--text-color);
     font-size: 1.2em;
     cursor: pointer;
-    padding: 2px;
+    padding: 0px;
     margin: 0;
     border-radius: 6px;
     height: 24px;
-    width: 24px;
+    width: 28px;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -139,7 +139,7 @@ async function loadUserProfile() {
       document.getElementById("profile-username").value = data.user.username;
       document.getElementById("profile-email").value = data.user.email;
       document.getElementById("pfp-preview").src =
-        "../" + data.user.profile_picture_url;
+        "/" + data.user.profile_picture_url;
       document.getElementById("profile-bio").value = data.user.bio;
 
       document

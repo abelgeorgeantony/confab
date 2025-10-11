@@ -75,10 +75,6 @@ body.index-page {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
 }
-.password-eye:hover {
-    background: var(--input-bg);
-    text-shadow: 2px 2px #ff0000;
-}
 
 /* Additional styles for the multi-step form */
 .step {

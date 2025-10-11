@@ -113,16 +113,64 @@
                             placeholder="Type a message..."
                             required
                         ></textarea>
-                        <div id="voice-message-ui" class="hidden">
-                            <audio id="audio-player" controls></audio>
-                            <span id="timer">0:00</span>
-                            <button
-                                type="button"
-                                id="delete-recording-btn"
-                                class="material-icons"
-                            >
-                                delete
-                            </button>
+                        <div id="voice-message-container" class="hidden">
+                            <!-- Recording State -->
+                            <div id="voice-recording-state" class="hidden">
+                                <div class="recording-info">
+                                    <div class="visualizer"></div>
+                                    <span id="recording-timer">0:00</span>
+                                </div>
+                                <div class="recording-actions">
+                                    <button
+                                        type="button"
+                                        id="pause-resume-recording-btn"
+                                        class="material-icons"
+                                    >
+                                        pause
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="stop-recording-btn"
+                                        class="material-icons"
+                                    >
+                                        stop
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="cancel-recording-btn"
+                                        class="material-icons"
+                                    >
+                                        delete
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Playback State -->
+                            <div id="voice-playback-state" class="hidden">
+                                <button
+                                    type="button"
+                                    id="play-pause-btn"
+                                    class="material-icons"
+                                >
+                                    play_arrow
+                                </button>
+                                <span id="playback-timer">0:00 / 0:00</span>
+                                <div class="waveform"></div>
+                                <button
+                                    type="button"
+                                    id="delete-recording-btn"
+                                    class="material-icons"
+                                >
+                                    delete
+                                </button>
+                                <button
+                                    type="button"
+                                    id="send-voice-message-btn"
+                                    class="material-icons"
+                                >
+                                    send
+                                </button>
+                            </div>
                         </div>
                         <button
                             type="button"

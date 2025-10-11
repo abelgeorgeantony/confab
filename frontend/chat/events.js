@@ -1,14 +1,36 @@
 // frontend/chat/events.js
 // Centralizes the application's event handling logic.
 // It attaches its functions to the 'app.events' namespace.
-//
-const recordButton = document.getElementById("record-button");
-const audioPlayer = document.getElementById("audio-player");
-let voicerecording = false;
-let mediaRecorder;
-let audioChunks = [];
 
 (function (app) {
+  // --- Voice Message Variables ---
+  let mediaRecorder;
+  let audioChunks = [];
+  let audioBlob = null;
+  let audioUrl = null;
+  let timerInterval = null;
+  let seconds = 0;
+  let totalDurationFormatted = "0:00";
+
+  // --- UI Elements ---
+  const recordButton = document.getElementById("record-button");
+  const messageInput = document.getElementById("message-input");
+  const voiceMessageContainer = document.getElementById(
+    "voice-message-container",
+  );
+  const recordingState = document.getElementById("voice-recording-state");
+  const playbackState = document.getElementById("voice-playback-state");
+  const recordingTimer = document.getElementById("recording-timer");
+  const pauseResumeBtn = document.getElementById("pause-resume-recording-btn");
+  const stopRecordingBtn = document.getElementById("stop-recording-btn");
+  const cancelRecordingBtn = document.getElementById("cancel-recording-btn");
+  const playPauseBtn = document.getElementById("play-pause-btn");
+  const playbackTimer = document.getElementById("playback-timer");
+  const deleteRecordingBtn = document.getElementById("delete-recording-btn");
+  const sendVoiceMessageBtn = document.getElementById("send-voice-message-btn");
+  const visualizer = document.querySelector(".visualizer");
+  const audioPlayer = new Audio(); // Use a detached audio element for playback logic
+
   /**
    * A helper function to dispatch custom events.
    * @param {string} name - The name of the event.
@@ -18,10 +40,195 @@ let audioChunks = [];
     document.dispatchEvent(new CustomEvent(name, { detail }));
   }
 
+  // --- UI State Management ---
+  function showRecordingUI() {
+    messageInput.classList.add("hidden");
+    recordButton.classList.add("hidden");
+    voiceMessageContainer.classList.remove("hidden");
+    recordingState.classList.remove("hidden");
+    playbackState.classList.add("hidden");
+    visualizer.classList.remove("paused");
+    pauseResumeBtn.textContent = "pause";
+  }
+
+  function showPlaybackUI() {
+    recordingState.classList.add("hidden");
+    playbackState.classList.remove("hidden");
+  }
+
+  function showInitialUI() {
+    voiceMessageContainer.classList.add("hidden");
+    messageInput.classList.remove("hidden");
+    recordButton.classList.remove("hidden");
+    resetRecordingState();
+  }
+
+  function resetRecordingState() {
+    if (
+      mediaRecorder &&
+      (mediaRecorder.state === "recording" || mediaRecorder.state === "paused")
+    ) {
+      mediaRecorder.stop();
+    }
+    clearInterval(timerInterval);
+    seconds = 0;
+    audioChunks = [];
+    audioBlob = null;
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+      audioUrl = null;
+    }
+    recordingTimer.textContent = "0:00";
+    totalDurationFormatted = "0:00";
+    playbackTimer.textContent = "0:00 / 0:00";
+    playPauseBtn.textContent = "play_arrow";
+  }
+
+  // --- Recording Logic ---
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      showRecordingUI();
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      // Start timer
+      recordingTimer.textContent = "0:00";
+      timerInterval = setInterval(() => {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        recordingTimer.textContent = `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+      }, 1000);
+
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        audioChunks.push(event.data);
+      });
+
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        audioUrl = URL.createObjectURL(audioBlob);
+        audioPlayer.src = audioUrl;
+        audioPlayer.load(); // Pre-load audio metadata
+        stream.getTracks().forEach((track) => track.stop()); // Release microphone
+      };
+    } catch (err) {
+      console.error("Could not start recording:", err);
+      alert(
+        "Could not access microphone. Please ensure you have given permission.",
+      );
+      showInitialUI();
+    }
+  }
+
+  function togglePauseResume() {
+    if (mediaRecorder.state === "recording") {
+      mediaRecorder.pause();
+      clearInterval(timerInterval);
+      visualizer.classList.add("paused");
+      pauseResumeBtn.textContent = "mic";
+      pauseResumeBtn.classList.add("resume-mode");
+    } else if (mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+      visualizer.classList.remove("paused");
+      pauseResumeBtn.textContent = "pause";
+      pauseResumeBtn.classList.remove("resume-mode");
+      timerInterval = setInterval(() => {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        recordingTimer.textContent = `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+      }, 1000);
+    }
+  }
+
+  function stopRecording() {
+    if (
+      mediaRecorder &&
+      (mediaRecorder.state === "recording" || mediaRecorder.state === "paused")
+    ) {
+      mediaRecorder.stop();
+    }
+    clearInterval(timerInterval);
+    showPlaybackUI();
+  }
+
+  // --- Playback Logic ---
+  function togglePlayback() {
+    if (audioPlayer.paused) {
+      audioPlayer.play();
+      playPauseBtn.textContent = "pause";
+    } else {
+      audioPlayer.pause();
+      playPauseBtn.textContent = "play_arrow";
+    }
+  }
+
+  audioPlayer.onended = () => {
+    playPauseBtn.textContent = "play_arrow";
+    audioPlayer.currentTime = 0;
+  };
+
+  audioPlayer.ontimeupdate = () => {
+    const currentMinutes = Math.floor(audioPlayer.currentTime / 60);
+    const currentSeconds = Math.floor(audioPlayer.currentTime % 60);
+    const currentTimeFormatted = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")}`;
+
+    playbackTimer.textContent = `${currentTimeFormatted} / ${totalDurationFormatted}`;
+  };
+
+  audioPlayer.onloadedmetadata = () => {
+    const totalMinutes = Math.floor(audioPlayer.duration / 60);
+    const totalSeconds = Math.floor(audioPlayer.duration % 60);
+    totalDurationFormatted = `${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
+
+    const currentMinutes = Math.floor(audioPlayer.currentTime / 60);
+    const currentSeconds = Math.floor(audioPlayer.currentTime % 60);
+    const currentTimeFormatted = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")}`;
+
+    playbackTimer.textContent = `${currentTimeFormatted} / ${totalDurationFormatted}`;
+  };
+
+  // --- Main Send Logic ---
+  function sendVoiceMessage() {
+    if (!audioBlob || !app.state.currentChatUser) return;
+
+    // This is where you would encrypt and send the `audioBlob`
+    console.log("Sending voice message of size:", audioBlob.size);
+
+    // For now, let's just display it as a placeholder
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      app.ui.displayMessage(
+        "me",
+        `🎤 Voice Message: ${e.target.result.substring(0, 30)}...`,
+        Date.now(),
+      );
+      app.storage.saveMessageLocally(
+        app.state.currentChatUser,
+        "me",
+        `🎤 Voice Message`,
+        Date.now(),
+      );
+    };
+    reader.readAsDataURL(audioBlob);
+
+    showInitialUI();
+  }
+
   /**
    * Sets up all the main event listeners for the application.
    */
   function initializeEventListeners() {
+    // --- Voice Message Button Listeners ---
+    recordButton.addEventListener("click", startRecording);
+    pauseResumeBtn.addEventListener("click", togglePauseResume);
+    stopRecordingBtn.addEventListener("click", stopRecording);
+    cancelRecordingBtn.addEventListener("click", showInitialUI);
+    playPauseBtn.addEventListener("click", togglePlayback);
+    deleteRecordingBtn.addEventListener("click", showInitialUI);
+    sendVoiceMessageBtn.addEventListener("click", sendVoiceMessage);
+
     // Listener for incoming messages (both real-time and offline).
     document.addEventListener("messageReceived", async (e) => {
       const { senderId, payload } = e.detail;
@@ -63,15 +270,6 @@ let audioChunks = [];
         decryptedMessage,
         payload.timestamp,
       );
-      // If the message is for the currently active chat, display it.
-      /*if (Number(app.state.currentChatUser) === Number(senderId)) {
-        app.ui.displayMessage("them", decryptedMessage, payload.timestamp);
-      } else {
-        // Otherwise, increment the unread count.
-        app.state.unreadCounts[senderId] =
-          (app.state.unreadCounts[senderId] || 0) + 1;
-        app.ui.updateUnreadBadge(senderId);
-      }*/
     });
 
     // Listener to rebuild the contact list UI when contacts are loaded/updated.
@@ -109,7 +307,7 @@ let audioChunks = [];
         contactDiv.setAttribute("data-contact-id", contact.id);
         const lastMsg = app.storage.getLastMessage(contact.id);
         const lastMsgText = lastMsg
-          ? lastMsg.message.replace(/[\n\r]/g, " ")
+          ? lastMsg.message.replace(new RegExp("[\\n\\r]", "g"), " ")
           : "Tap to chat";
         const useravatar = contact.profile_picture_url
           ? `<img src="/${contact.profile_picture_url}" class="contact-avatar" data-contact-id="${contact.id}">`
@@ -176,8 +374,6 @@ let audioChunks = [];
       const list = document.getElementById("user-list");
       const card = list.querySelector(`[data-contact-id="${contactId}"]`);
 
-      // **FIX:** If the chat is of a user not in our contact list,
-      // fetch their details and add them dynamically.
       if (!card && !app.state.allContacts.some((c) => c.id == contactId)) {
         const token = getCookie("auth_token");
         fetch(API + "add_non_contact.php", {
@@ -189,15 +385,14 @@ let audioChunks = [];
           .then((data) => {
             if (data.success && data.contact) {
               app.state.allContacts.push(data.contact);
-              triggerEvent("contactsLoaded"); // This will re-render the entire list correctly.
+              triggerEvent("contactsLoaded");
             }
           });
       } else if (card) {
         card.querySelector(".contact-lastmsg").textContent = message.replace(
-          /[\n\r]/g,
+          new RegExp("[\\n\\r]", "g"),
           " ",
         );
-        // Move the card to the top of the list for recent activity.
         if (list.firstChild !== card) {
           list.prepend(card);
         }
@@ -208,68 +403,9 @@ let audioChunks = [];
       if (Number(app.state.currentChatUser) === Number(contactId)) {
         app.ui.displayMessage(sender, message, timestamp);
       } else {
-        // Otherwise, increment the unread count.
         app.state.unreadCounts[contactId] =
           (app.state.unreadCounts[contactId] || 0) + 1;
         app.ui.updateUnreadBadge(contactId);
-      }
-    });
-
-    document.addEventListener("recordstart", async () => {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-
-        // show the audio being recorded
-        document.getElementById("voice-message-ui").classList.remove("hidden");
-        document.getElementById("message-input").classList.add("hidden");
-
-        const audioContext = new (window.AudioContext ||
-          window.webkitAudioContext)();
-        audioContext.resume();
-
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.start();
-
-        let seconds = 0;
-        timerInterval = setInterval(() => {
-          seconds++;
-          const minutes = Math.floor(seconds / 60);
-          const remainingSeconds = seconds % 60;
-          document.getElementById("timer").textContent =
-            `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-        }, 1000);
-
-        mediaRecorder.addEventListener("dataavailable", (event) => {
-          audioChunks.push(event.data);
-        });
-      }
-    });
-    document.addEventListener("recordend", () => {
-      mediaRecorder.stop();
-      clearInterval(timerInterval);
-      document.getElementById("timer").textContent = "0:00";
-      mediaRecorder.addEventListener("stop", () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioPlayer.src = audioUrl;
-        return;
-        // You would then encrypt and send this blob
-        audioChunks = [];
-        document.getElementById("voice-message-ui").classList.add("hidden");
-        document.getElementById("message-input").classList.remove("hidden");
-      });
-    });
-    recordButton.addEventListener("click", () => {
-      if (!voicerecording) {
-        recordButton.textContent = "mic_off";
-        triggerEvent("recordstart");
-        voicerecording = true;
-      } else {
-        recordButton.textContent = "mic";
-        triggerEvent("recordend");
-        voicerecording = false;
       }
     });
   }
