@@ -53,8 +53,9 @@ if (file_exists($requestedFile) && is_file($requestedFile)) {
         pathinfo($requestedFile, PATHINFO_EXTENSION) === "php" &&
         dirname($requestedFile) === $documentRoot
     ) {
-        http_response_code(404);
-        echo "<h1>404 Not Found</h1>";
+        http_response_code(403);
+        echo "<h1>403 Access Denied</h1>";
+        echo '<p>Go back to the <a href="/frontend/index.html">homepage</a>.</p>';
         return;
     }
 
@@ -79,3 +80,4 @@ echo "<h1>404 Not Found</h1>";
 echo "<p>The requested resource <code>" .
     htmlspecialchars($uri) .
     "</code> was not found on this server.</p>";
+echo '<p>Go back to the <a href="/frontend/index.html">homepage</a>.</p>';

@@ -11,10 +11,23 @@
   let timerInterval = null;
   let seconds = 0;
   let totalDurationFormatted = "0:00";
+  let wavesurfer = null;
+  let lowpassFilter = null;
+  let highpassFilter = null;
+  let audioContext = null;
+  let sourceNode = null;
+  let isAudioGraphInitialized = false;
 
   // --- UI Elements ---
+  const messagesContainer = document.getElementById("messages");
+  const filterButtons = document.querySelectorAll(".filter-btn");
   const recordButton = document.getElementById("record-button");
   const messageInput = document.getElementById("message-input");
+  const voiceUiWrapper = document.getElementById("voice-ui-wrapper");
+  const audioFiltersContainer = document.getElementById(
+    "audio-filters-container",
+  );
+  const waveformContainer = document.getElementById("waveform-container");
   const voiceMessageContainer = document.getElementById(
     "voice-message-container",
   );
@@ -29,38 +42,102 @@
   const deleteRecordingBtn = document.getElementById("delete-recording-btn");
   const sendVoiceMessageBtn = document.getElementById("send-voice-message-btn");
   const visualizer = document.querySelector(".visualizer");
-  const audioPlayer = new Audio(); // Use a detached audio element for playback logic
 
   /**
    * A helper function to dispatch custom events.
    * @param {string} name - The name of the event.
-   * @param {Object} [detail={}] - The data to pass with the event.
+   * @param {Object} [detail={}] - The data to pass with the event..
    */
   function triggerEvent(name, detail = {}) {
     document.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
+  function applyFilter(filterType) {
+    if (!isAudioGraphInitialized) return;
+
+    // Reset pitch and playback rate
+    wavesurfer.getMediaElement().preservesPitch = true;
+    wavesurfer.setPlaybackRate(1);
+
+    // Disconnect all nodes from the source
+    sourceNode.disconnect();
+
+    if (filterType === "lowpass") {
+      if (!lowpassFilter) {
+        lowpassFilter = audioContext.createBiquadFilter();
+        lowpassFilter.type = "lowpass";
+        lowpassFilter.frequency.value = 1000;
+      }
+      sourceNode.connect(lowpassFilter);
+      lowpassFilter.connect(audioContext.destination);
+    } else if (filterType === "highpass") {
+      if (!highpassFilter) {
+        highpassFilter = audioContext.createBiquadFilter();
+        highpassFilter.type = "highpass";
+        highpassFilter.frequency.value = 800;
+      }
+      sourceNode.connect(highpassFilter);
+      highpassFilter.connect(audioContext.destination);
+    } else if (filterType === "talkingtom") {
+      wavesurfer.getMediaElement().preservesPitch = false;
+      wavesurfer.setPlaybackRate(2.0);
+      sourceNode.connect(audioContext.destination);
+    } else {
+      // 'none'
+      sourceNode.connect(audioContext.destination);
+    }
+  }
+
+  function updateWaveformColors() {
+    if (wavesurfer) {
+      const computedStyle = getComputedStyle(document.body);
+      const waveColor = computedStyle.getPropertyValue("--border-color");
+      const progressColor = computedStyle.getPropertyValue("--primary-color");
+      wavesurfer.setOptions({
+        waveColor: waveColor.trim(),
+        progressColor: progressColor.trim(),
+      });
+    }
   }
 
   // --- UI State Management ---
   function showRecordingUI() {
     messageInput.classList.add("hidden");
     recordButton.classList.add("hidden");
-    voiceMessageContainer.classList.remove("hidden");
+    voiceUiWrapper.classList.remove("hidden");
     recordingState.classList.remove("hidden");
     playbackState.classList.add("hidden");
     visualizer.classList.remove("paused");
     pauseResumeBtn.textContent = "pause";
+    audioFiltersContainer.classList.add("hidden");
+    waveformContainer.classList.add("hidden");
   }
 
   function showPlaybackUI() {
     recordingState.classList.add("hidden");
     playbackState.classList.remove("hidden");
+    audioFiltersContainer.classList.remove("hidden");
+    waveformContainer.classList.remove("hidden");
+    messagesContainer.classList.add("voice-ui-active");
+
+    // Set "None" filter as active by default
+    filterButtons.forEach((btn) => btn.classList.remove("active"));
+    document
+      .querySelector('.filter-btn[data-filter="none"]')
+      .classList.add("active");
+    applyFilter("none");
+
+    setTimeout(() => {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 300); // Matches the CSS transition duration
   }
 
   function showInitialUI() {
-    voiceMessageContainer.classList.add("hidden");
+    voiceUiWrapper.classList.add("hidden");
     messageInput.classList.remove("hidden");
     recordButton.classList.remove("hidden");
     resetRecordingState();
+    messagesContainer.classList.remove("voice-ui-active");
   }
 
   function resetRecordingState() {
@@ -69,6 +146,15 @@
       (mediaRecorder.state === "recording" || mediaRecorder.state === "paused")
     ) {
       mediaRecorder.stop();
+    }
+    if (wavesurfer) {
+      wavesurfer.destroy();
+      wavesurfer = null;
+    }
+    if (audioContext) {
+      audioContext.close();
+      audioContext = null;
+      isAudioGraphInitialized = false;
     }
     clearInterval(timerInterval);
     seconds = 0;
@@ -108,9 +194,48 @@
       mediaRecorder.onstop = () => {
         audioBlob = new Blob(audioChunks, { type: "audio/webm" });
         audioUrl = URL.createObjectURL(audioBlob);
-        audioPlayer.src = audioUrl;
-        audioPlayer.load(); // Pre-load audio metadata
         stream.getTracks().forEach((track) => track.stop()); // Release microphone
+
+        if (!wavesurfer) {
+          wavesurfer = WaveSurfer.create({
+            container: waveformContainer,
+            height: "auto",
+            barWidth: 2,
+            barGap: 1,
+            dragToSeek: true,
+            plugins: [WaveSurfer.Regions.create({})],
+          });
+          updateWaveformColors();
+
+          wavesurfer.on("decode", () => {
+            const duration = wavesurfer.getDuration();
+            const totalMinutes = Math.floor(duration / 60);
+            const totalSeconds = Math.floor(duration % 60);
+            totalDurationFormatted = `${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
+            updatePlaybackTimer();
+
+            if (!isAudioGraphInitialized) {
+              audioContext = new (window.AudioContext ||
+                window.webkitAudioContext)();
+              sourceNode = audioContext.createMediaElementSource(
+                wavesurfer.getMediaElement(),
+              );
+              sourceNode.connect(audioContext.destination);
+              isAudioGraphInitialized = true;
+            }
+          });
+
+          wavesurfer.on("timeupdate", () => {
+            updatePlaybackTimer();
+          });
+
+          wavesurfer.on("finish", () => {
+            playPauseBtn.textContent = "play_arrow";
+            wavesurfer.seekTo(0);
+            updatePlaybackTimer();
+          });
+        }
+        wavesurfer.load(audioUrl);
       };
     } catch (err) {
       console.error("Could not start recording:", err);
@@ -155,39 +280,23 @@
 
   // --- Playback Logic ---
   function togglePlayback() {
-    if (audioPlayer.paused) {
-      audioPlayer.play();
-      playPauseBtn.textContent = "pause";
-    } else {
-      audioPlayer.pause();
-      playPauseBtn.textContent = "play_arrow";
+    if (wavesurfer) {
+      wavesurfer.playPause();
+      playPauseBtn.textContent = wavesurfer.isPlaying()
+        ? "pause"
+        : "play_arrow";
     }
   }
 
-  audioPlayer.onended = () => {
-    playPauseBtn.textContent = "play_arrow";
-    audioPlayer.currentTime = 0;
-  };
-
-  audioPlayer.ontimeupdate = () => {
-    const currentMinutes = Math.floor(audioPlayer.currentTime / 60);
-    const currentSeconds = Math.floor(audioPlayer.currentTime % 60);
-    const currentTimeFormatted = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")}`;
-
-    playbackTimer.textContent = `${currentTimeFormatted} / ${totalDurationFormatted}`;
-  };
-
-  audioPlayer.onloadedmetadata = () => {
-    const totalMinutes = Math.floor(audioPlayer.duration / 60);
-    const totalSeconds = Math.floor(audioPlayer.duration % 60);
-    totalDurationFormatted = `${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
-
-    const currentMinutes = Math.floor(audioPlayer.currentTime / 60);
-    const currentSeconds = Math.floor(audioPlayer.currentTime % 60);
-    const currentTimeFormatted = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")}`;
-
-    playbackTimer.textContent = `${currentTimeFormatted} / ${totalDurationFormatted}`;
-  };
+  function updatePlaybackTimer() {
+    if (wavesurfer) {
+      const currentTime = wavesurfer.getCurrentTime();
+      const currentMinutes = Math.floor(currentTime / 60);
+      const currentSeconds = Math.floor(currentTime % 60);
+      const currentTimeFormatted = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")}`;
+      playbackTimer.textContent = `${currentTimeFormatted} / ${totalDurationFormatted}`;
+    }
+  }
 
   // --- Main Send Logic ---
   function sendVoiceMessage() {
@@ -220,6 +329,17 @@
    * Sets up all the main event listeners for the application.
    */
   function initializeEventListeners() {
+    document.addEventListener("themeChanged", updateWaveformColors);
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        filterButtons.forEach((btn) => btn.classList.remove("active"));
+        button.classList.add("active");
+        const filterType = button.dataset.filter;
+        applyFilter(filterType);
+      });
+    });
+
     // --- Voice Message Button Listeners ---
     recordButton.addEventListener("click", startRecording);
     pauseResumeBtn.addEventListener("click", togglePauseResume);

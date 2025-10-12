@@ -77,6 +77,8 @@ function toggleTheme() {
 
   const currentTheme = body.classList.contains("dark-mode") ? "dark" : "light";
   localStorage.setItem("theme", currentTheme);
+
+  document.dispatchEvent(new CustomEvent("themeChanged"));
 }
 
 /**

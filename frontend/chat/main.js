@@ -44,31 +44,34 @@
     const sendButton = document.getElementById("send-button");
     const recordButton = document.getElementById("record-button");
     const messageInput = document.getElementById("message-input");
+    const voiceUiWrapper = document.getElementById("voice-ui-wrapper");
 
-    if (messageInput.value.trim() === "") {
-      sendButton.classList.add("hidden");
-      recordButton.classList.remove("hidden");
-    } else {
-      sendButton.classList.remove("hidden");
-      recordButton.classList.add("hidden");
-    }
+    const updateButtonVisibility = () => {
+      const isVoiceUIVisible = !voiceUiWrapper.classList.contains("hidden");
+      const isInputEmpty = messageInput.value.trim() === "";
 
-    messageInput.oninput = () => {
-      if (messageInput.value.trim() === "") {
+      if (isVoiceUIVisible) {
         sendButton.classList.add("hidden");
-        recordButton.classList.remove("hidden");
-      } else {
-        sendButton.classList.remove("hidden");
         recordButton.classList.add("hidden");
+      } else {
+        if (isInputEmpty) {
+          sendButton.classList.add("hidden");
+          recordButton.classList.remove("hidden");
+        } else {
+          sendButton.classList.remove("hidden");
+          recordButton.classList.add("hidden");
+        }
       }
     };
+
+    messageInput.oninput = updateButtonVisibility;
+    updateButtonVisibility(); // Initial check
 
     const sendMessageAction = async () => {
       sendButton.disabled = true;
       await app.websocket.send(contact.id);
       sendButton.disabled = false;
-      sendButton.classList.add("hidden");
-      recordButton.classList.remove("hidden");
+      updateButtonVisibility();
       //messageInput.focus();
     };
     sendButton.onclick = sendMessageAction;
