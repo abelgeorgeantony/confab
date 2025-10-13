@@ -1,5 +1,11 @@
 /* === Chat Page Specific Styles === */
 
+body {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
 .page-wrapper {
     height: 100dvh;
     overflow: hidden;
@@ -29,8 +35,8 @@
 }
 
 .chat-header {
-    position: fixed;
-    width: 29.3vw;
+    /*position: fixed;
+    width: 29.3vw;*/
     padding: 10px 15px;
     border-right: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
@@ -61,7 +67,7 @@
 
 /* --- Modal Styles --- */
 .modal-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 100;
@@ -199,7 +205,7 @@
 }
 
 #user-list {
-    padding-top: 65px;
+    /*padding-top: 65px;*/
     flex-grow: 1;
     overflow-y: auto;
 }
@@ -293,11 +299,11 @@
 }
 
 .chat-view-header {
-    margin-top: 28px;
+    /*margin-top: 28px;
     width: 70.7vw;
     position: fixed;
     top: 0;
-    right: 0;
+    right: 0;*/
     padding: 10px 15px;
     background: var(--chat-header-bg);
     border-bottom: 1px solid var(--border-color);
@@ -339,7 +345,8 @@
     margin-bottom: 5px;
     height: 100%;
     overflow-y: auto;
-    padding: 90px 15px 100px 15px; /* Top and bottom padding to clear fixed header/footer */
+    scrollbar-width: none;
+    padding: 10px 15px 10px 15px; /* Top and bottom padding to clear fixed header/footer */
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -347,14 +354,14 @@
 }
 
 #messages.voice-ui-active {
-    padding-bottom: 220px;
+    /*padding-bottom: 220px;*/
 }
 
 #message-form {
-    width: 70.7vw;
+    /*width: 70.7vw;
     position: fixed;
     bottom: 0;
-    right: 0;
+    right: 0;*/
     display: flex;
     align-items: center;
     padding: 10px;
@@ -362,7 +369,7 @@
     background-color: var(--chat-header-bg);
     border-top: 1px solid var(--border-color);
     z-index: 2;
-    min-height: 65px; /* Give it a fixed min-height */
+    /*min-height: 65px;  Give it a fixed min-height */
 }
 
 #message-input,
@@ -453,7 +460,7 @@
     }
 
     #user-list {
-        padding-top: 110px;
+        /*padding-top: 110px;*/
     }
 
     #chat-list.slideout {
@@ -495,13 +502,14 @@
     }
 
     #messages {
-        padding-top: 100px;
-        padding-bottom: 100px;
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
     #message-form {
         width: 100vw;
     }
     .chat-view-header {
+        margin-top: 28px;
         width: 100vw;
     }
 }
@@ -523,6 +531,7 @@
     gap: 10px;
     align-items: center;
     overflow-x: auto;
+    scrollbar-width: none;
     padding: 0 10px;
 }
 
@@ -537,7 +546,7 @@
     white-space: nowrap;
     flex-shrink: 0;
     min-width: fit-content;
-    font-size: 0.9em;
+    font-size: 0.9em !important;
     font-weight: 600;
     box-shadow: 0 1px 2px var(--shadow-color);
     transition: all 0.2s ease-in-out;
@@ -647,4 +656,36 @@
 
 #pause-resume-recording-btn.resume-mode {
     background-color: var(--primary-color);
+}
+
+/* === Message Actions Popup === */
+.message-actions-popup {
+    position: absolute; /* Changed from fixed */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Fine-tune centering */
+    background-color: var(--chat-header-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    display: flex;
+    flex-direction: column; /* New: stack items vertically */
+    gap: 5px;
+    padding: 10px; /* Increased padding for a better look */
+    z-index: 101; /* Make sure it's on top of the overlay */
+}
+
+.message-actions-popup button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color-light);
+    font-size: 20px;
+    padding: 10px; /* Increased padding */
+    width: 100%; /* Make buttons take full width */
+    text-align: center; /* Center the icon */
+}
+
+.message-actions-popup button:hover {
+    color: var(--text-color);
 }

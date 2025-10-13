@@ -10,6 +10,7 @@ var app = {
     currentChatUser: null,
     allContacts: [],
     myPrivateKey: null,
+    myPublicKey: null,
     publicKeyCache: {},
   },
   // Namespace for utility functions (e.g., local storage).

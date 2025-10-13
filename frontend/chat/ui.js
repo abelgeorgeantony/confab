@@ -53,6 +53,62 @@
 
     msgDiv.appendChild(textSpan);
     msgDiv.appendChild(timeSpan);
+
+    // Long press event for message actions
+    let pressTimer;
+    let popupJustShown = false;
+
+    const showPopup = () => {
+      const popup = document.getElementById("message-actions-popup");
+      const overlay = document.getElementById("modal-overlay");
+
+      popup.classList.remove("hidden");
+      overlay.classList.remove("hidden");
+
+      const copyBtn = document.getElementById("copy-message-btn");
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(messageText);
+        popup.classList.add("hidden");
+        overlay.classList.add("hidden");
+      };
+
+      // Hide popup when clicking outside (on the overlay)
+      const clickOutsideHandler = (event) => {
+        if (event.target === overlay) {
+          popup.classList.add("hidden");
+          overlay.classList.add("hidden");
+          document.removeEventListener("click", clickOutsideHandler);
+          document.removeEventListener("touchstart", clickOutsideHandler);
+        }
+      };
+
+      document.addEventListener("click", clickOutsideHandler);
+      document.addEventListener("touchstart", clickOutsideHandler);
+    };
+
+    const startPress = (e) => {
+      // Don't show for right-clicks
+      if (e.button === 2) return;
+
+      pressTimer = window.setTimeout(() => {
+        showPopup();
+      }, 500); // 500ms for a long press
+    };
+
+    const cancelPress = () => {
+      clearTimeout(pressTimer);
+    };
+
+    msgDiv.addEventListener("mousedown", startPress);
+    msgDiv.addEventListener("mouseup", cancelPress);
+    msgDiv.addEventListener("mouseleave", cancelPress);
+    msgDiv.addEventListener("touchstart", startPress);
+    msgDiv.addEventListener("touchend", cancelPress);
+
+    msgDiv.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
+
     messagesContainer.appendChild(msgDiv);
     // Automatically scroll to the bottom to show the new message.
     messagesContainer.scrollTop = messagesContainer.scrollHeight;

@@ -78,25 +78,50 @@
         return reject(new Error("Cannot find public key!"));
       }
 
+      const myPublicKeyJwk = app.state.myPublicKey;
+      if (!myPublicKeyJwk) {
+        alert("Your public key is not available. Please try logging in again.");
+        return reject(new Error("Cannot find own public key!"));
+      }
+
       // E2EE Encryption Flow
       const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(
         recipientPublicKeyJwk,
       );
+      const myPublicKey =
+        await cryptoHandler.importPublicKeyFromJwk(myPublicKeyJwk);
       const aesKey = await cryptoHandler.generateAesKey();
       const { ciphertext, iv } = await cryptoHandler.aesEncrypt(
         message,
         aesKey,
       );
-      const exportedAesKeyJwk = await cryptoHandler.exportKeyToJwk(aesKey);
-      const encryptedAesKey = await cryptoHandler.rsaEncrypt(
-        new TextEncoder().encode(JSON.stringify(exportedAesKeyJwk)),
+      const exportedAesKeyJwkString = JSON.stringify(
+        await cryptoHandler.exportKeyToJwk(aesKey),
+      );
+
+      const encryptedAesKeyForReceiver = await cryptoHandler.rsaEncrypt(
+        new TextEncoder().encode(exportedAesKeyJwkString),
         recipientPublicKey,
+      );
+
+      const encryptedAesKeyForSender = await cryptoHandler.rsaEncrypt(
+        new TextEncoder().encode(exportedAesKeyJwkString),
+        myPublicKey,
       );
 
       const payload = {
         ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
-        encryptedKey: cryptoHandler.arrayBufferToBase64(encryptedAesKey),
         iv: cryptoHandler.arrayBufferToBase64(iv),
+        keys: [
+          {
+            userId: contactId,
+            key: cryptoHandler.arrayBufferToBase64(encryptedAesKeyForReceiver),
+          },
+          {
+            userId: app.state.myId,
+            key: cryptoHandler.arrayBufferToBase64(encryptedAesKeyForSender),
+          },
+        ],
         timestamp: Date.now(),
       };
 

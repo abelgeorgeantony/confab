@@ -106,6 +106,24 @@
                     <div id="messages">
                         <!-- Messages will be injected here by chat.js -->
                     </div>
+                    <div
+                        id="message-actions-popup"
+                        class="message-actions-popup hidden"
+                    >
+                        <button id="copy-message-btn">
+                            <span class="material-icons">content_copy</span>Copy
+                        </button>
+                        <button id="forward-message-btn">
+                            <span class="material-icons">forward</span>Forward
+                        </button>
+                        <button id="delete-message-btn">
+                            <span class="material-icons">delete</span>Delete
+                        </button>
+                        <button id="edit-message-btn">
+                            <span class="material-icons">edit</span>Edit
+                        </button>
+                    </div>
+                    <div id="modal-overlay" class="modal-overlay hidden"></div>
                     <form
                         id="message-form"
                         onsubmit="event.preventDefault(); sendMessage(currentChatUser);"
@@ -213,7 +231,6 @@
             </div>
 
             <!-- Modal Overlay -->
-            <div id="modal-overlay" class="modal-overlay hidden"></div>
 
             <!-- Add Contact Modal -->
             <div id="add-contact-modal" class="modal hidden">

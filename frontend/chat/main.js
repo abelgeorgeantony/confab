@@ -253,8 +253,39 @@
    */
   async function main() {
     // Ensure user is authenticated before proceeding.
-    Loader.start("Ensuring you're on the VIP list");
-    await requireAuth();
+    Loader.start("Checking if you are a terrorist");
+    const myId = await requireAuth();
+
+    // Fetch and store user's own public key
+    const token = getCookie("auth_token");
+    const formData = new URLSearchParams();
+    formData.append("token", token);
+    await fetch(API + "fetch_my_profile.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData,
+    })
+      .then((res) => {
+        if (!res.ok) {
+          console.error("Fetch failed with status:", res.status);
+          res.text().then((text) => console.error("Response body:", text));
+          throw new Error("Network response was not ok.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          app.state.myPublicKey = JSON.parse(data.profile.public_key);
+        } else {
+          console.error("Failed to fetch own profile:", data.error);
+          alert(
+            "There was an error fetching your profile information. Please try logging in again.",
+          );
+          // Redirect to login?
+        }
+      });
 
     // Load the user's decrypted private key from local storage.
     Loader.addMessage("Selling your private key");
@@ -274,6 +305,103 @@
     // Fetch initial data and connect to the real-time server.
     Loader.addMessage("Tickling your friends");
     await app.api.loadContacts();
+
+    // Fetch all messages if no chat history is found in local storage
+    let hasChatHistory = false;
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i).startsWith("chat_user_")) {
+        hasChatHistory = true;
+        break;
+      }
+    }
+
+    if (!hasChatHistory) {
+      if (!myId) {
+        console.error("User ID not set, cannot fetch history.");
+        return;
+      }
+
+      console.log(
+        "No chat history found in local storage, fetching from server...",
+      );
+      const historyToken = getCookie("auth_token");
+      const historyFormData = new URLSearchParams();
+      historyFormData.append("token", historyToken);
+
+      await fetch(API + "fetch_all_messages.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: historyFormData,
+      })
+        .then((res) => {
+          if (!res.ok) {
+            console.error("Fetch failed with status:", res.status);
+            res.text().then((text) => console.error("Response body:", text));
+            throw new Error("Network response was not ok.");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (data.success) {
+            data.messages.forEach(async (msg) => {
+              const contactId =
+                msg.sender_id == myId ? msg.receiver_id : msg.sender_id;
+              const sender = msg.sender_id == myId ? "me" : "them";
+              const payload = JSON.parse(msg.payload);
+              let decryptedMessage;
+
+              try {
+                if (!app.state.myPrivateKey)
+                  throw new Error("Private key not loaded.");
+
+                const myKeyData = payload.keys.find(
+                  (k) => Number(k.userId) === Number(myId),
+                );
+                if (!myKeyData)
+                  throw new Error("No key found for this user in the payload.");
+
+                // E2EE Decryption Flow
+                const encryptedKey = cryptoHandler.base64ToArrayBuffer(
+                  myKeyData.key,
+                );
+                const iv = cryptoHandler.base64ToArrayBuffer(payload.iv);
+                const ciphertext = cryptoHandler.base64ToArrayBuffer(
+                  payload.ciphertext,
+                );
+                const decryptedAesKeyData = await cryptoHandler.rsaDecrypt(
+                  encryptedKey,
+                  app.state.myPrivateKey,
+                );
+                const aesKeyJwk = JSON.parse(
+                  new TextDecoder().decode(decryptedAesKeyData),
+                );
+                const aesKey =
+                  await cryptoHandler.importAesKeyFromJwk(aesKeyJwk);
+                decryptedMessage = await cryptoHandler.aesDecrypt(
+                  ciphertext,
+                  aesKey,
+                  iv,
+                );
+              } catch (error) {
+                console.error("Decryption failed:", error);
+                decryptedMessage = "🔒 [Could not decrypt message]";
+              }
+
+              app.storage.saveMessageLocally(
+                contactId,
+                sender,
+                decryptedMessage,
+                msg.created_at,
+              );
+            });
+          } else {
+            console.error("Failed to fetch all messages:", data.error);
+          }
+        });
+    }
+
     Loader.addMessage("Reading your unread messages");
     await app.api.loadOfflineMessages();
     Loader.addMessage("Waking up the carrier pigeon");

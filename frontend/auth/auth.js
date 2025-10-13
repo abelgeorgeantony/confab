@@ -487,19 +487,20 @@ async function requireAuth() {
   if (!token || !privateKeyJwkString) {
     deleteCookie("auth_token");
     localStorage.clear();
-    window.location.replace("login.html");
+    window.location.replace("/frontend/auth/login.html");
     throw new Error("Authentication failed: Missing token or private key.");
   }
 
   try {
     // Await the validation. If it fails, the catch block will execute.
-    await validateToken(token, "login");
-    // If we reach this line, the token is valid, and the function resolves.
+    const validationData = await validateToken(token, "login");
+    app.state.myId = validationData.user_id; // Store the user ID
+    return validationData.user_id; // Return the user ID
   } catch (err) {
     // If the token is invalid, clear storage and redirect.
     deleteCookie("auth_token");
     localStorage.clear();
-    window.location.replace("login.html");
+    window.location.replace("/frontend/auth/login.html");
     // Re-throw the error to ensure the script that called requireAuth() stops executing.
     throw err;
   }

@@ -80,7 +80,7 @@
       highpassFilter.connect(audioContext.destination);
     } else if (filterType === "talkingtom") {
       wavesurfer.getMediaElement().preservesPitch = false;
-      wavesurfer.setPlaybackRate(2.0);
+      wavesurfer.setPlaybackRate(1.8);
       sourceNode.connect(audioContext.destination);
     } else {
       // 'none'
@@ -127,9 +127,7 @@
       .classList.add("active");
     applyFilter("none");
 
-    setTimeout(() => {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, 300); // Matches the CSS transition duration
+    messagesContainer.scrollTop = messagesContainer.scrollHeight; // Matches the CSS transition duration
   }
 
   function showInitialUI() {
@@ -357,10 +355,14 @@
       try {
         if (!app.state.myPrivateKey) throw new Error("Private key not loaded.");
 
-        // E2EE Decryption Flow
-        const encryptedKey = cryptoHandler.base64ToArrayBuffer(
-          payload.encryptedKey,
+        const myKeyData = payload.keys.find(
+          (k) => Number(k.userId) === Number(app.state.myId),
         );
+        if (!myKeyData)
+          throw new Error("No key found for this user in the payload.");
+
+        // E2EE Decryption Flow
+        const encryptedKey = cryptoHandler.base64ToArrayBuffer(myKeyData.key);
         const iv = cryptoHandler.base64ToArrayBuffer(payload.iv);
         const ciphertext = cryptoHandler.base64ToArrayBuffer(
           payload.ciphertext,
