@@ -60,7 +60,7 @@
 
     const showPopup = () => {
       const popup = document.getElementById("message-actions-popup");
-      const overlay = document.getElementById("modal-overlay");
+      const overlay = document.getElementById("message-actions-overlay");
 
       popup.classList.remove("hidden");
       overlay.classList.remove("hidden");

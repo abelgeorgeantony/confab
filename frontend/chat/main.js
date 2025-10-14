@@ -88,8 +88,7 @@
    * Initializes the modals for adding new contacts.
    */
   function initAddContactModals() {
-    // This function is large and self-contained, so it's pasted here directly.
-    // It has been modified to use the app object, e.g., app.api.loadContacts().
+    // --- Modal Elements ---
     const openBtn = document.getElementById("add-contact-btn");
     const overlay = document.getElementById("modal-overlay");
     const addContactModal = document.getElementById("add-contact-modal");
@@ -102,21 +101,53 @@
     const closeProfileBtn = document.getElementById("close-profile-modal");
     const profileContent = document.getElementById("profile-content");
 
-    function openAddContactModal() {
-      addContactModal.classList.remove("hidden");
+    // --- Modal State Manager (Z-Index Approach) ---
+    const modalStack = [];
+
+    function openModal(modalElement) {
+      if (!modalElement) return;
+
+      if (modalStack.length > 0) {
+        modalStack[modalStack.length - 1].classList.remove("modal-top");
+      }
+
+      modalStack.push(modalElement);
+      modalElement.classList.add("modal-top");
+      modalElement.classList.remove("hidden");
       overlay.classList.remove("hidden");
+    }
+
+    function closeCurrentModal() {
+      if (modalStack.length === 0) return;
+
+      const modalToClose = modalStack.pop();
+      modalToClose.classList.add("hidden");
+      modalToClose.classList.remove("modal-top");
+
+      if (modalStack.length > 0) {
+        modalStack[modalStack.length - 1].classList.add("modal-top");
+      }
+
+      if (modalStack.length === 0) {
+        overlay.classList.add("hidden");
+      }
+    }
+
+    // --- Modal Specific Logic ---
+
+    function openAddContact() {
+      openModal(addContactModal);
       searchInput.focus();
     }
 
     function closeAddContactModal() {
-      addContactModal.classList.add("hidden");
-      overlay.classList.add("hidden");
       searchInput.value = "";
       searchResultsContainer.innerHTML =
         '<p class="search-results-placeholder">Start typing to find users.</p>';
+      closeCurrentModal();
     }
 
-    function openProfileModal(user) {
+    function openProfile(user) {
       const useravatar = user.profile_picture_url
         ? `<img src="/${user.profile_picture_url}" class="profile-avatar">`
         : `<div class="profile-avatar">${user.display_name.charAt(0).toUpperCase()}</div>`;
@@ -130,34 +161,49 @@
             </button>
             <button id="message-user-btn" class="button">Message</button>
         `;
-      profileModal.classList.remove("hidden");
+      openModal(profileModal);
 
       document.getElementById("add-user-btn").onclick = (e) => {
         addContact(e.target.getAttribute("data-username"));
       };
       document.getElementById("message-user-btn").onclick = () => {
-        // This is a new user, add their key to the cache
         if (user.public_key) {
           app.state.publicKeyCache[user.id] = JSON.parse(user.public_key);
         }
         openChatWith(user);
-        closeProfileModal();
-        closeAddContactModal();
+        while (modalStack.length > 0) closeCurrentModal();
       };
+
       if (user.status === "contact") {
-        // Viewing the profile of a contact so add some contact features.
         document.getElementById("add-user-btn").classList.add("hidden");
       }
       if (Number(app.state.currentChatUser) === Number(user.id)) {
-        // Viewing the profile from the same chat so remove the message button.
         document.getElementById("message-user-btn").classList.add("hidden");
       }
     }
 
     function closeProfileModal() {
-      profileModal.classList.add("hidden");
+      // No specific cleanup needed for profile modal yet
+      closeCurrentModal();
     }
 
+    async function addContact(username) {
+      const token = getCookie("auth_token");
+      const res = await fetch(API + "add_contact.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, username }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        while (modalStack.length > 0) closeCurrentModal();
+        app.api.loadContacts();
+      } else {
+        alert("Failed to add contact: " + data.error);
+      }
+    }
+
+    // --- Search Logic ---
     async function searchUsers(query) {
       if (query.length < 2) {
         searchResultsContainer.innerHTML =
@@ -200,7 +246,7 @@
                     <div class="contact-username">@${user.username}</div>
                 </div>
             `;
-        userCard.onclick = () => openProfileModal(user);
+        userCard.onclick = () => openProfile(user);
         searchResultsContainer.appendChild(userCard);
       });
     }
@@ -215,36 +261,17 @@
 
     const debouncedSearch = debounce(searchUsers, 300);
 
-    async function addContact(username) {
-      const token = getCookie("auth_token");
-      const res = await fetch(API + "add_contact.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, username }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        closeProfileModal();
-        closeAddContactModal();
-        app.api.loadContacts(); // Refresh the main contact list
-      } else {
-        alert("Failed to add contact: " + data.error);
-      }
-    }
-
-    openBtn.addEventListener("click", openAddContactModal);
+    // --- Event Listeners ---
+    openBtn.addEventListener("click", openAddContact);
     closeAddContactBtn.addEventListener("click", closeAddContactModal);
     closeProfileBtn.addEventListener("click", closeProfileModal);
-    overlay.addEventListener("click", () => {
-      closeAddContactModal();
-      closeProfileModal();
-    });
+    overlay.addEventListener("click", closeCurrentModal);
     searchInput.addEventListener("input", (e) =>
       debouncedSearch(e.target.value),
     );
+
     openProfileOf = (contact) => {
-      overlay.classList.remove("hidden");
-      openProfileModal(contact);
+      openProfile(contact);
     };
   }
 

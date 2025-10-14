@@ -123,7 +123,10 @@
                             <span class="material-icons">edit</span>Edit
                         </button>
                     </div>
-                    <div id="modal-overlay" class="modal-overlay hidden"></div>
+                    <div
+                        id="message-actions-overlay"
+                        class="modal-overlay hidden"
+                    ></div>
                     <form
                         id="message-form"
                         onsubmit="event.preventDefault(); sendMessage(currentChatUser);"
@@ -231,6 +234,9 @@
             </div>
 
             <!-- Modal Overlay -->
+
+            <!-- Main Modal Overlay -->
+            <div id="modal-overlay" class="modal-overlay hidden"></div>
 
             <!-- Add Contact Modal -->
             <div id="add-contact-modal" class="modal hidden">

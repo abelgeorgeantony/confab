@@ -70,7 +70,7 @@ body {
     position: absolute;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 100;
+    z-index: 101; /* Should be above base modals */
 }
 .modal {
     position: fixed;
@@ -82,7 +82,10 @@ body {
     background-color: var(--form-bg);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 101;
+    z-index: 100; /* Base, under the overlay */
+}
+.modal-top {
+    z-index: 102; /* Active modal, on top of overlay */
 }
 .modal-header {
     display: flex;

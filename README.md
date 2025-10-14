@@ -27,11 +27,11 @@ a). **Install dependencies:**
   - composer
   - caddy
 
-- composer require(php libraries must be installed in **/backend/**):
+- composer require(php libraries must be installed in `backend/`):
   - cboden/ratchet
   - phpmailer/phpmailer
   - vlucas/phpdotenv \
-  (Running "composer install" in the **/backend/** would be sufficient)
+  (Running "composer install" in `backend/` would be sufficient)
 
 
 b). **Create a new MySQL database `confab`.**
@@ -66,6 +66,7 @@ To start all the necessary servers (Caddy, PHP, WebSocket), simply run the start
 ```
 
 The script will automatically handle prerequisite checks, update network configurations, and launch all servers in the background. It will also provide you with the URL to access the application.
+> Once the server is started you will find a `logs/` directory where you can find the logs of the different servers.
 
 ### Stopping the Servers
 
@@ -75,10 +76,8 @@ To stop all the running servers, use the stop script:
 ./stop-server.sh
 ```
 
-### Accessing the Application
+---
 
-Once the servers are running, open your browser and go to the `https://<ip-address>` URL provided by the startup script.
-
-Login or register a new user and start chatting.
+## Visit `docs/` for more information.
 
 ---

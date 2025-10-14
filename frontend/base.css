@@ -336,3 +336,7 @@ button:hover {
         font-size: medium;
     }
 }
+
+.modal-inert {
+    pointer-events: none;
+}
