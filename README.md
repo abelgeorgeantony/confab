@@ -1,7 +1,8 @@
 # Confab – Real-time Private Messaging
 
 A real-time chat application built with **PHP, MySQL, and Ratchet WebSocket** as the backend, and **HTML, CSS, and JavaScript** as the frontend.
-It supports **username based user identification**.
+
+> This project was submitted as a Mini Project for the 5th Semester of the BCA (Bachelor of Computer Applications) program at Mahatma Gandhi University.
 
 ---
 
@@ -18,7 +19,8 @@ It supports **username based user identification**.
 - composer require(php libraries must be installed in **/backend/**):
   - cboden/ratchet
   - phpmailer/phpmailer
-  - vlucas/phpdotenv
+  - vlucas/phpdotenv \
+  (Running "composer install" in the **/backend/** would be sufficient)
 
 ---
 
@@ -33,21 +35,21 @@ cd confab
 
 ### 3. Configure the Database
 
-1. Create a new MySQL database `confab`
+1. Create a new MySQL database `confab`.
 2. Import the base schema:
    ```bash
-   mysql -u root -p chat_app < backend/schema.sql
+   mysql -u root -p confab < backend/schema.sql
    ```
-3. Update credentials in **backend/.env**, the file must first be created:
+3. Create a `.env` file in the `backend/` directory and add your database and SMTP credentials. You can use the following template:
    ```
     DB_HOST=127.0.0.1
     DB_USER=root
     DB_PASS=
-    DB_NAME=chat_app
+    DB_NAME=confab
 
     SMTP_HOST=smtp.gmail.com
-    SMTP_USER=abel.chatapp@gmail.com
-    SMTP_PASS=
+    SMTP_USER=your-email@gmail.com
+    SMTP_PASS=your-app-password
     SMTP_PORT=587
    ```
 
@@ -57,66 +59,43 @@ On user registration, their **inbox_<user_id>** and **contacts_<user_id>** table
 
 ### 4. Install Dependencies
 
-Move to the backend folder and install Ratchet WebSocket library:
+Move to the backend folder and install dependencies using Composer:
 ```bash
 cd backend
-composer require cboden/ratchet
+composer install
 ```
 
-This will create the `vendor/` folder with required dependencies.
+This will create the `vendor/` folder with the required libraries.
 
 ---
 
-## Starting the Server
+## Running the Application
 
-Before starting, make sure *MySQL (mysqld)* is running.
-Without the database service running, the backend will fail to connect.
+Before starting, make sure the following services are running on your system:
+- MySQL (`mysqld`)
 
-You need 3 servers running simultaneously:
+### Starting the Servers
 
----
+To start all the necessary servers (Caddy, PHP, WebSocket), simply run the startup script from the project root:
 
-### 1. Start the Caddy server(https)
-From the project root, run:
 ```bash
-sudo caddy run --config ./Caddyfile
+./start-server.sh
 ```
-This makes the Caddy server run on port 80, 443(default ports).
-**If those ports are already in use, you need to free up those ports and start caddy again!**
 
----
+The script will automatically handle prerequisite checks, update network configurations, and launch all servers in the background. It will also provide you with the URL to access the application.
 
-### 2. Start the PHP Server(http)
-In a new terminal window, from the project root, run:
+### Stopping the Servers
+
+To stop all the running servers, use the stop script:
+
 ```bash
-php -S localhost:8000 -t ./ front_controller.php
-```
-This is the actual server that does most of the work!
-
----
-
-### 3. Start the WebSocket Chat Server
-In a new terminal window:
-```bash
-cd backend
-php chat_server.php
-```
-You should see:
-```
-WebSocket Chat Server running on port 8080...
+./stop-server.sh
 ```
 
----
+### Accessing the Application
 
-### 3. Access the Application
-Open your browser and go to:
-```
-https://<ip-address>
-```
-eg:
-```
-https://192.168.1.100
-```
+Once the servers are running, open your browser and go to the `https://<ip-address>` URL provided by the startup script.
+
 Login or register a new user and start chatting.
 
 ---

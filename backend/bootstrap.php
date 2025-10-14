@@ -1,5 +1,5 @@
 <?php
-// This file will be the single entry point for all backend scripts.
+// This file will be included by all backend scripts to avoid code duplication.
 
 // 1. Set the default timezone to UTC to ensure consistency.
 date_default_timezone_set("UTC");
