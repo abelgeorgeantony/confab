@@ -2,13 +2,24 @@
 
 A real-time chat application built with **PHP, MySQL, and Ratchet WebSocket** as the backend, and **HTML, CSS, and JavaScript** as the frontend.
 
-> This project was submitted as a Mini Project for the 5th Semester of the BCA (Bachelor of Computer Applications) program at Mahatma Gandhi University.
+This project is being developed as a Mini Project for the 5th Semester BCA program at Mahatma Gandhi University.
 
 ---
 
 ## Setup on a New Device
+> The instructions are for linux based systems and for making the application available on a local network.
 
-### 1. Requirements
+### 1. Clone the Project
+
+```bash
+git clone https://github.com/abelgeorgeantony/confab.git
+```
+
+---
+
+### 2. Requirements
+
+a). **Install dependencies:**
 - apt install:
   - php
   - php-mysql
@@ -22,25 +33,14 @@ A real-time chat application built with **PHP, MySQL, and Ratchet WebSocket** as
   - vlucas/phpdotenv \
   (Running "composer install" in the **/backend/** would be sufficient)
 
----
 
-### 2. Clone the Project
+b). **Create a new MySQL database `confab`.**
 
-```bash
-git clone https://github.com/abelgeorgeantony/confab.git
-cd confab
-```
-
----
-
-### 3. Configure the Database
-
-1. Create a new MySQL database `confab`.
-2. Import the base schema:
+c). **Import the database schema:**
    ```bash
    mysql -u root -p confab < backend/schema.sql
    ```
-3. Create a `.env` file in the `backend/` directory and add your database and SMTP credentials. You can use the following template:
+d). **Create a `.env` file in the `backend/` directory and add your database and SMTP credentials. Use the following template:**
    ```
     DB_HOST=127.0.0.1
     DB_USER=root
@@ -53,28 +53,11 @@ cd confab
     SMTP_PORT=587
    ```
 
-On user registration, their **inbox_<user_id>** and **contacts_<user_id>** tables will be auto-created.
-
 ---
-
-### 4. Install Dependencies
-
-Move to the backend folder and install dependencies using Composer:
-```bash
-cd backend
-composer install
-```
-
-This will create the `vendor/` folder with the required libraries.
-
----
-
-## Running the Application
-
-Before starting, make sure the following services are running on your system:
-- MySQL (`mysqld`)
 
 ### Starting the Servers
+
+> Before starting, make sure MySQL (`mysqld`) is running.
 
 To start all the necessary servers (Caddy, PHP, WebSocket), simply run the startup script from the project root:
 
