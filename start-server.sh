@@ -32,11 +32,9 @@ if [ ! -f "backend/.env" ]; then
     exit 1
 fi
 
-# Check for uploads directory
-if [ ! -d "uploads" ]; then
-    echo "Creating 'uploads' directory..."
-    mkdir -p uploads
-fi
+# Create uploads directory and subdirectories
+echo "Ensuring upload directories exist..."
+mkdir -p uploads/{voice,image,profile_picture,audio,document}
 
 # --- End Prerequisite Checks ---
 

@@ -27,7 +27,7 @@
     const messages = app.storage.getLocalMessages(contact.id);
     console.log(messages);
     messages.forEach((m) =>
-      app.ui.displayMessage(m.sender, m.message, m.timestamp),
+      app.ui.displayMessage(m.sender, m.payload, m.timestamp, m.messageType),
     );
 
     app.state.currentChatUser = contact.id;
@@ -69,7 +69,7 @@
 
     const sendMessageAction = async () => {
       sendButton.disabled = true;
-      await app.websocket.send(contact.id);
+      await app.websocket.sendTextMessage(contact.id);
       sendButton.disabled = false;
       updateButtonVisibility();
       //messageInput.focus();
@@ -323,7 +323,7 @@
     }
     const privateKeyJwk = JSON.parse(privateKeyJwkString);
     app.state.myPrivateKey =
-      await cryptoHandler.importPrivateKeyFromJwk(privateKeyJwk);
+      await app.crypto.importPrivateKeyFromJwk(privateKeyJwk);
 
     // Set up all event listeners and UI components.
     app.events.initialize();
@@ -377,50 +377,59 @@
                 msg.sender_id == myId ? msg.receiver_id : msg.sender_id;
               const sender = msg.sender_id == myId ? "me" : "them";
               const payload = JSON.parse(msg.payload);
-              let decryptedMessage;
+              let decryptedPayload;
 
-              try {
-                if (!app.state.myPrivateKey)
-                  throw new Error("Private key not loaded.");
+              if (msg.message_type === "text") {
+                try {
+                  if (!app.state.myPrivateKey)
+                    throw new Error("Private key not loaded.");
+                  const myKeyData = payload.keys.find(
+                    (k) => Number(k.userId) === Number(myId),
+                  );
+                  if (!myKeyData)
+                    throw new Error(
+                      "No key found for this user in the payload.",
+                    );
 
-                const myKeyData = payload.keys.find(
-                  (k) => Number(k.userId) === Number(myId),
-                );
-                if (!myKeyData)
-                  throw new Error("No key found for this user in the payload.");
-
-                // E2EE Decryption Flow
-                const encryptedKey = cryptoHandler.base64ToArrayBuffer(
-                  myKeyData.key,
-                );
-                const iv = cryptoHandler.base64ToArrayBuffer(payload.iv);
-                const ciphertext = cryptoHandler.base64ToArrayBuffer(
-                  payload.ciphertext,
-                );
-                const decryptedAesKeyData = await cryptoHandler.rsaDecrypt(
-                  encryptedKey,
-                  app.state.myPrivateKey,
-                );
-                const aesKeyJwk = JSON.parse(
-                  new TextDecoder().decode(decryptedAesKeyData),
-                );
-                const aesKey =
-                  await cryptoHandler.importAesKeyFromJwk(aesKeyJwk);
-                decryptedMessage = await cryptoHandler.aesDecrypt(
-                  ciphertext,
-                  aesKey,
-                  iv,
-                );
-              } catch (error) {
-                console.error("Decryption failed:", error);
-                decryptedMessage = "🔒 [Could not decrypt message]";
+                  const encryptedKey = app.crypto.base64ToArrayBuffer(
+                    myKeyData.key,
+                  );
+                  const iv = app.crypto.base64ToArrayBuffer(payload.iv);
+                  const ciphertext = app.crypto.base64ToArrayBuffer(
+                    payload.ciphertext,
+                  );
+                  const decryptedAesKeyData = await app.crypto.rsaDecrypt(
+                    encryptedKey,
+                    app.state.myPrivateKey,
+                  );
+                  const aesKeyJwk = JSON.parse(
+                    new TextDecoder().decode(decryptedAesKeyData),
+                  );
+                  const aesKey =
+                    await app.crypto.importAesKeyFromJwk(aesKeyJwk);
+                  decryptedPayload = await app.crypto.aesDecrypt(
+                    ciphertext,
+                    aesKey,
+                    iv,
+                  );
+                } catch (error) {
+                  console.error(
+                    "Decryption failed during history load:",
+                    error,
+                  );
+                  decryptedPayload = "🔒 [Could not decrypt message]";
+                }
+              } else {
+                // For voice, image, etc., the payload from the DB is already what we want to store.
+                decryptedPayload = payload;
               }
 
               app.storage.saveMessageLocally(
                 contactId,
                 sender,
-                decryptedMessage,
+                decryptedPayload,
                 msg.created_at,
+                msg.message_type,
               );
             });
           } else {

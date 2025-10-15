@@ -296,31 +296,143 @@
     }
   }
 
+  // --- Audio Processing ---
+  async function processAndEncodeAudio(sourceBlob, filterType) {
+    const tempAudioContext = new AudioContext();
+    const response = await fetch(URL.createObjectURL(sourceBlob));
+    const arrayBuffer = await response.arrayBuffer();
+    const decodedData = await tempAudioContext.decodeAudioData(arrayBuffer);
+
+    const offlineCtx = new OfflineAudioContext(
+      decodedData.numberOfChannels,
+      decodedData.length,
+      decodedData.sampleRate,
+    );
+
+    const source = offlineCtx.createBufferSource();
+    source.buffer = decodedData;
+
+    let filterNode = null;
+    if (filterType === "lowpass") {
+      filterNode = offlineCtx.createBiquadFilter();
+      filterNode.type = "lowpass";
+      filterNode.frequency.value = 1000;
+      source.connect(filterNode);
+      filterNode.connect(offlineCtx.destination);
+    } else if (filterType === "highpass") {
+      filterNode = offlineCtx.createBiquadFilter();
+      filterNode.type = "highpass";
+      filterNode.frequency.value = 800;
+      source.connect(filterNode);
+      filterNode.connect(offlineCtx.destination);
+    } else if (filterType === "talkingtom") {
+      source.playbackRate.value = 1.8;
+      source.connect(offlineCtx.destination);
+    } else {
+      source.connect(offlineCtx.destination);
+    }
+
+    source.start(0);
+    const renderedBuffer = await offlineCtx.startRendering();
+    return app.crypto.audioBufferToWav(renderedBuffer);
+  }
+
   // --- Main Send Logic ---
-  function sendVoiceMessage() {
+  async function sendVoiceMessage() {
     if (!audioBlob || !app.state.currentChatUser) return;
 
-    // This is where you would encrypt and send the `audioBlob`
-    console.log("Sending voice message of size:", audioBlob.size);
+    const sendButton = document.getElementById("send-voice-message-btn");
+    sendButton.disabled = true;
+    Loader.start("Processing audio...");
 
-    // For now, let's just display it as a placeholder
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      app.ui.displayMessage(
-        "me",
-        `🎤 Voice Message: ${e.target.result.substring(0, 30)}...`,
-        Date.now(),
-      );
+    try {
+      const recipientId = app.state.currentChatUser;
+      const activeFilter =
+        document.querySelector(".filter-btn.active").dataset.filter;
+
+      // 1. Process and Encode audio to a WAV blob
+      const wavBlob = await processAndEncodeAudio(audioBlob, activeFilter);
+
+      // 2. Create a Base64 Data URL for local storage and UI
+      const reader = new FileReader();
+      reader.readAsDataURL(wavBlob);
+      await new Promise((resolve) => (reader.onload = resolve));
+      const base64DataUrl = reader.result;
+
+      // 3. Save to local storage and update sender's UI immediately
+      const localPayload = { dataUrl: base64DataUrl };
       app.storage.saveMessageLocally(
-        app.state.currentChatUser,
+        recipientId,
         "me",
-        `🎤 Voice Message`,
+        localPayload,
         Date.now(),
+        "voice",
       );
-    };
-    reader.readAsDataURL(audioBlob);
+      app.ui.displayMessage("me", localPayload, Date.now(), "voice");
 
-    showInitialUI();
+      // 4. Reset the recording UI now that the local part is done
+      showInitialUI();
+
+      // 5. Proceed with encryption and upload in the background
+      const wavArrayBuffer = await wavBlob.arrayBuffer();
+      const recipientPublicKeyJwk = app.state.publicKeyCache[recipientId];
+      if (!recipientPublicKeyJwk) {
+        throw new Error(`Public key for user ${recipientId} not found.`);
+      }
+      const recipientPublicKey = await app.crypto.importPublicKeyFromJwk(
+        recipientPublicKeyJwk,
+      );
+
+      const aesKey = await app.crypto.generateAesKey();
+      const { ciphertext: encryptedAudioBuffer, iv } =
+        await app.crypto.aesEncrypt(wavArrayBuffer, aesKey);
+
+      const aesKeyJwk = await app.crypto.exportKeyToJwk(aesKey);
+      const aesKeyString = JSON.stringify(aesKeyJwk);
+      const encryptedAesKey = await app.crypto.rsaEncrypt(
+        new TextEncoder().encode(aesKeyString),
+        recipientPublicKey,
+      );
+
+      Loader.addMessage("Uploading encrypted voice message...");
+      const encryptedBlob = new Blob([encryptedAudioBuffer]);
+      const formData = new FormData();
+      formData.append("token", getCookie("auth_token"));
+      formData.append("voiceMessage", encryptedBlob, "voice.bin");
+
+      const response = await fetch("/backend/upload_voice_message.php", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Upload failed");
+      }
+
+      // 6. Send the pointer message via WebSocket
+      const pointerPayload = {
+        url: result.url,
+        key: app.crypto.arrayBufferToBase64(encryptedAesKey),
+        iv: app.crypto.arrayBufferToBase64(iv),
+      };
+
+      // This is a fire-and-forget, no need to await the full send logic
+      app.websocket.send(
+        recipientId,
+        pointerPayload,
+        "🎤 Voice Message",
+        "voice",
+      );
+
+      Loader.stop();
+    } catch (error) {
+      console.error("Failed to send voice message:", error);
+      alert(`Error sending voice message: ${error.message}`);
+      Loader.stop();
+    } finally {
+      sendButton.disabled = false;
+    }
   }
 
   /**
@@ -347,51 +459,96 @@
     deleteRecordingBtn.addEventListener("click", showInitialUI);
     sendVoiceMessageBtn.addEventListener("click", sendVoiceMessage);
 
-    // Listener for incoming messages (both real-time and offline).
     document.addEventListener("messageReceived", async (e) => {
-      const { senderId, payload } = e.detail;
-      let decryptedMessage;
+      console.log("RAW MESSAGE RECEIVED:", e.detail); // Enhanced debugging
+      const { senderId, message_type, payload } = e.detail;
 
-      try {
-        if (!app.state.myPrivateKey) throw new Error("Private key not loaded.");
-
-        const myKeyData = payload.keys.find(
-          (k) => Number(k.userId) === Number(app.state.myId),
-        );
-        if (!myKeyData)
-          throw new Error("No key found for this user in the payload.");
-
-        // E2EE Decryption Flow
-        const encryptedKey = cryptoHandler.base64ToArrayBuffer(myKeyData.key);
-        const iv = cryptoHandler.base64ToArrayBuffer(payload.iv);
-        const ciphertext = cryptoHandler.base64ToArrayBuffer(
-          payload.ciphertext,
-        );
-        const decryptedAesKeyData = await cryptoHandler.rsaDecrypt(
-          encryptedKey,
-          app.state.myPrivateKey,
-        );
-        const aesKeyJwk = JSON.parse(
-          new TextDecoder().decode(decryptedAesKeyData),
-        );
-        const aesKey = await cryptoHandler.importAesKeyFromJwk(aesKeyJwk);
-        decryptedMessage = await cryptoHandler.aesDecrypt(
-          ciphertext,
-          aesKey,
-          iv,
-        );
-      } catch (error) {
-        console.error("Decryption failed:", error);
-        decryptedMessage = "🔒 [Could not decrypt message]";
+      if (!payload) {
+        console.error("Received message with no payload.", e.detail);
+        return;
       }
 
-      // Save the message locally.
+      let messageForDisplay;
+      let contentForUI;
+
+      switch (message_type) {
+        case "voice":
+          messageForDisplay = "🎤 Voice Message";
+          contentForUI = payload; // Pass the pointer payload directly to the UI
+          break;
+
+        case "text":
+        default: // Fallback to text for safety
+          try {
+            if (message_type !== "text") {
+              console.warn(
+                `Unknown message_type: '${message_type}'. Treating as text.`,
+              );
+            }
+            if (!app.state.myPrivateKey)
+              throw new Error("Private key not loaded.");
+
+            const myKeyData = payload.keys.find(
+              (k) => Number(k.userId) === Number(app.state.myId),
+            );
+            if (!myKeyData)
+              throw new Error("No key found for this user in the payload.");
+
+            const encryptedKey = app.crypto.base64ToArrayBuffer(myKeyData.key);
+            const iv = app.crypto.base64ToArrayBuffer(payload.iv);
+            const ciphertext = app.crypto.base64ToArrayBuffer(
+              payload.ciphertext,
+            );
+
+            const decryptedAesKeyData = await app.crypto.rsaDecrypt(
+              encryptedKey,
+              app.state.myPrivateKey,
+            );
+            const aesKeyJwk = JSON.parse(
+              new TextDecoder().decode(decryptedAesKeyData),
+            );
+            const aesKey = await app.crypto.importAesKeyFromJwk(aesKeyJwk);
+
+            messageForDisplay = await app.crypto.aesDecrypt(
+              ciphertext,
+              aesKey,
+              iv,
+            );
+            contentForUI = messageForDisplay;
+          } catch (error) {
+            console.error("Decryption failed:", error);
+            messageForDisplay = "🔒 [Could not decrypt message]";
+            contentForUI = messageForDisplay;
+          }
+          break;
+      }
+
+      // Save the message locally for history
       app.storage.saveMessageLocally(
         senderId,
         "them",
-        decryptedMessage,
-        payload.timestamp,
+        messageForDisplay,
+        payload.timestamp || Date.now(),
+        message_type || "text", // Ensure we save a type
       );
+
+      // Trigger UI update for the contact list
+      app.events.trigger("lastMessageUpdated", {
+        contactId: senderId,
+        sender: "them",
+        message: messageForDisplay,
+        timestamp: payload.timestamp || Date.now(),
+      });
+
+      // If the relevant chat is open, display the message
+      if (Number(app.state.currentChatUser) === Number(senderId)) {
+        app.ui.displayMessage(
+          "them",
+          contentForUI,
+          payload.timestamp || Date.now(),
+          message_type,
+        );
+      }
     });
 
     // Listener to rebuild the contact list UI when contacts are loaded/updated.
@@ -428,9 +585,19 @@
         contactDiv.className = "contact-card";
         contactDiv.setAttribute("data-contact-id", contact.id);
         const lastMsg = app.storage.getLastMessage(contact.id);
-        const lastMsgText = lastMsg
-          ? lastMsg.message.replace(new RegExp("[\\n\\r]", "g"), " ")
-          : "Tap to chat";
+        let lastMsgText;
+        if (lastMsg) {
+          if (lastMsg.messageType === "voice") {
+            lastMsgText = "🎤 Voice Message";
+          } else {
+            lastMsgText = lastMsg.payload.replace(
+              new RegExp("[\\n\\r]", "g"),
+              " ",
+            );
+          }
+        } else {
+          lastMsgText = "Tap to chat";
+        }
         const useravatar = contact.profile_picture_url
           ? `<img src="/${contact.profile_picture_url}" class="contact-avatar" data-contact-id="${contact.id}">`
           : `<div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>`;
@@ -522,9 +689,8 @@
       if (sender === "me") {
         return;
       }
-      if (Number(app.state.currentChatUser) === Number(contactId)) {
-        app.ui.displayMessage(sender, message, timestamp);
-      } else {
+      // If the chat is not open, increment the unread count
+      if (Number(app.state.currentChatUser) !== Number(contactId)) {
         app.state.unreadCounts[contactId] =
           (app.state.unreadCounts[contactId] || 0) + 1;
         app.ui.updateUnreadBadge(contactId);

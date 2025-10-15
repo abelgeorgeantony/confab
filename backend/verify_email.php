@@ -39,12 +39,6 @@ if ($result->num_rows === 1) {
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
 
-        // Create inbox table
-        $inbox_table = "inbox_" . intval($user_id);
-        $conn->query(
-            "CREATE TABLE $inbox_table (id INT AUTO_INCREMENT PRIMARY KEY, sender_id INT NOT NULL, payload TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE)",
-        );
-
         // Create contacts table
         $contacts_table = "contacts_" . intval($user_id);
         $conn->query(

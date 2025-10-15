@@ -30,6 +30,7 @@
       if (data.type === "message") {
         app.events.trigger("messageReceived", {
           senderId: data.from,
+          message_type: data.message_type, // Pass the type
           payload: data.payload,
         });
       }
@@ -45,110 +46,109 @@
   }
 
   /**
-   * Encrypts and sends a message to a contact via WebSocket.
+   * Sends a fully constructed message payload to a contact via WebSocket.
+   * @param {number} contactId - The ID of the recipient.
+   * @param {object} payload - The message payload (e.g., encrypted text or voice pointer).
+   * @param {string} messageForDisplay - The text to display in the UI for this message.
+   * @param {string} [messageType='text'] - The type of message.
+   */
+  async function send(
+    contactId,
+    payload,
+    messageForDisplay,
+    messageType = "text",
+  ) {
+    if (!app.state.ws || app.state.ws.readyState !== WebSocket.OPEN) {
+      console.warn("WebSocket not open yet!");
+      if (navigator.vibrate) navigator.vibrate(200);
+      const statusIcon = document.querySelector(".status-icon");
+      if (statusIcon) {
+        statusIcon.classList.add("shake");
+        setTimeout(() => statusIcon.classList.remove("shake"), 500);
+      }
+      throw new Error("Websocket disconnected!");
+    }
+
+    // Send the final payload to the server.
+    app.state.ws.send(
+      JSON.stringify({
+        type: "message",
+        receiver_id: contactId,
+        message_type: messageType,
+        payload: payload,
+      }),
+    );
+
+    app.events.trigger("messageSent", {
+      contactId,
+      message: messageForDisplay,
+    });
+  }
+
+  /**
+   * Handles the specific logic for encrypting and sending a TEXT message.
    * @param {number} contactId - The ID of the recipient.
    */
-  async function sendMessage(contactId) {
-    return new Promise(async (resolve, reject) => {
-      const input = document.getElementById("message-input");
-      const message = input.value.trim();
-      if (!message) {
-        return reject(new Error("Empty message!"));
-      }
+  async function sendTextMessage(contactId) {
+    const input = document.getElementById("message-input");
+    const message = input.value.trim();
+    if (!message) return;
 
-      if (!app.state.ws || app.state.ws.readyState !== WebSocket.OPEN) {
-        console.warn("WebSocket not open yet!");
-        if (navigator.vibrate) {
-          navigator.vibrate(200); // Vibrate for 200 milliseconds
-        }
+    const recipientPublicKeyJwk = app.state.publicKeyCache[contactId];
+    if (!recipientPublicKeyJwk) {
+      throw new Error("Cannot find public key for this user.");
+    }
 
-        const statusIcon = document.querySelector(".status-icon");
-        if (statusIcon) {
-          statusIcon.classList.add("shake");
-          setTimeout(() => statusIcon.classList.remove("shake"), 500);
-        }
-        return reject(new Error("Websocket disconnected!"));
-      }
+    const myPublicKeyJwk = app.state.myPublicKey;
+    if (!myPublicKeyJwk) {
+      throw new Error("Your own public key is not available.");
+    }
 
-      const recipientPublicKeyJwk = app.state.publicKeyCache[contactId];
-      if (!recipientPublicKeyJwk) {
-        alert(
-          "Cannot find the public key for this user. They may need to log in again to publish their key.",
-        );
-        return reject(new Error("Cannot find public key!"));
-      }
+    // E2EE Encryption Flow
+    const recipientPublicKey = await app.crypto.importPublicKeyFromJwk(
+      recipientPublicKeyJwk,
+    );
+    const myPublicKey = await app.crypto.importPublicKeyFromJwk(myPublicKeyJwk);
+    const aesKey = await app.crypto.generateAesKey();
+    const { ciphertext, iv } = await app.crypto.aesEncrypt(message, aesKey);
+    const exportedAesKeyJwkString = JSON.stringify(
+      await app.crypto.exportKeyToJwk(aesKey),
+    );
 
-      const myPublicKeyJwk = app.state.myPublicKey;
-      if (!myPublicKeyJwk) {
-        alert("Your public key is not available. Please try logging in again.");
-        return reject(new Error("Cannot find own public key!"));
-      }
+    const encryptedAesKeyForReceiver = await app.crypto.rsaEncrypt(
+      new TextEncoder().encode(exportedAesKeyJwkString),
+      recipientPublicKey,
+    );
 
-      // E2EE Encryption Flow
-      const recipientPublicKey = await cryptoHandler.importPublicKeyFromJwk(
-        recipientPublicKeyJwk,
-      );
-      const myPublicKey =
-        await cryptoHandler.importPublicKeyFromJwk(myPublicKeyJwk);
-      const aesKey = await cryptoHandler.generateAesKey();
-      const { ciphertext, iv } = await cryptoHandler.aesEncrypt(
-        message,
-        aesKey,
-      );
-      const exportedAesKeyJwkString = JSON.stringify(
-        await cryptoHandler.exportKeyToJwk(aesKey),
-      );
+    const encryptedAesKeyForSender = await app.crypto.rsaEncrypt(
+      new TextEncoder().encode(exportedAesKeyJwkString),
+      myPublicKey,
+    );
 
-      const encryptedAesKeyForReceiver = await cryptoHandler.rsaEncrypt(
-        new TextEncoder().encode(exportedAesKeyJwkString),
-        recipientPublicKey,
-      );
+    const payload = {
+      ciphertext: app.crypto.arrayBufferToBase64(ciphertext),
+      iv: app.crypto.arrayBufferToBase64(iv),
+      keys: [
+        {
+          userId: contactId,
+          key: app.crypto.arrayBufferToBase64(encryptedAesKeyForReceiver),
+        },
+        {
+          userId: app.state.myId,
+          key: app.crypto.arrayBufferToBase64(encryptedAesKeyForSender),
+        },
+      ],
+      timestamp: Date.now(),
+    };
 
-      const encryptedAesKeyForSender = await cryptoHandler.rsaEncrypt(
-        new TextEncoder().encode(exportedAesKeyJwkString),
-        myPublicKey,
-      );
+    input.value = ""; // Clear input after preparing message
 
-      const payload = {
-        ciphertext: cryptoHandler.arrayBufferToBase64(ciphertext),
-        iv: cryptoHandler.arrayBufferToBase64(iv),
-        keys: [
-          {
-            userId: contactId,
-            key: cryptoHandler.arrayBufferToBase64(encryptedAesKeyForReceiver),
-          },
-          {
-            userId: app.state.myId,
-            key: cryptoHandler.arrayBufferToBase64(encryptedAesKeyForSender),
-          },
-        ],
-        timestamp: Date.now(),
-      };
-
-      // Update local UI immediately.
-      app.storage.saveMessageLocally(
-        contactId,
-        "me",
-        message,
-        payload.timestamp,
-      );
-      app.ui.displayMessage("me", message, payload.timestamp);
-      input.value = "";
-
-      // Send the encrypted payload.
-      app.state.ws.send(
-        JSON.stringify({
-          type: "message",
-          receiver_id: contactId,
-          payload: payload,
-        }),
-      );
-      app.events.trigger("messageSent", { contactId, message });
-      resolve();
-    });
+    // Use the generic send function to deliver the message
+    await send(contactId, payload, message, "text");
   }
 
   // Expose functions on the global app object.
   app.websocket.connect = connectWebSocket;
-  app.websocket.send = sendMessage;
+  app.websocket.send = send;
+  app.websocket.sendTextMessage = sendTextMessage;
 })(app);

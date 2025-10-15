@@ -35,10 +35,11 @@
     const data = await res.json();
     if (data.success && data.messages.length > 0) {
       data.messages.forEach((m) => {
-        // Trigger the message received event for each offline message.
+        console.log("Processing offline message:", m); // Keep this for debugging
         app.events.trigger("messageReceived", {
           senderId: m.sender_id,
-          payload: JSON.parse(m.payload), // The payload is stored as a JSON string.
+          message_type: m.message_type,
+          payload: JSON.parse(m.payload),
         });
       });
     }

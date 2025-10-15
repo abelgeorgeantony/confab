@@ -218,25 +218,25 @@ async function handleStep1(event) {
   registrationState.email = document.getElementById("reg_email").value;
 
   // 1. Generate a new RSA key pair.
-  const keyPair = await cryptoHandler.generateRsaKeyPair();
-  const publicKeyJwk = await cryptoHandler.exportKeyToJwk(keyPair.publicKey);
+  const keyPair = await app.crypto.generateRsaKeyPair();
+  const publicKeyJwk = await app.crypto.exportKeyToJwk(keyPair.publicKey);
 
   // 2. Generate a random salt for password key derivation.
   const salt = window.crypto.getRandomValues(new Uint8Array(16));
 
   // 3. Derive a key from the password and salt to encrypt the private key.
-  const passwordDerivedKey = await cryptoHandler.deriveKeyFromPassword(
+  const passwordDerivedKey = await app.crypto.deriveKeyFromPassword(
     document.getElementById("reg_pass").value,
     salt,
   );
 
   // 4. Encrypt the private key.
-  const privateKeyJwk = await cryptoHandler.exportKeyToJwk(keyPair.privateKey);
+  const privateKeyJwk = await app.crypto.exportKeyToJwk(keyPair.privateKey);
 
   localStorage.setItem("decrypted_private_key", JSON.stringify(privateKeyJwk));
 
   const { ciphertext: encryptedPrivateKeyData, iv: privateKeyIv } =
-    await cryptoHandler.aesEncrypt(
+    await app.crypto.aesEncrypt(
       JSON.stringify(privateKeyJwk),
       passwordDerivedKey,
     );
@@ -246,11 +246,11 @@ async function handleStep1(event) {
     email: registrationState.email,
     password: document.getElementById("reg_pass").value,
     publicKey: JSON.stringify(publicKeyJwk),
-    encryptedPrivateKey: cryptoHandler.arrayBufferToBase64(
+    encryptedPrivateKey: app.crypto.arrayBufferToBase64(
       encryptedPrivateKeyData,
     ),
-    privateKeySalt: cryptoHandler.arrayBufferToBase64(salt),
-    privateKeyIv: cryptoHandler.arrayBufferToBase64(privateKeyIv),
+    privateKeySalt: app.crypto.arrayBufferToBase64(salt),
+    privateKeyIv: app.crypto.arrayBufferToBase64(privateKeyIv),
   };
 
   // This now points to your original register.php script
@@ -379,17 +379,17 @@ async function login() {
   const data = await res.json();
 
   if (data.success) {
-    const salt = cryptoHandler.base64ToArrayBuffer(data.private_key_salt);
-    const iv = cryptoHandler.base64ToArrayBuffer(data.private_key_iv);
-    const encryptedKeyData = cryptoHandler.base64ToArrayBuffer(
+    const salt = app.crypto.base64ToArrayBuffer(data.private_key_salt);
+    const iv = app.crypto.base64ToArrayBuffer(data.private_key_iv);
+    const encryptedKeyData = app.crypto.base64ToArrayBuffer(
       data.encrypted_private_key,
     );
-    const passwordDerivedKey = await cryptoHandler.deriveKeyFromPassword(
+    const passwordDerivedKey = await app.crypto.deriveKeyFromPassword(
       pass,
       salt,
     );
 
-    const decryptedPrivateKeyJwkString = await cryptoHandler.aesDecrypt(
+    const decryptedPrivateKeyJwkString = await app.crypto.aesDecrypt(
       encryptedKeyData,
       passwordDerivedKey,
       iv,

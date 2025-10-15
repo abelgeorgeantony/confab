@@ -675,7 +675,7 @@ body {
     flex-direction: column; /* New: stack items vertically */
     gap: 5px;
     padding: 10px; /* Increased padding for a better look */
-    z-index: 101; /* Make sure it's on top of the overlay */
+    z-index: 102; /* Make sure it's on top of the overlay */
 }
 
 .message-actions-popup button {

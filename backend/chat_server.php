@@ -74,8 +74,6 @@ class ChatServer implements MessageComponentInterface
             $this->onlineUsers[$user_id] = $conn;
             $this->userConnections[$conn->resourceId] = $user_id;
             error_log("✅ User $user_id registered & online");
-
-            // TODO: fetch and deliver inbox_<user_id> messages here later
         } else {
             error_log("❌ Invalid token for {$conn->resourceId}");
             $conn->close();
@@ -114,52 +112,45 @@ class ChatServer implements MessageComponentInterface
                 json_encode([
                     "type" => "message",
                     "from" => $sender_id,
+                    "message_type" => $data["message_type"],
                     "payload" => $payload,
                 ]),
             );
             error_log(
                 "📨 Delivered message from $sender_id → $receiver_id (online)",
             );
-        } else {
-            // Receiver offline → save to inbox_<receiver_id>
-            $this->saveToInbox($receiver_id, $sender_id, $payload);
-            error_log("💾 Receiver $receiver_id offline → message saved");
         }
 
         // Always back up the message to the central log
-        $this->backupMessage($sender_id, $receiver_id, $payload);
-    }
-
-    private function saveToInbox($receiver_id, $sender_id, $payload)
-    {
-        require_once __DIR__ . "/config.php";
-        global $conn;
-
-        $inbox_table = "inbox_" . intval($receiver_id);
-        $stmt = $conn->prepare(
-            "INSERT INTO $inbox_table (sender_id, payload) VALUES (?, ?)",
+        $this->backupMessage(
+            $sender_id,
+            $receiver_id,
+            $payload,
+            $data["message_type"],
         );
-        $enc_payload = json_encode($payload);
-        $stmt->bind_param("is", $sender_id, $enc_payload);
-        $stmt->execute();
     }
 
     // Saves a copy of every message to the central 'messages' table for history.
-    private function backupMessage($sender_id, $receiver_id, $payload)
-    {
+    private function backupMessage(
+        $sender_id,
+        $receiver_id,
+        $payload,
+        $message_type,
+    ) {
         require __DIR__ . "/config.php";
         global $conn;
         $status = isset($this->onlineUsers[$receiver_id])
             ? "delivered"
-            : "sent";
+            : "queued";
         $stmt = $conn->prepare(
-            "INSERT INTO messages (sender_id, receiver_id, payload, status) VALUES (?, ?, ?, ?)",
+            "INSERT INTO messages (sender_id, receiver_id, message_type, payload, status) VALUES (?, ?, ?, ?, ?)",
         );
         $payload_json = json_encode($payload);
         $stmt->bind_param(
-            "iiss",
+            "iisss",
             $sender_id,
             $receiver_id,
+            $message_type,
             $payload_json,
             $status,
         );

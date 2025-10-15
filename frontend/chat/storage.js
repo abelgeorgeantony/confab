@@ -13,18 +13,34 @@
   function saveMessageLocally(
     contactId,
     sender,
-    message,
+    payload,
     timestamp = Date.now(),
+    messageType = "text",
   ) {
     const key = `chat_user_${contactId}`;
     let messages = JSON.parse(localStorage.getItem(key)) || [];
-    messages.push({ sender, message, timestamp });
+
+    // Store the full message object
+    messages.push({ sender, messageType, payload, timestamp });
     localStorage.setItem(key, JSON.stringify(messages));
+
+    // For the contact list preview, create a simple display message
+    let messageForDisplay;
+    switch (messageType) {
+      case "voice":
+        messageForDisplay = "🎤 Voice Message";
+        break;
+      case "text":
+      default:
+        messageForDisplay = payload; // For text, payload is the string
+        break;
+    }
+
     // Notify the app that this contact's last message has been updated.
     app.events.trigger("lastMessageUpdated", {
       contactId,
       sender,
-      message,
+      message: messageForDisplay,
       timestamp,
     });
   }

@@ -37,8 +37,9 @@ CREATE TABLE messages (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sender_id INT NOT NULL,
     receiver_id INT NOT NULL,
+    message_type ENUM('text', 'voice', 'image', 'document') NOT NULL DEFAULT 'text',
     payload TEXT NOT NULL,
-    status ENUM('sent', 'delivered', 'read') NOT NULL DEFAULT 'sent',
+    status ENUM('queued', 'delivered', 'read') NOT NULL DEFAULT 'queued',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE

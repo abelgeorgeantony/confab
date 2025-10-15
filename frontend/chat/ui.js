@@ -35,14 +35,50 @@
    * @param {string} messageText - The content of the message.
    * @param {number} [timestamp=Date.now()] - The message timestamp.
    */
-  function displayMessage(sender, messageText, timestamp = Date.now()) {
+  function displayMessage(
+    sender,
+    content,
+    timestamp = Date.now(),
+    messageType = "text",
+  ) {
     const messagesContainer = document.getElementById("messages");
     const msgDiv = document.createElement("div");
     msgDiv.classList.add("message", sender === "me" ? "outgoing" : "incoming");
 
-    const textSpan = document.createElement("span");
-    textSpan.classList.add("message-text");
-    textSpan.textContent = messageText;
+    if (messageType === "voice") {
+      if (sender === "me") {
+        // For our own sent voice messages, create a player from the Base64 Data URL
+        const audioPlayer = document.createElement("audio");
+        audioPlayer.classList.add("voice-message-player");
+        audioPlayer.controls = true;
+        audioPlayer.src = content.dataUrl;
+        msgDiv.appendChild(audioPlayer);
+      } else {
+        // For incoming voice messages, decrypt and create the player
+        const placeholder = document.createElement("div");
+        placeholder.classList.add("message-text", "voice-placeholder");
+        placeholder.textContent = "Loading voice message...";
+        msgDiv.appendChild(placeholder);
+
+        decryptAndCreateAudioPlayer(content) // content is the pointer payload
+          .then((audioPlayer) => {
+            placeholder.replaceWith(audioPlayer);
+          })
+          .catch((error) => {
+            console.error("Failed to load voice message:", error);
+            placeholder.textContent = "Error: Could not load voice message.";
+          });
+      }
+    } else {
+      // Handle text messages as before
+      const textSpan = document.createElement("span");
+      textSpan.classList.add("message-text");
+      textSpan.textContent = content;
+      msgDiv.appendChild(textSpan);
+
+      // Only allow long-press on text messages for now
+      enableLongPress(msgDiv, content);
+    }
 
     const timeSpan = document.createElement("span");
     timeSpan.classList.add("message-time");
@@ -50,13 +86,42 @@
       hour: "2-digit",
       minute: "2-digit",
     });
-
-    msgDiv.appendChild(textSpan);
     msgDiv.appendChild(timeSpan);
 
-    // Long press event for message actions
+    messagesContainer.appendChild(msgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  /**
+   * Decrypts a voice message payload and creates an HTML audio player.
+   * @param {object} payload - The voice message pointer payload {url, key, iv}.
+   * @returns {Promise<HTMLAudioElement>} A promise that resolves to the audio element.
+   */
+  async function decryptAndCreateAudioPlayer(payload) {
+    // 1. Decrypt the entire voice payload using the new crypto utility
+    const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
+      payload,
+      app.state.myPrivateKey,
+    );
+
+    // 2. Create audio player from the decrypted buffer
+    const wavBlob = new Blob([decryptedWavBuffer], { type: "audio/wav" });
+    const audioUrl = URL.createObjectURL(wavBlob);
+    const audioPlayer = document.createElement("audio");
+    audioPlayer.classList.add("voice-message-player");
+    audioPlayer.controls = true;
+    audioPlayer.src = audioUrl;
+
+    return audioPlayer;
+  }
+
+  /**
+   * Enables the long-press gesture on a message bubble to show actions.
+   * @param {HTMLElement} msgDiv - The message bubble element.
+   * @param {string} messageText - The text content of the message.
+   */
+  function enableLongPress(msgDiv, messageText) {
     let pressTimer;
-    let popupJustShown = false;
 
     const showPopup = () => {
       const popup = document.getElementById("message-actions-popup");
@@ -72,7 +137,6 @@
         overlay.classList.add("hidden");
       };
 
-      // Hide popup when clicking outside (on the overlay)
       const clickOutsideHandler = (event) => {
         if (event.target === overlay) {
           popup.classList.add("hidden");
@@ -87,12 +151,8 @@
     };
 
     const startPress = (e) => {
-      // Don't show for right-clicks
       if (e.button === 2) return;
-
-      pressTimer = window.setTimeout(() => {
-        showPopup();
-      }, 500); // 500ms for a long press
+      pressTimer = window.setTimeout(showPopup, 500);
     };
 
     const cancelPress = () => {
@@ -104,14 +164,7 @@
     msgDiv.addEventListener("mouseleave", cancelPress);
     msgDiv.addEventListener("touchstart", startPress);
     msgDiv.addEventListener("touchend", cancelPress);
-
-    msgDiv.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-    });
-
-    messagesContainer.appendChild(msgDiv);
-    // Automatically scroll to the bottom to show the new message.
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    msgDiv.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
   /**
