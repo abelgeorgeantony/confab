@@ -1,4 +1,3 @@
-// frontend/chat/state.js
 // This script must be the first one loaded.
 // It initializes a single global object 'app' to hold all modules and state.
 

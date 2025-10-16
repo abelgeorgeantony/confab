@@ -4,87 +4,6 @@
 
 (function (app) {
   /**
-   * Opens a chat window with a specific contact.
-   * @param {Object} contact - The contact object.
-   */
-  function openChatWith(contact) {
-    showStatusBarBackButton(app.ui.goBackToList);
-    document.getElementById("chat-view-cover").classList.add("hidden");
-    document.getElementById("messages").innerHTML = "";
-    const avatarContainer = document.getElementById("chat-view-avatar");
-    if (contact.profile_picture_url) {
-      avatarContainer.innerHTML = `<img src="/${contact.profile_picture_url}" alt="${contact.display_name}">`;
-    } else {
-      avatarContainer.innerHTML = `<div>${contact.username.charAt(0).toUpperCase()}</div>`;
-    }
-    avatarContainer.classList.remove("hideavatar");
-    document.getElementById("chat-title").textContent = contact.display_name;
-    document.getElementById("chat-subtitle").textContent =
-      "@" + contact.username;
-    document.getElementById("chat-view").classList.add("active");
-    document.getElementById("chat-list").classList.add("slideout");
-
-    const messages = app.storage.getLocalMessages(contact.id);
-    console.log(messages);
-    messages.forEach((m) =>
-      app.ui.displayMessage(m.sender, m.payload, m.timestamp, m.messageType),
-    );
-
-    app.state.currentChatUser = contact.id;
-    // Clear unread count for this chat.
-    app.state.unreadCounts[contact.id] = 0;
-    app.ui.updateUnreadBadge(contact.id);
-
-    // Make profile popup on header click
-    document.getElementById("chat-view-header").onclick = () => {
-      openProfileOf(contact);
-    };
-
-    // Set up the send button for this specific chat.
-    const sendButton = document.getElementById("send-button");
-    const recordButton = document.getElementById("record-button");
-    const messageInput = document.getElementById("message-input");
-    const voiceUiWrapper = document.getElementById("voice-ui-wrapper");
-
-    const updateButtonVisibility = () => {
-      const isVoiceUIVisible = !voiceUiWrapper.classList.contains("hidden");
-      const isInputEmpty = messageInput.value.trim() === "";
-
-      if (isVoiceUIVisible) {
-        sendButton.classList.add("hidden");
-        recordButton.classList.add("hidden");
-      } else {
-        if (isInputEmpty) {
-          sendButton.classList.add("hidden");
-          recordButton.classList.remove("hidden");
-        } else {
-          sendButton.classList.remove("hidden");
-          recordButton.classList.add("hidden");
-        }
-      }
-    };
-
-    messageInput.oninput = updateButtonVisibility;
-    updateButtonVisibility(); // Initial check
-
-    const sendMessageAction = async () => {
-      sendButton.disabled = true;
-      await app.websocket.sendTextMessage(contact.id);
-      sendButton.disabled = false;
-      updateButtonVisibility();
-      //messageInput.focus();
-    };
-    sendButton.onclick = sendMessageAction;
-    // Allow sending with Enter key
-    messageInput.onkeydown = (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessageAction();
-      }
-    };
-  }
-
-  /**
    * Initializes the modals for adding new contacts.
    */
   function initAddContactModals() {
@@ -170,7 +89,7 @@
         if (user.public_key) {
           app.state.publicKeyCache[user.id] = JSON.parse(user.public_key);
         }
-        openChatWith(user);
+        app.ui.openChatWith(user);
         while (modalStack.length > 0) closeCurrentModal();
       };
 
@@ -454,7 +373,7 @@
 
   // Expose necessary functions to the global app object.
   app.init.main = main;
-  app.init.openChatWith = openChatWith;
+  //app.init.openChatWith = openChatWith;
 
   // Add the event listener to prevent accidental reloads.
   window.addEventListener("beforeunload", (e) => {
@@ -464,8 +383,4 @@
 
   // Run the application once the DOM is fully loaded.
   document.addEventListener("DOMContentLoaded", app.init.main);
-  window.addEventListener("load", function () {
-    // Code to execute after the entire page and all resources are loaded
-    //
-  });
 })(app);

@@ -2,7 +2,7 @@
 require_once "bootstrap.php";
 require_once "auth.php";
 
-header("Content-Type: application/json");
+//header("Content-Type: application/json");
 
 // 1. Authenticate the user
 // We expect the token to be sent as a POST field along with the file

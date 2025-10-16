@@ -339,11 +339,12 @@
 
   // --- Main Send Logic ---
   async function sendVoiceMessage() {
+    // Need to fix this such that the voice is encrypted for the receiver and the sender too like text messges.
     if (!audioBlob || !app.state.currentChatUser) return;
 
     const sendButton = document.getElementById("send-voice-message-btn");
     sendButton.disabled = true;
-    Loader.start("Processing audio...");
+    //VoiceSendingLoader.start("Processing audio...");
 
     try {
       const recipientId = app.state.currentChatUser;
@@ -379,9 +380,16 @@
       if (!recipientPublicKeyJwk) {
         throw new Error(`Public key for user ${recipientId} not found.`);
       }
+      const myPublicKeyJwk = app.state.myPublicKey;
+      if (!myPublicKeyJwk) {
+        throw new Error("Your own public key is not available.");
+      }
+
       const recipientPublicKey = await app.crypto.importPublicKeyFromJwk(
         recipientPublicKeyJwk,
       );
+      const myPublicKey =
+        await app.crypto.importPublicKeyFromJwk(myPublicKeyJwk);
 
       const aesKey = await app.crypto.generateAesKey();
       const { ciphertext: encryptedAudioBuffer, iv } =
@@ -389,12 +397,17 @@
 
       const aesKeyJwk = await app.crypto.exportKeyToJwk(aesKey);
       const aesKeyString = JSON.stringify(aesKeyJwk);
-      const encryptedAesKey = await app.crypto.rsaEncrypt(
+
+      const encryptedAesKeyForReceiver = await app.crypto.rsaEncrypt(
         new TextEncoder().encode(aesKeyString),
         recipientPublicKey,
       );
+      const encryptedAesKeyForSender = await app.crypto.rsaEncrypt(
+        new TextEncoder().encode(aesKeyString),
+        myPublicKey,
+      );
 
-      Loader.addMessage("Uploading encrypted voice message...");
+      //VoiceSendingLoader.addMessage("Uploading encrypted voice message...");
       const encryptedBlob = new Blob([encryptedAudioBuffer]);
       const formData = new FormData();
       formData.append("token", getCookie("auth_token"));
@@ -413,8 +426,18 @@
       // 6. Send the pointer message via WebSocket
       const pointerPayload = {
         url: result.url,
-        key: app.crypto.arrayBufferToBase64(encryptedAesKey),
         iv: app.crypto.arrayBufferToBase64(iv),
+        keys: [
+          {
+            userId: recipientId,
+            key: app.crypto.arrayBufferToBase64(encryptedAesKeyForReceiver),
+          },
+          {
+            userId: app.state.myId,
+            key: app.crypto.arrayBufferToBase64(encryptedAesKeyForSender),
+          },
+        ],
+        timestamp: Date.now(),
       };
 
       // This is a fire-and-forget, no need to await the full send logic
@@ -425,11 +448,11 @@
         "voice",
       );
 
-      Loader.stop();
+      //VoiceSendingLoader.stop();
     } catch (error) {
       console.error("Failed to send voice message:", error);
       alert(`Error sending voice message: ${error.message}`);
-      Loader.stop();
+      //VoiceSendingLoader.stop();
     } finally {
       sendButton.disabled = false;
     }
@@ -608,7 +631,8 @@
               <div class="contact-lastmsg">${lastMsgText}</div>
           </div>
         `;
-        contactDiv.onclick = () => app.init.openChatWith(contact);
+        contactDiv.onclick = () => app.ui.openChatWith(contact);
+
         list.appendChild(contactDiv);
         if (app.state.unreadCounts[contact.id] > 0) {
           app.ui.updateUnreadBadge(contact.id);

@@ -178,9 +178,11 @@
 
          */
 
-    async decryptVoicePayload(payload, privateKey) {
+    async decryptVoicePayload(payload, privateKey, sender) {
       // 1. Decrypt AES key
-
+      if (sender === "them") {
+        // Fix the function!!!!
+      }
       const encryptedKey = this.base64ToArrayBuffer(payload.key);
 
       const decryptedAesKeyData = await this.rsaDecrypt(

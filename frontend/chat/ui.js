@@ -21,12 +21,92 @@
     };
     app.state.currentChatUser = null;
   }
-
   /**
    * Navigates the user to their profile page.
    */
   function goToProfile() {
     window.location.href = "../profile/profile.html";
+  }
+
+  /**
+   * Opens a chat window with a specific contact.
+   * @param {Object} contact - The contact object.
+   */
+  function openChatWith(contact) {
+    showStatusBarBackButton(goBackToList);
+    document.getElementById("chat-view-cover").classList.add("hidden");
+    document.getElementById("messages").innerHTML = "";
+    const avatarContainer = document.getElementById("chat-view-avatar");
+    if (contact.profile_picture_url) {
+      avatarContainer.innerHTML = `<img src="/${contact.profile_picture_url}" alt="${contact.display_name}">`;
+    } else {
+      avatarContainer.innerHTML = `<div>${contact.username.charAt(0).toUpperCase()}</div>`;
+    }
+    avatarContainer.classList.remove("hideavatar");
+    document.getElementById("chat-title").textContent = contact.display_name;
+    document.getElementById("chat-subtitle").textContent =
+      "@" + contact.username;
+    document.getElementById("chat-view").classList.add("active");
+    document.getElementById("chat-list").classList.add("slideout");
+
+    const messages = app.storage.getLocalMessages(contact.id);
+    console.log(messages);
+    messages.forEach((m) =>
+      displayMessage(m.sender, m.payload, m.timestamp, m.messageType),
+    );
+
+    app.state.currentChatUser = contact.id;
+    // Clear unread count for this chat.
+    app.state.unreadCounts[contact.id] = 0;
+    updateUnreadBadge(contact.id);
+
+    // Make profile popup on header click
+    document.getElementById("chat-view-header").onclick = () => {
+      openProfileOf(contact);
+    };
+
+    // Set up the send button for this specific chat.
+    const sendButton = document.getElementById("send-button");
+    const recordButton = document.getElementById("record-button");
+    const messageInput = document.getElementById("message-input");
+    const voiceUiWrapper = document.getElementById("voice-ui-wrapper");
+
+    const updateButtonVisibility = () => {
+      const isVoiceUIVisible = !voiceUiWrapper.classList.contains("hidden");
+      const isInputEmpty = messageInput.value.trim() === "";
+
+      if (isVoiceUIVisible) {
+        sendButton.classList.add("hidden");
+        recordButton.classList.add("hidden");
+      } else {
+        if (isInputEmpty) {
+          sendButton.classList.add("hidden");
+          recordButton.classList.remove("hidden");
+        } else {
+          sendButton.classList.remove("hidden");
+          recordButton.classList.add("hidden");
+        }
+      }
+    };
+
+    messageInput.oninput = updateButtonVisibility;
+    updateButtonVisibility(); // Initial check
+
+    const sendMessageAction = async () => {
+      sendButton.disabled = true;
+      await app.websocket.sendTextMessage(contact.id);
+      sendButton.disabled = false;
+      updateButtonVisibility();
+      //messageInput.focus();
+    };
+    sendButton.onclick = sendMessageAction;
+    // Allow sending with Enter key
+    messageInput.onkeydown = (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessageAction();
+      }
+    };
   }
 
   /**
@@ -46,31 +126,33 @@
     msgDiv.classList.add("message", sender === "me" ? "outgoing" : "incoming");
 
     if (messageType === "voice") {
-      if (sender === "me") {
+      console.log("audioPlayer.src:", content);
+      /*if (sender === "me") {
         // For our own sent voice messages, create a player from the Base64 Data URL
         const audioPlayer = document.createElement("audio");
         audioPlayer.classList.add("voice-message-player");
         audioPlayer.controls = true;
         audioPlayer.src = content.dataUrl;
         msgDiv.appendChild(audioPlayer);
-      } else {
-        // For incoming voice messages, decrypt and create the player
-        const placeholder = document.createElement("div");
-        placeholder.classList.add("message-text", "voice-placeholder");
-        placeholder.textContent = "Loading voice message...";
-        msgDiv.appendChild(placeholder);
+      } else {*/
+      // For incoming voice messages, decrypt and create the player
+      const placeholder = document.createElement("div");
+      placeholder.classList.add("message-text", "voice-placeholder");
+      placeholder.textContent = "Loading voice message...";
+      msgDiv.appendChild(placeholder);
 
-        decryptAndCreateAudioPlayer(content) // content is the pointer payload
-          .then((audioPlayer) => {
-            placeholder.replaceWith(audioPlayer);
-          })
-          .catch((error) => {
-            console.error("Failed to load voice message:", error);
-            placeholder.textContent = "Error: Could not load voice message.";
-          });
-      }
+      decryptAndCreateAudioPlayer(content, sender) // content is the pointer payload
+        .then((audioPlayer) => {
+          placeholder.replaceWith(audioPlayer);
+        })
+        .catch((error) => {
+          console.error("Failed to load voice message:", error);
+          placeholder.textContent = "Error: Could not load voice message.";
+        });
+      //}
     } else {
       // Handle text messages as before
+      console.log("Handling text message");
       const textSpan = document.createElement("span");
       textSpan.classList.add("message-text");
       textSpan.textContent = content;
@@ -97,11 +179,13 @@
    * @param {object} payload - The voice message pointer payload {url, key, iv}.
    * @returns {Promise<HTMLAudioElement>} A promise that resolves to the audio element.
    */
-  async function decryptAndCreateAudioPlayer(payload) {
+  async function decryptAndCreateAudioPlayer(payload, sender) {
     // 1. Decrypt the entire voice payload using the new crypto utility
+    console.log(payload);
     const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
       payload,
       app.state.myPrivateKey,
+      sender,
     );
 
     // 2. Create audio player from the decrypted buffer
@@ -196,6 +280,7 @@
   // Expose functions on the global app object.
   app.ui.goBackToList = goBackToList;
   app.ui.goToProfile = goToProfile;
+  app.ui.openChatWith = openChatWith;
   app.ui.displayMessage = displayMessage;
   app.ui.updateUnreadBadge = updateUnreadBadge;
 })(app);
