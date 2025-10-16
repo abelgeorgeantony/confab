@@ -339,7 +339,6 @@
 
   // --- Main Send Logic ---
   async function sendVoiceMessage() {
-    // Need to fix this such that the voice is encrypted for the receiver and the sender too like text messges.
     if (!audioBlob || !app.state.currentChatUser) return;
 
     const sendButton = document.getElementById("send-voice-message-btn");
@@ -354,26 +353,6 @@
       // 1. Process and Encode audio to a WAV blob
       const wavBlob = await processAndEncodeAudio(audioBlob, activeFilter);
 
-      // 2. Create a Base64 Data URL for local storage and UI
-      const reader = new FileReader();
-      reader.readAsDataURL(wavBlob);
-      await new Promise((resolve) => (reader.onload = resolve));
-      const base64DataUrl = reader.result;
-
-      // 3. Save to local storage and update sender's UI immediately
-      const localPayload = { dataUrl: base64DataUrl };
-      app.storage.saveMessageLocally(
-        recipientId,
-        "me",
-        localPayload,
-        Date.now(),
-        "voice",
-      );
-      app.ui.displayMessage("me", localPayload, Date.now(), "voice");
-
-      // 4. Reset the recording UI now that the local part is done
-      showInitialUI();
-
       // 5. Proceed with encryption and upload in the background
       const wavArrayBuffer = await wavBlob.arrayBuffer();
       const recipientPublicKeyJwk = app.state.publicKeyCache[recipientId];
@@ -382,7 +361,7 @@
       }
       const myPublicKeyJwk = app.state.myPublicKey;
       if (!myPublicKeyJwk) {
-        throw new Error("Your own public key is not available.");
+        throw new Error("Your public key not found.");
       }
 
       const recipientPublicKey = await app.crypto.importPublicKeyFromJwk(
@@ -409,6 +388,22 @@
 
       //VoiceSendingLoader.addMessage("Uploading encrypted voice message...");
       const encryptedBlob = new Blob([encryptedAudioBuffer]);
+      const localPayload = {
+        encryptedBlob: encryptedBlob,
+        iv: app.crypto.arrayBufferToBase64(iv),
+        keys: [
+          {
+            userId: recipientId,
+            key: app.crypto.arrayBufferToBase64(encryptedAesKeyForReceiver),
+          },
+          {
+            userId: app.state.myId,
+            key: app.crypto.arrayBufferToBase64(encryptedAesKeyForSender),
+          },
+        ],
+      };
+      app.ui.displayMessage("me", localPayload, Date.now(), "voice");
+
       const formData = new FormData();
       formData.append("token", getCookie("auth_token"));
       formData.append("voiceMessage", encryptedBlob, "voice.bin");
@@ -447,6 +442,18 @@
         "🎤 Voice Message",
         "voice",
       );
+
+      // 3. Save to local storage
+      //TO.DO Fix this
+      app.storage.saveMessageLocally(
+        recipientId,
+        "me",
+        localPayload,
+        Date.now(),
+        "voice",
+      );
+      // 4. Reset the recording UI now that the local part is done
+      showInitialUI();
 
       //VoiceSendingLoader.stop();
     } catch (error) {
@@ -547,6 +554,7 @@
       }
 
       // Save the message locally for history
+      // TO.DO Need to fix this for incoming voice messages
       app.storage.saveMessageLocally(
         senderId,
         "them",

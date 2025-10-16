@@ -126,22 +126,12 @@
     msgDiv.classList.add("message", sender === "me" ? "outgoing" : "incoming");
 
     if (messageType === "voice") {
-      console.log("audioPlayer.src:", content);
-      /*if (sender === "me") {
-        // For our own sent voice messages, create a player from the Base64 Data URL
-        const audioPlayer = document.createElement("audio");
-        audioPlayer.classList.add("voice-message-player");
-        audioPlayer.controls = true;
-        audioPlayer.src = content.dataUrl;
-        msgDiv.appendChild(audioPlayer);
-      } else {*/
-      // For incoming voice messages, decrypt and create the player
       const placeholder = document.createElement("div");
       placeholder.classList.add("message-text", "voice-placeholder");
       placeholder.textContent = "Loading voice message...";
       msgDiv.appendChild(placeholder);
 
-      decryptAndCreateAudioPlayer(content, sender) // content is the pointer payload
+      decryptAndCreateAudioPlayer(content) // content is the pointer payload
         .then((audioPlayer) => {
           placeholder.replaceWith(audioPlayer);
         })
@@ -179,13 +169,11 @@
    * @param {object} payload - The voice message pointer payload {url, key, iv}.
    * @returns {Promise<HTMLAudioElement>} A promise that resolves to the audio element.
    */
-  async function decryptAndCreateAudioPlayer(payload, sender) {
+  async function decryptAndCreateAudioPlayer(payload) {
     // 1. Decrypt the entire voice payload using the new crypto utility
-    console.log(payload);
     const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
       payload,
       app.state.myPrivateKey,
-      sender,
     );
 
     // 2. Create audio player from the decrypted buffer

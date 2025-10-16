@@ -167,23 +167,18 @@
     }
 
     /**
-
-         * Handles the full decryption flow for a voice message payload.
-
-         * @param {object} payload - The voice message pointer payload {url, key, iv}.
-
-         * @param {CryptoKey} privateKey - The user's private RSA key.
-
-         * @returns {Promise<ArrayBuffer>} A promise that resolves to the decrypted WAV data.
-
-         */
-
-    async decryptVoicePayload(payload, privateKey, sender) {
+     * Handles the full decryption flow for a voice message payload.
+     * @param {object} payload - The voice message pointer payload {url, key, iv}.
+     * @param {CryptoKey} privateKey - The user's private RSA key.
+     * @returns {Promise<ArrayBuffer>} A promise that resolves to the decrypted WAV data.
+     */
+    async decryptVoicePayload(payload, privateKey) {
       // 1. Decrypt AES key
-      if (sender === "them") {
-        // Fix the function!!!!
-      }
-      const encryptedKey = this.base64ToArrayBuffer(payload.key);
+      const myKeyData = payload.keys.find(
+        (k) => Number(k.userId) === Number(app.state.myId),
+      );
+      //return;
+      const encryptedKey = this.base64ToArrayBuffer(myKeyData.key);
 
       const decryptedAesKeyData = await this.rsaDecrypt(
         encryptedKey,
@@ -197,11 +192,13 @@
       const aesKey = await this.importAesKeyFromJwk(aesKeyJwk);
 
       // 2. Fetch encrypted audio data
-
-      const response = await fetch(payload.url);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+      var response;
+      if (payload.url) {
+        response = await fetch(payload.url);
+        if (!response.ok)
+          throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+      } else {
+        response = payload.encryptedBlob;
       }
 
       const encryptedAudioBuffer = await response.arrayBuffer();
