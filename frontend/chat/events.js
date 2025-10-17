@@ -498,11 +498,32 @@
         return;
       }
 
+      if (!app.state.myPrivateKey) throw new Error("Private key not loaded.");
+
+      const myKeyData = payload.keys.find(
+        (k) => Number(k.userId) === Number(app.state.myId),
+      );
+      if (!myKeyData)
+        throw new Error("No key found for the user in the payload.");
+
+      const encryptedKey = app.crypto.base64ToArrayBuffer(myKeyData.key);
+      const iv = app.crypto.base64ToArrayBuffer(payload.iv);
+      const decryptedAesKeyData = await app.crypto.rsaDecrypt(
+        encryptedKey,
+        app.state.myPrivateKey,
+      );
+      const aesKeyJwk = JSON.parse(
+        new TextDecoder().decode(decryptedAesKeyData),
+      );
+      const aesKey = await app.crypto.importAesKeyFromJwk(aesKeyJwk);
+
       let messageForDisplay;
       let contentForUI;
-
       switch (message_type) {
         case "voice":
+          //
+
+          //
           messageForDisplay = "🎤 Voice Message";
           contentForUI = payload; // Pass the pointer payload directly to the UI
           break;
@@ -515,30 +536,9 @@
                 `Unknown message_type: '${message_type}'. Treating as text.`,
               );
             }
-            if (!app.state.myPrivateKey)
-              throw new Error("Private key not loaded.");
-
-            const myKeyData = payload.keys.find(
-              (k) => Number(k.userId) === Number(app.state.myId),
-            );
-            if (!myKeyData)
-              throw new Error("No key found for this user in the payload.");
-
-            const encryptedKey = app.crypto.base64ToArrayBuffer(myKeyData.key);
-            const iv = app.crypto.base64ToArrayBuffer(payload.iv);
             const ciphertext = app.crypto.base64ToArrayBuffer(
               payload.ciphertext,
             );
-
-            const decryptedAesKeyData = await app.crypto.rsaDecrypt(
-              encryptedKey,
-              app.state.myPrivateKey,
-            );
-            const aesKeyJwk = JSON.parse(
-              new TextDecoder().decode(decryptedAesKeyData),
-            );
-            const aesKey = await app.crypto.importAesKeyFromJwk(aesKeyJwk);
-
             messageForDisplay = await app.crypto.aesDecrypt(
               ciphertext,
               aesKey,

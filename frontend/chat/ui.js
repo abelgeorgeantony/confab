@@ -50,7 +50,6 @@
     document.getElementById("chat-list").classList.add("slideout");
 
     const messages = app.storage.getLocalMessages(contact.id);
-    console.log(messages);
     messages.forEach((m) =>
       displayMessage(m.sender, m.payload, m.timestamp, m.messageType),
     );
@@ -66,7 +65,7 @@
     };
 
     // Set up the send button for this specific chat.
-    const sendButton = document.getElementById("send-button");
+    const sendTextButton = document.getElementById("send-button");
     const recordButton = document.getElementById("record-button");
     const messageInput = document.getElementById("message-input");
     const voiceUiWrapper = document.getElementById("voice-ui-wrapper");
@@ -76,14 +75,14 @@
       const isInputEmpty = messageInput.value.trim() === "";
 
       if (isVoiceUIVisible) {
-        sendButton.classList.add("hidden");
+        sendTextButton.classList.add("hidden");
         recordButton.classList.add("hidden");
       } else {
         if (isInputEmpty) {
-          sendButton.classList.add("hidden");
+          sendTextButton.classList.add("hidden");
           recordButton.classList.remove("hidden");
         } else {
-          sendButton.classList.remove("hidden");
+          sendTextButton.classList.remove("hidden");
           recordButton.classList.add("hidden");
         }
       }
@@ -92,19 +91,22 @@
     messageInput.oninput = updateButtonVisibility;
     updateButtonVisibility(); // Initial check
 
-    const sendMessageAction = async () => {
-      sendButton.disabled = true;
+    const sendTextMessageAction = async () => {
+      sendTextButton.disabled = true;
+      const textMessage = messageInput.value;
+      displayMessage("me", textMessage);
       await app.websocket.sendTextMessage(contact.id);
-      sendButton.disabled = false;
+      app.storage.saveMessageLocally(contact.id, "me", textMessage);
+      sendTextButton.disabled = false;
       updateButtonVisibility();
       //messageInput.focus();
     };
-    sendButton.onclick = sendMessageAction;
+    sendTextButton.onclick = sendTextMessageAction;
     // Allow sending with Enter key
     messageInput.onkeydown = (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendMessageAction();
+        sendTextMessageAction();
       }
     };
   }
@@ -139,10 +141,8 @@
           console.error("Failed to load voice message:", error);
           placeholder.textContent = "Error: Could not load voice message.";
         });
-      //}
     } else {
       // Handle text messages as before
-      console.log("Handling text message");
       const textSpan = document.createElement("span");
       textSpan.classList.add("message-text");
       textSpan.textContent = content;
@@ -247,7 +247,6 @@
     const contactElement = document.querySelector(
       `[data-contact-id="${senderId}"]`,
     );
-    console.log(contactElement);
     if (!contactElement) return;
 
     let badge = contactElement.querySelector(".unread-badge");
