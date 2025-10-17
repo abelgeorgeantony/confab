@@ -102,15 +102,12 @@
 
   // --- UI State Management ---
   function showRecordingUI() {
-    messageInput.classList.add("hidden");
+    document.getElementById("message-input").classList.add("hidden");
+    document.getElementById("emoji-button").classList.add("hidden");
     recordButton.classList.add("hidden");
     voiceUiWrapper.classList.remove("hidden");
     recordingState.classList.remove("hidden");
     playbackState.classList.add("hidden");
-    visualizer.classList.remove("paused");
-    pauseResumeBtn.textContent = "pause";
-    audioFiltersContainer.classList.add("hidden");
-    waveformContainer.classList.add("hidden");
   }
 
   function showPlaybackUI() {
@@ -133,6 +130,7 @@
   function showInitialUI() {
     voiceUiWrapper.classList.add("hidden");
     messageInput.classList.remove("hidden");
+    document.getElementById("emoji-button").classList.remove("hidden");
     recordButton.classList.remove("hidden");
     resetRecordingState();
     messagesContainer.classList.remove("voice-ui-active");

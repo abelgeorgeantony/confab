@@ -70,14 +70,23 @@
     const messageInput = document.getElementById("message-input");
     const voiceUiWrapper = document.getElementById("voice-ui-wrapper");
 
+    const emojiButton = document.getElementById("emoji-button");
+    const emojiPickerContainer = document.getElementById(
+      "emoji-picker-container",
+    );
+
     const updateButtonVisibility = () => {
       const isVoiceUIVisible = !voiceUiWrapper.classList.contains("hidden");
       const isInputEmpty = messageInput.value.trim() === "";
+      const isEmojiPickerVisible =
+        !emojiPickerContainer.classList.contains("hidden");
 
       if (isVoiceUIVisible) {
         sendTextButton.classList.add("hidden");
         recordButton.classList.add("hidden");
+        emojiButton.classList.add("hidden");
       } else {
+        emojiButton.classList.remove("hidden");
         if (isInputEmpty) {
           sendTextButton.classList.add("hidden");
           recordButton.classList.remove("hidden");
@@ -90,6 +99,28 @@
 
     messageInput.oninput = updateButtonVisibility;
     updateButtonVisibility(); // Initial check
+
+    emojiButton.onclick = () => {
+      emojiPickerContainer.classList.toggle("hidden");
+      updateButtonVisibility();
+    };
+
+    const emojiPicker = emojiPickerContainer.querySelector("emoji-picker");
+    emojiPicker.addEventListener("emoji-click", (event) => {
+      messageInput.value += event.detail.unicode;
+      updateButtonVisibility();
+    });
+
+    // Hide emoji picker when clicking outside
+    document.addEventListener("click", (event) => {
+      if (
+        !emojiPickerContainer.contains(event.target) &&
+        !emojiButton.contains(event.target)
+      ) {
+        emojiPickerContainer.classList.add("hidden");
+        updateButtonVisibility();
+      }
+    });
 
     const sendTextMessageAction = async () => {
       sendTextButton.disabled = true;

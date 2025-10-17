@@ -27,6 +27,10 @@
         <script src="main.js" defer></script>
         <script src="https://unpkg.com/wavesurfer.js@7"></script>
         <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+        <script
+            type="module"
+            src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"
+        ></script>
     </head>
     <body class="chat-page">
         <div class="status-bar">
@@ -127,14 +131,23 @@
                         id="message-actions-overlay"
                         class="modal-overlay hidden"
                     ></div>
+                    <div id="emoji-picker-container" class="hidden">
+                        <emoji-picker></emoji-picker>
+                    </div>
                     <form
                         id="message-form"
                         onsubmit="event.preventDefault(); sendMessage(currentChatUser);"
                     >
+                        <button
+                            type="button"
+                            id="emoji-button"
+                            class="material-icons"
+                        >
+                            mood
+                        </button>
                         <textarea
                             id="message-input"
                             placeholder="Type a message..."
-                            required
                         ></textarea>
                         <div id="voice-ui-wrapper" class="hidden">
                             <div id="audio-filters-container">
