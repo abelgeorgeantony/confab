@@ -7,8 +7,10 @@
             name="viewport"
             content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
         />
-        <link rel="stylesheet" href="../base.css" />
         <link rel="stylesheet" href="../loader.css" />
+        <script src="../loader.js" defer></script>
+
+        <link rel="stylesheet" href="../base.css" />
         <link rel="stylesheet" href="chat.css" />
         <link
             href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -17,7 +19,6 @@
         <script src="state.js" defer></script>
         <script src="../crypto.js" defer></script>
         <script src="../utils.js" defer></script>
-        <script src="../loader.js" defer></script>
         <script src="../auth/auth.js" defer></script>
         <script src="storage.js" defer></script>
         <script src="ui.js" defer></script>
@@ -58,6 +59,9 @@
         </div>
 
         <div class="page-wrapper">
+            <div id="loading-overlay" class="loading-overlay hidden">
+                <div class="loading-container"></div>
+            </div>
             <div id="chat-app">
                 <!-- Sidebar: Chat List -->
                 <aside id="chat-list">
@@ -91,8 +95,8 @@
                     <div id="chat-view-cover">
                         <h2>Welcome to Confab</h2>
                         <p>
-                            Select a conversation from the list on the left to
-                            get started,<br />or find someone new to talk to.
+                            Select a conversation from the list on the left,<br />or
+                            find someone new to talk to.
                         </p>
                     </div>
                     <header id="chat-view-header" class="chat-view-header">
@@ -286,10 +290,6 @@
                 <div id="profile-content" class="profile-content">
                     <!-- Profile details will be dynamically inserted here -->
                 </div>
-            </div>
-
-            <div id="loading-overlay" class="loading-overlay hidden">
-                <div class="loading-container"></div>
             </div>
         </div>
     </body>

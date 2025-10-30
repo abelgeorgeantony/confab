@@ -7,6 +7,7 @@ var app = {
     ws: null,
     unreadCounts: {},
     currentChatUser: null,
+    chatState: {},
     allContacts: [],
     myPrivateKey: null,
     myPublicKey: null,

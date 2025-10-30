@@ -7,6 +7,15 @@
    * Switches the view from the chat window back to the contact list on mobile.
    */
   function goBackToList() {
+    if (app.state.currentChatUser) {
+      // Save the current chat's UI state to cache
+      app.state.chatState[app.state.currentChatUser] = {
+        textDraft: document.getElementById("message-input").value,
+        voiceDraft: null,
+        scrollPosition: document.getElementById("messages").scrollTop,
+      };
+    }
+    console.log(app.state.chatState);
     document.getElementById("chat-view-cover").classList.remove("hidden");
     hideStatusBarBackButton();
     document.getElementById("chat-view").classList.remove("active");
@@ -29,11 +38,30 @@
   }
 
   /**
+   * Checks if a chat UI cache exists for a given contact ID.
+   * @param {number} contactId - The ID of the contact.
+   * @returns {boolean} - True if a cache exists, false otherwise.
+   */
+  function chatCacheExists(contactId) {
+    return !!app.state.chatState[contactId];
+  }
+
+  /**
    * Opens a chat window with a specific contact.
    * @param {Object} contact - The contact object.
    */
   function openChatWith(contact) {
-    showStatusBarBackButton(goBackToList);
+    if (Number(contact.id) === Number(app.state.currentChatUser)) {
+      return;
+    }
+    if (app.state.currentChatUser) {
+      // Save the current chat's UI state to cache
+      app.state.chatState[app.state.currentChatUser] = {
+        textDraft: document.getElementById("message-input").value,
+        voiceDraft: null,
+        scrollPosition: document.getElementById("messages").scrollTop,
+      };
+    }
     document.getElementById("chat-view-cover").classList.add("hidden");
     document.getElementById("messages").innerHTML = "";
     const avatarContainer = document.getElementById("chat-view-avatar");
@@ -50,6 +78,7 @@
     document.getElementById("chat-list").classList.add("slideout");
 
     const messages = app.storage.getLocalMessages(contact.id);
+    console.log(messages);
     messages.forEach((m) =>
       displayMessage(m.sender, m.payload, m.timestamp, m.messageType),
     );
@@ -140,6 +169,15 @@
         sendTextMessageAction();
       }
     };
+
+    if (chatCacheExists(contact.id)) {
+      messageInput.value = app.state.chatState[contact.id].textDraft;
+      document.getElementById("messages").scrollTop =
+        app.state.chatState[contact.id].scrollPosition - 148;
+    } else {
+      messageInput.value = "";
+    }
+    showStatusBarBackButton(goBackToList);
   }
 
   /**
@@ -241,7 +279,16 @@
       };
 
       const clickOutsideHandler = (event) => {
-        if (event.target === overlay) {
+        console.log(event.target);
+        if (
+          event.target === overlay ||
+          event.target === document.getElementById("status-bar-back-btn") ||
+          event.target ===
+            document
+              .getElementById("status-bar-back-btn")
+              .querySelector("span") ||
+          event.target === document.getElementById("add-contact-btn")
+        ) {
           popup.classList.add("hidden");
           overlay.classList.add("hidden");
           document.removeEventListener("click", clickOutsideHandler);

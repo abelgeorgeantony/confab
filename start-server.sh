@@ -21,14 +21,14 @@ echo "Updated Caddyfile with the new IP address."
 # Check for backend dependencies
 if [ ! -d "backend/vendor" ]; then
     echo "Error: Composer dependencies not installed in the backend."
-    echo "Please run 'composer install' in the 'backend' directory."
+    echo "Please run 'composer install' inside the 'backend/' directory."
     exit 1
 fi
 
 # Check for backend .env file
 if [ ! -f "backend/.env" ]; then
     echo "Error: .env file not found in the backend."
-    echo "Please create it inside backend/ and configure it."
+    echo "Please create it inside 'backend/' and configure it."
     exit 1
 fi
 

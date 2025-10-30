@@ -174,6 +174,7 @@
      */
     async decryptVoicePayload(payload, privateKey) {
       // 1. Decrypt AES key
+      console.log(payload);
       const myKeyData = payload.keys.find(
         (k) => Number(k.userId) === Number(app.state.myId),
       );
