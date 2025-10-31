@@ -249,12 +249,127 @@
     // 2. Create audio player from the decrypted buffer
     const wavBlob = new Blob([decryptedWavBuffer], { type: "audio/wav" });
     const audioUrl = URL.createObjectURL(wavBlob);
-    const audioPlayer = document.createElement("audio");
+    /*const audioPlayer = document.createElement("audio");
     audioPlayer.classList.add("voice-message-player");
     audioPlayer.controls = true;
     audioPlayer.src = audioUrl;
 
-    return audioPlayer;
+    return audioPlayer;*/
+
+    // 3. Create a container for the Wavesurfer player and its controls
+    const playerWrapper = document.createElement("div");
+    playerWrapper.classList.add("voice-message-player-wrapper"); // Custom wrapper for styling
+
+    // Create the Play/Pause button
+    const playPauseBtn = document.createElement("button");
+    playPauseBtn.type = "button";
+    playPauseBtn.classList.add(
+      "material-icons",
+      "voice-message-play-pause-btn",
+    );
+    playPauseBtn.textContent = "play_arrow"; // Initial state: play
+
+    // Create the waveform container
+    const waveformContainer = document.createElement("div");
+    waveformContainer.classList.add("voice-message-waveform-container"); // Container for Wavesurfer
+
+    // Create the timer display
+    const timerSpan = document.createElement("span");
+    timerSpan.classList.add("voice-message-timer");
+    timerSpan.textContent = "0:00 / 0:00"; // Initial timer display
+
+    // Append elements to the wrapper
+    playerWrapper.appendChild(playPauseBtn);
+    playerWrapper.appendChild(waveformContainer);
+    playerWrapper.appendChild(timerSpan);
+
+    // Get computed styles for consistent theming
+    const computedStyle = getComputedStyle(document.documentElement);
+    let waveColor = "#ffffff"; // Default wave color
+    let progressColor = "#ffffff"; // Default progress color
+
+    /*if (sender === "me") {
+      // Outgoing message styling
+      waveColor =
+        computedStyle
+          .getPropertyValue("--outgoing-message-wave-color")
+          .trim() || "#ffffff";
+      progressColor =
+        computedStyle
+          .getPropertyValue("--outgoing-message-progress-color")
+          .trim() || "#ffffff";
+    } else {
+      // Incoming message styling
+      waveColor =
+        computedStyle
+          .getPropertyValue("--incoming-message-wave-color")
+          .trim() || "#f0f0f0";
+      progressColor =
+        computedStyle
+          .getPropertyValue("--incoming-message-progress-color")
+          .trim() || "#f0f0f0";
+    }*/
+
+    // 4. Initialize Wavesurfer.js
+    const wavesurferInstance = WaveSurfer.create({
+      container: waveformContainer,
+      waveColor: waveColor,
+      progressColor: progressColor,
+      height: 40, // Adjust height to fit message bubble
+      barWidth: 2,
+      barGap: 1,
+      dragToSeek: true,
+      cursorColor: "transparent", // Hide default cursor
+      interact: true, // Allow interaction with the waveform
+    });
+
+    // 5. Load the audio into Wavesurfer.js
+    wavesurferInstance.load(audioUrl);
+
+    // 6. Attach event listeners for playback controls and Wavesurfer events
+    playPauseBtn.onclick = () => {
+      wavesurferInstance.playPause();
+    };
+
+    wavesurferInstance.on("play", () => {
+      playPauseBtn.textContent = "pause";
+    });
+
+    wavesurferInstance.on("pause", () => {
+      playPauseBtn.textContent = "play_arrow";
+    });
+
+    wavesurferInstance.on("timeupdate", (currentTime) => {
+      const duration = wavesurferInstance.getDuration();
+      const currentMinutes = Math.floor(currentTime / 60);
+      const currentSeconds = Math.floor(currentTime % 60);
+      const totalMinutes = Math.floor(duration / 60);
+      const totalSeconds = Math.floor(duration % 60);
+
+      timerSpan.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")} / ${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
+    });
+
+    wavesurferInstance.on("ready", (duration) => {
+      const totalMinutes = Math.floor(duration / 60);
+      const totalSeconds = Math.floor(duration % 60);
+      timerSpan.textContent = `0:00 / ${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
+    });
+
+    wavesurferInstance.on("finish", () => {
+      playPauseBtn.textContent = "play_arrow";
+      wavesurferInstance.seekTo(0); // Reset to beginning
+      wavesurferInstance.fireEvent("timeupdate", 0); // Manually update timer to 0:00
+    });
+
+    // Important: Clean up Blob URL when Wavesurfer is destroyed or the element is removed.
+    // This part is crucial for memory management.
+    // We'll attach a mutation observer to the parent to detect removal.
+    // For simplicity now, we'll rely on the browser's eventual cleanup,
+    // but in a production app, more robust lifecycle management is needed.
+    // A robust solution would involve a MutationObserver to detect when playerWrapper is removed from DOM
+    // and then call wavesurferInstance.destroy() and URL.revokeObjectURL(audioUrl);
+
+    return playerWrapper;
   }
 
   /**

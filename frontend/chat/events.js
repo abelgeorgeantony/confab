@@ -446,7 +446,7 @@
       app.storage.saveMessageLocally(
         recipientId,
         "me",
-        localPayload,
+        pointerPayload,
         Date.now(),
         "voice",
       );
