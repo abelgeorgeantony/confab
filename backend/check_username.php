@@ -4,6 +4,9 @@ require_once "bootstrap.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 $username = $data["username"] ?? "";
+if (!is_string($username)) {
+    $username = (string) $username;
+}
 
 if (strlen($username) < 3) {
     echo json_encode(["exists" => false]);

@@ -298,8 +298,10 @@
               const payload = JSON.parse(msg.payload);
               let decryptedPayload;
 
+              console.log(msg.message_type);
               if (msg.message_type === "text") {
                 try {
+                  console.log("Hi from text");
                   if (!app.state.myPrivateKey)
                     throw new Error("Private key not loaded.");
                   const myKeyData = payload.keys.find(
@@ -317,10 +319,12 @@
                   const ciphertext = app.crypto.base64ToArrayBuffer(
                     payload.ciphertext,
                   );
+                  console.log("Before late completions1");
                   const decryptedAesKeyData = await app.crypto.rsaDecrypt(
                     encryptedKey,
                     app.state.myPrivateKey,
                   );
+                  console.log("Before late completions2");
                   const aesKeyJwk = JSON.parse(
                     new TextDecoder().decode(decryptedAesKeyData),
                   );
@@ -339,15 +343,19 @@
                   decryptedPayload = "🔒 [Could not decrypt message]";
                 }
               } else {
+                console.log("Hi from voice");
                 // For voice, image, etc., the payload from the DB is already what we want to store.
                 decryptedPayload = payload;
               }
 
+              console.log(decryptedPayload);
+              const dateString = msg.created_at; // ISO 8601 formatted date string
+              const timestamp_parsed = Date.parse(dateString);
               app.storage.saveMessageLocally(
                 contactId,
                 sender,
                 decryptedPayload,
-                msg.created_at,
+                timestamp_parsed,
                 msg.message_type,
               );
             });

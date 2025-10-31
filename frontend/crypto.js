@@ -102,7 +102,7 @@
     }
 
     async importAesKeyFromJwk(jwk) {
-      return window.crypto.subtle.importKey(
+      return await window.crypto.subtle.importKey(
         "jwk",
         jwk,
         { name: "AES-GCM" },
@@ -157,11 +157,9 @@
     }
 
     async rsaDecrypt(encryptedData, rsaPrivateKey) {
-      return window.crypto.subtle.decrypt(
+      return await window.crypto.subtle.decrypt(
         { name: "RSA-OAEP" },
-
         rsaPrivateKey,
-
         encryptedData,
       );
     }

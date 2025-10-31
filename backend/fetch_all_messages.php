@@ -25,5 +25,6 @@ $stmt->bind_param("ii", $userId, $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 $messages = $result->fetch_all(MYSQLI_ASSOC);
+error_log(print_r($messages, true));
 
 echo json_encode(["success" => true, "messages" => $messages]);

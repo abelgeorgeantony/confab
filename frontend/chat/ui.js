@@ -79,9 +79,10 @@
 
     const messages = app.storage.getLocalMessages(contact.id);
     console.log(messages);
-    messages.forEach((m) =>
-      displayMessage(m.sender, m.payload, m.timestamp, m.messageType),
-    );
+    messages.forEach((m) => {
+      console.log(m);
+      displayMessage(m.sender, m.payload, m.timestamp, m.messageType);
+    });
 
     app.state.currentChatUser = contact.id;
     // Clear unread count for this chat.

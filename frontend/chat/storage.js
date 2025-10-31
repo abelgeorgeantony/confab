@@ -19,9 +19,6 @@
   ) {
     const key = `chat_user_${contactId}`;
     let messages = JSON.parse(localStorage.getItem(key)) || [];
-
-    console.log(payload);
-
     // Store the full message object
     messages.push({ sender, messageType, payload, timestamp });
     localStorage.setItem(key, JSON.stringify(messages));
