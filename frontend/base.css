@@ -23,6 +23,15 @@
     --chat-incoming-msg-bg: #eee;
     --chat-outgoing-msg-bg: #007bff;
     --chat-outgoing-msg-text: white;
+
+    --outgoing-play-pause-btn-bg: #eeeeee;
+    --outgoing-play-pause-btn-color: #007bff;
+    --incoming-play-pause-btn-bg: #007bff;
+    --incoming-play-pause-btn-color: #ffffff;
+    --outgoing-message-wave-color: #f0f0f0; /* Light color for outgoing waves */
+    --outgoing-message-progress-color: #ffffff; /* Brighter for progress */
+    --incoming-message-wave-color: #d0d0d0; /* Slightly darker for incoming waves */
+    --incoming-message-progress-color: #eeeeee; /* Brighter for progress */
 }
 
 body.dark-mode {
@@ -47,6 +56,12 @@ body.dark-mode {
     --chat-incoming-msg-bg: #333;
     --chat-outgoing-msg-bg: #0d6efd;
     --chat-outgoing-msg-text: white;
+
+    --outgoing-play-pause-btn-bg: #333333;
+    --outgoing-message-wave-color: #333333; /* Light color for outgoing waves */
+    --outgoing-message-progress-color: #f0f0f0; /* Brighter for progress */
+    --incoming-message-wave-color: #d0d0d0; /* Slightly darker for incoming waves */
+    --incoming-message-progress-color: #eeeeee; /* Brighter for progress */
 }
 
 @keyframes shake {

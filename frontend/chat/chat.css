@@ -537,6 +537,9 @@ body {
         margin-top: 28px;
         width: 100vw;
     }
+    .voice-message-main-elements-wrapper {
+        width: 13rem !important;
+    }
 }
 
 /* === Voice Message UI === */
@@ -681,6 +684,24 @@ body {
 
 #pause-resume-recording-btn.resume-mode {
     background-color: var(--primary-color);
+}
+
+.voice-message-main-elements-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 15rem;
+}
+.voice-message-main-elements-wrapper button {
+    margin: 0;
+}
+.voice-message-waveform-container {
+    flex-grow: 1; /* Allows waveform to take available space */
+    min-width: 0; /* Prevents overflow in flex container */
+    height: 40px; /* Consistent height with Wavesurfer init */
+    border-radius: 5px; /* Slightly rounded edges for the waveform container */
+    overflow: hidden; /* Ensures waveform stays within bounds */
+    padding-left: 5px;
+    margin-right: 5px;
 }
 
 /* === Message Actions Popup === */

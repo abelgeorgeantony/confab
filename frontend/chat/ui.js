@@ -203,7 +203,7 @@
       placeholder.textContent = "Loading voice message...";
       msgDiv.appendChild(placeholder);
 
-      decryptAndCreateAudioPlayer(content) // content is the pointer payload
+      decryptAndCreateAudioPlayer(content, sender) // content is the pointer payload
         .then((audioPlayer) => {
           placeholder.replaceWith(audioPlayer);
         })
@@ -239,7 +239,7 @@
    * @param {object} payload - The voice message pointer payload {url, key, iv}.
    * @returns {Promise<HTMLAudioElement>} A promise that resolves to the audio element.
    */
-  async function decryptAndCreateAudioPlayer(payload) {
+  async function decryptAndCreateAudioPlayer(payload, sender) {
     // 1. Decrypt the entire voice payload using the new crypto utility
     const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
       payload,
@@ -260,6 +260,9 @@
     const playerWrapper = document.createElement("div");
     playerWrapper.classList.add("voice-message-player-wrapper"); // Custom wrapper for styling
 
+    const mainElementsWrapper = document.createElement("div");
+    mainElementsWrapper.classList.add("voice-message-main-elements-wrapper");
+
     // Create the Play/Pause button
     const playPauseBtn = document.createElement("button");
     playPauseBtn.type = "button";
@@ -279,8 +282,9 @@
     timerSpan.textContent = "0:00 / 0:00"; // Initial timer display
 
     // Append elements to the wrapper
-    playerWrapper.appendChild(playPauseBtn);
-    playerWrapper.appendChild(waveformContainer);
+    mainElementsWrapper.appendChild(playPauseBtn);
+    mainElementsWrapper.appendChild(waveformContainer);
+    playerWrapper.appendChild(mainElementsWrapper);
     playerWrapper.appendChild(timerSpan);
 
     // Get computed styles for consistent theming
@@ -288,27 +292,25 @@
     let waveColor = "#ffffff"; // Default wave color
     let progressColor = "#ffffff"; // Default progress color
 
-    /*if (sender === "me") {
+    if (sender === "me") {
       // Outgoing message styling
-      waveColor =
-        computedStyle
-          .getPropertyValue("--outgoing-message-wave-color")
-          .trim() || "#ffffff";
-      progressColor =
-        computedStyle
-          .getPropertyValue("--outgoing-message-progress-color")
-          .trim() || "#ffffff";
+      waveColor = "var(--outgoing-message-wave-color)";
+      progressColor = "var(--outgoing-message-progress-color)";
+      playPauseBtn.style.backgroundColor = "var(--outgoing-play-pause-btn-bg";
+      playPauseBtn.style.color = computedStyle
+        .getPropertyValue("--outgoing-play-pause-btn-color")
+        .trim();
     } else {
       // Incoming message styling
-      waveColor =
-        computedStyle
-          .getPropertyValue("--incoming-message-wave-color")
-          .trim() || "#f0f0f0";
-      progressColor =
-        computedStyle
-          .getPropertyValue("--incoming-message-progress-color")
-          .trim() || "#f0f0f0";
-    }*/
+      waveColor = "var(--incoming-message-wave-color)";
+      progressColor = "var(--incoming-message-progress-color)";
+      playPauseBtn.style.backgroundColor = computedStyle
+        .getPropertyValue("--incoming-play-pause-btn-bg")
+        .trim();
+      playPauseBtn.style.color = computedStyle
+        .getPropertyValue("--incoming-play-pause-btn-color")
+        .trim();
+    }
 
     // 4. Initialize Wavesurfer.js
     const wavesurferInstance = WaveSurfer.create({
@@ -319,7 +321,7 @@
       barWidth: 2,
       barGap: 1,
       dragToSeek: true,
-      cursorColor: "transparent", // Hide default cursor
+      //cursorColor: "transparent", // Hide default cursor
       interact: true, // Allow interaction with the waveform
     });
 
