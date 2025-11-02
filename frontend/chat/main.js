@@ -261,7 +261,10 @@
       }
     }
 
-    if (!hasChatHistory) {
+    if (hasChatHistory) {
+      Loader.addMessage("Reading your unread messages");
+      await app.api.loadOfflineMessages();
+    } else if (!hasChatHistory) {
       if (!myId) {
         console.error("User ID not set, cannot fetch history.");
         return;
@@ -270,6 +273,7 @@
       console.log(
         "No chat history found in local storage, fetching from server...",
       );
+      Loader.addMessage("Loading your messages");
       const historyToken = getCookie("auth_token");
       const historyFormData = new URLSearchParams();
       historyFormData.append("token", historyToken);
@@ -359,8 +363,6 @@
         });
     }
 
-    Loader.addMessage("Reading your unread messages");
-    await app.api.loadOfflineMessages();
     Loader.addMessage("Waking up the carrier pigeon");
     app.websocket.connect();
     app.ui.goBackToList();

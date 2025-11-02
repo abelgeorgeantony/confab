@@ -171,6 +171,8 @@
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       showRecordingUI();
+      waveformContainer.style.display = "none";
+      audioFiltersContainer.style.display = "none";
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.start();
 
@@ -271,6 +273,8 @@
       mediaRecorder.stop();
     }
     clearInterval(timerInterval);
+    waveformContainer.style.display = "unset";
+    audioFiltersContainer.style.display = "unset";
     showPlaybackUI();
   }
 
@@ -519,9 +523,6 @@
       let contentForUI;
       switch (message_type) {
         case "voice":
-          //
-
-          //
           messageForDisplay = "🎤 Voice Message";
           contentForUI = payload; // Pass the pointer payload directly to the UI
           break;
@@ -556,18 +557,10 @@
       app.storage.saveMessageLocally(
         senderId,
         "them",
-        messageForDisplay,
+        contentForUI,
         payload.timestamp || Date.now(),
         message_type || "text", // Ensure we save a type
       );
-
-      // Trigger UI update for the contact list
-      app.events.trigger("lastMessageUpdated", {
-        contactId: senderId,
-        sender: "them",
-        message: messageForDisplay,
-        timestamp: payload.timestamp || Date.now(),
-      });
 
       // If the relevant chat is open, display the message
       if (Number(app.state.currentChatUser) === Number(senderId)) {
