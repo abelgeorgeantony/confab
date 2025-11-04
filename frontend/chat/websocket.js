@@ -30,6 +30,7 @@
       if (data.type === "message") {
         app.events.trigger("messageReceived", {
           senderId: data.from,
+          message_id: data.id,
           message_type: data.message_type, // Pass the type
           payload: data.payload,
         });

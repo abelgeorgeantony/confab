@@ -345,7 +345,6 @@
 
     const sendButton = document.getElementById("send-voice-message-btn");
     sendButton.disabled = true;
-    //VoiceSendingLoader.start("Processing audio...");
 
     try {
       const recipientId = app.state.currentChatUser;
@@ -404,7 +403,14 @@
           },
         ],
       };
-      app.ui.displayMessage("me", localPayload, Date.now(), "voice");
+      const clientMessageId = app.crypto.generateClientMessageId();
+      app.ui.displayMessage(
+        clientMessageId,
+        "me",
+        localPayload,
+        Date.now(),
+        "voice",
+      );
 
       const formData = new FormData();
       formData.append("token", getCookie("auth_token"));
@@ -441,6 +447,7 @@
       app.websocket.send(
         recipientId,
         pointerPayload,
+        clientMessageId,
         "🎤 Voice Message",
         "voice",
       );
@@ -448,6 +455,8 @@
       // 3. Save to local storage
       //TO.DO Fix this
       app.storage.saveMessageLocally(
+        null,
+        clientMessageId,
         recipientId,
         "me",
         pointerPayload,
@@ -493,7 +502,7 @@
 
     document.addEventListener("messageReceived", async (e) => {
       console.log("RAW MESSAGE RECEIVED:", e.detail); // Enhanced debugging
-      const { senderId, message_type, payload } = e.detail;
+      const { senderId, message_id, message_type, payload } = e.detail;
 
       if (!payload) {
         console.error("Received message with no payload.", e.detail);
@@ -555,6 +564,8 @@
       // Save the message locally for history
       // TO.DO Need to fix this for incoming voice messages
       app.storage.saveMessageLocally(
+        message_id,
+        null,
         senderId,
         "them",
         contentForUI,
@@ -565,6 +576,7 @@
       // If the relevant chat is open, display the message
       if (Number(app.state.currentChatUser) === Number(senderId)) {
         app.ui.displayMessage(
+          message_id,
           "them",
           contentForUI,
           payload.timestamp || Date.now(),

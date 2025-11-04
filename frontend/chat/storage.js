@@ -77,6 +77,22 @@
     }
   }
 
+  function deleteLocalMessage(chatId, messageId) {
+    const key = `chat_user_${chatId}`;
+    const messages = JSON.parse(localStorage.getItem(key)) || [];
+
+    const messageIndex = messages.findIndex(
+      (msg) => Number(msg.messageId) === Number(messageId),
+    );
+    console.log(messages);
+    console.log(messageId);
+    console.log(messageIndex + "Hi");
+    if (messageIndex !== -1) {
+      messages.splice(messageIndex, 1);
+      localStorage.setItem(key, JSON.stringify(messages));
+    }
+  }
+
   /**
    * Retrieves all messages for a specific contact from local storage.
    * @param {number} contactId - The ID of the contact.
@@ -101,6 +117,7 @@
   // Expose these functions on the global app object.
   app.storage.saveMessageLocally = saveMessageLocally;
   app.storage.updateClientMessageId = updateClientMessageId;
+  app.storage.deleteLocalMessage = deleteLocalMessage;
   app.storage.getLocalMessages = getLocalMessages;
   app.storage.getLastMessage = getLastMessage;
 })(app);

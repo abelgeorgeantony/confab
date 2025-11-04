@@ -207,7 +207,6 @@
     timestamp = Date.now(),
     messageType = "text",
   ) {
-    console.log(messageId);
     const messagesContainer = document.getElementById("messages");
     const msgDiv = document.createElement("div");
     msgDiv.classList.add("message", sender === "me" ? "outgoing" : "incoming");
@@ -412,8 +411,38 @@
         overlay.classList.add("hidden");
       };
       const deleteBtn = document.getElementById("delete-message-btn");
-      deleteBtn.onclick = () => {
-        msgDiv.remove();
+      deleteBtn.onclick = async () => {
+        try {
+          const auth_token = getCookie("auth_token");
+          const response = await fetch(API + "delete_message.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messageId: msgDiv.dataset.message_id,
+              token: auth_token,
+            }),
+          });
+
+          const data = await response.json();
+          console.log(data + response);
+          if (response.ok) {
+            // Check if HTTP status is 2xx
+            console.log("Message deleted successfully:", data.message);
+            app.storage.deleteLocalMessage(
+              app.state.currentChatUser,
+              msgDiv.dataset.message_id,
+            );
+            msgDiv.remove();
+          } else {
+            console.error("Failed to delete message:", data.message);
+            alert("Error deleting message: " + data.message);
+          }
+        } catch (error) {
+          console.error("Network or server error:", error);
+          alert("An unexpected error occurred. Please try again.");
+        }
         popup.classList.add("hidden");
         overlay.classList.add("hidden");
       };
