@@ -51,6 +51,7 @@
    * @param {Object} contact - The contact object.
    */
   function openChatWith(contact) {
+    console.log(contact);
     if (Number(contact.id) === Number(app.state.currentChatUser)) {
       return;
     }
@@ -231,9 +232,6 @@
       textSpan.classList.add("message-text");
       textSpan.textContent = content;
       msgDiv.appendChild(textSpan);
-
-      // Only allow long-press on text messages for now
-      enableLongPress(msgDiv, content);
     }
 
     const timeSpan = document.createElement("span");
@@ -241,9 +239,14 @@
     timeSpan.textContent = new Date(timestamp).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
     });
     msgDiv.appendChild(timeSpan);
     msgDiv.dataset.message_id = messageId;
+    msgDiv.dataset.message_type = messageType;
+    enableLongPress(msgDiv, content);
 
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -446,6 +449,16 @@
         popup.classList.add("hidden");
         overlay.classList.add("hidden");
       };
+      const forwardBtn = document.getElementById("forward-message-btn");
+      const editBtn = document.getElementById("edit-message-btn");
+
+      if (msgDiv.dataset.message_type === "voice") {
+        copyBtn.classList.add("hidden");
+        editBtn.classList.add("hidden");
+      } else if (msgDiv.dataset.message_type === "text") {
+        copyBtn.classList.remove("hidden");
+        editBtn.classList.remove("hidden");
+      }
 
       const clickOutsideHandler = (event) => {
         console.log(event.target);

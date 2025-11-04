@@ -98,6 +98,7 @@ class ChatServer implements MessageComponentInterface
             return;
         }
 
+        error_log($this->isSenderBlocked($sender_id, $receiver_id));
         if ($this->isSenderBlocked($sender_id, $receiver_id)) {
             error_log(
                 "🚫 Message blocked: Sender $sender_id is blocked by receiver $receiver_id.",

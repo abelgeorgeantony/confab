@@ -79,11 +79,15 @@
                 Add to Contacts
             </button>
             <button id="message-user-btn" class="button">Message</button>
+            <button id="block-user-btn" class="button button-danger">Block</button>
+            <button id="unblock-user-btn" class="button button-danger">Unblock</button>
         `;
       openModal(profileModal);
 
       document.getElementById("add-user-btn").onclick = (e) => {
-        addContact(e.target.getAttribute("data-username"));
+        if (addContact(e.target.getAttribute("data-username"))) {
+          user.status = "contact";
+        }
       };
       document.getElementById("message-user-btn").onclick = () => {
         if (user.public_key) {
@@ -92,10 +96,75 @@
         app.ui.openChatWith(user);
         while (modalStack.length > 0) closeCurrentModal();
       };
+      document.getElementById("block-user-btn").onclick = async (e) => {
+        const response = await fetch(API + "block_user.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contact_id: user.id,
+            token: getCookie("auth_token"),
+          }),
+        });
 
+        const data = await response.json();
+
+        if (response.ok) {
+          // Check if HTTP status is 2xx
+          user.status = "blocked";
+          console.log("Block request successful:", data.message);
+          document
+            .getElementById("unblock-user-btn")
+            .classList.remove("hidden");
+          document.getElementById("block-user-btn").classList.add("hidden");
+          document.getElementById("add-user-btn").classList.add("hidden");
+        } else {
+          console.error("Failed to block user:", data.message);
+          alert("Error blocking user: " + data.message);
+        }
+      };
+      document.getElementById("unblock-user-btn").onclick = async (e) => {
+        const response = await fetch(API + "unblock_user.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contact_id: user.id,
+            token: getCookie("auth_token"),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Check if HTTP status is 2xx
+          user.status = "pending";
+          console.log("Unblock request successful:", data.message);
+          document.getElementById("block-user-btn").classList.remove("hidden");
+          document.getElementById("unblock-user-btn").classList.add("hidden");
+          document.getElementById("add-user-btn").classList.remove("hidden");
+        } else {
+          console.error("Failed to unblock user:", data.message);
+          alert("Error unblocking user: " + data.message);
+        }
+      };
+
+      document.getElementById("unblock-user-btn").classList.add("hidden");
       if (user.status === "contact") {
         document.getElementById("add-user-btn").classList.add("hidden");
+      } else if (user.status === "blocked") {
+        document.getElementById("block-user-btn").classList.add("hidden");
+        document.getElementById("unblock-user-btn").classList.remove("hidden");
+        document.getElementById("add-user-btn").classList.add("hidden");
+        document.getElementById("message-user-btn").classList.add("hidden");
+      } else if (user.status === "pending") {
+        document.getElementById("block-user-btn").classList.remove("hidden");
+        document.getElementById("unblock-user-btn").classList.add("hidden");
+        document.getElementById("add-user-btn").classList.remove("hidden");
       }
+
       if (Number(app.state.currentChatUser) === Number(user.id)) {
         document.getElementById("message-user-btn").classList.add("hidden");
       }
@@ -117,8 +186,10 @@
       if (data.success) {
         while (modalStack.length > 0) closeCurrentModal();
         app.api.loadContacts();
+        return true;
       } else {
         alert("Failed to add contact: " + data.error);
+        return false;
       }
     }
 

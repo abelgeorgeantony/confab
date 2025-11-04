@@ -730,6 +730,7 @@ body {
     padding: 10px; /* Increased padding */
     width: 100%; /* Make buttons take full width */
     text-align: center; /* Center the icon */
+    display: flex;
 }
 
 .message-actions-popup button:hover {
