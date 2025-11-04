@@ -33,6 +33,12 @@
           message_type: data.message_type, // Pass the type
           payload: data.payload,
         });
+      } else if (data.type === "message_saved_receipt") {
+        app.events.trigger("messageIDReceived", {
+          chat_id: data.receiver_id,
+          client_message_id: data.client_message_id,
+          message_id: data.id,
+        });
       }
     };
 
@@ -55,6 +61,7 @@
   async function send(
     contactId,
     payload,
+    clientMessageId,
     messageForDisplay,
     messageType = "text",
   ) {
@@ -75,6 +82,7 @@
         type: "message",
         receiver_id: contactId,
         message_type: messageType,
+        client_message_id: clientMessageId,
         payload: payload,
       }),
     );
@@ -88,8 +96,9 @@
   /**
    * Handles the specific logic for encrypting and sending a TEXT message.
    * @param {number} contactId - The ID of the recipient.
+   * @param {number} clientMessageId - The ID of the message in the client.
    */
-  async function sendTextMessage(contactId) {
+  async function sendTextMessage(contactId, clientMessageId) {
     const input = document.getElementById("message-input");
     const message = input.value.trim();
     if (!message) return;
@@ -144,7 +153,7 @@
     input.value = ""; // Clear input after preparing message
 
     // Use the generic send function to deliver the message
-    await send(contactId, payload, message, "text");
+    await send(contactId, payload, clientMessageId, message, "text");
   }
 
   // Expose functions on the global app object.

@@ -11,16 +11,31 @@
    * @param {number} [timestamp=Date.now()] - The message timestamp.
    */
   function saveMessageLocally(
+    messageId,
+    clientMessageId,
     contactId,
     sender,
     payload,
     timestamp = Date.now(),
     messageType = "text",
   ) {
+    if (messageId === null) {
+      messageId = 0;
+    }
+    if (clientMessageId === null) {
+      clientMessageId = 0;
+    }
     const key = `chat_user_${contactId}`;
     let messages = JSON.parse(localStorage.getItem(key)) || [];
     // Store the full message object
-    messages.push({ sender, messageType, payload, timestamp });
+    messages.push({
+      messageId,
+      clientMessageId,
+      sender,
+      messageType,
+      payload,
+      timestamp,
+    });
     localStorage.setItem(key, JSON.stringify(messages));
 
     // For the contact list preview, create a simple display message
@@ -42,6 +57,24 @@
       message: messageForDisplay,
       timestamp,
     });
+  }
+
+  function updateClientMessageId(chatId, clientMessageId, messageId) {
+    const key = `chat_user_${chatId}`;
+    const messages = JSON.parse(localStorage.getItem(key)) || [];
+
+    const messageIndex = messages.findIndex(
+      (msg) => msg.clientMessageId === clientMessageId,
+    );
+    if (messageIndex !== -1) {
+      messages[messageIndex].messageId = messageId;
+      messages[messageIndex].clientMessageId = 0;
+      localStorage.setItem(key, JSON.stringify(messages));
+      const element = document.querySelector(
+        '[data-message_id="' + clientMessageId + '"]',
+      );
+      element.dataset.message_id = messageId;
+    }
   }
 
   /**
@@ -67,6 +100,7 @@
 
   // Expose these functions on the global app object.
   app.storage.saveMessageLocally = saveMessageLocally;
+  app.storage.updateClientMessageId = updateClientMessageId;
   app.storage.getLocalMessages = getLocalMessages;
   app.storage.getLastMessage = getLastMessage;
 })(app);

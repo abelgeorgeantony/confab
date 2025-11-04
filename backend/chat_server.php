@@ -89,6 +89,7 @@ class ChatServer implements MessageComponentInterface
 
         $sender_id = $this->userConnections[$conn->resourceId];
         $receiver_id = $data["receiver_id"] ?? null;
+        $client_message_id = $data["client_message_id"] ?? null;
         $payload = $data["payload"] ?? null;
         error_log("Rid: $receiver_id");
 
@@ -106,11 +107,33 @@ class ChatServer implements MessageComponentInterface
             return; // Stop processing the message
         }
 
+        // Always back up the message to the central log
+        $message_id = $this->backupMessage(
+            $sender_id,
+            $receiver_id,
+            $payload,
+            $data["message_type"],
+        );
+        if ($message_id) {
+            $conn->send(
+                json_encode([
+                    "type" => "message_saved_receipt",
+                    "receiver_id" => $receiver_id,
+                    "id" => $message_id, // This is the ID from the server
+                    "client_message_id" => $client_message_id, // This is the original ID from the client
+                ]),
+            );
+            error_log(
+                "✅ Sent message receipt to $sender_id for message $message_id (client ID: $client_message_id)",
+            );
+        }
+
         if (isset($this->onlineUsers[$receiver_id])) {
             // Receiver online → send directly
             $this->onlineUsers[$receiver_id]->send(
                 json_encode([
                     "type" => "message",
+                    "id" => $message_id,
                     "from" => $sender_id,
                     "message_type" => $data["message_type"],
                     "payload" => $payload,
@@ -120,14 +143,6 @@ class ChatServer implements MessageComponentInterface
                 "📨 Delivered message from $sender_id → $receiver_id (online)",
             );
         }
-
-        // Always back up the message to the central log
-        $this->backupMessage(
-            $sender_id,
-            $receiver_id,
-            $payload,
-            $data["message_type"],
-        );
     }
 
     // Saves a copy of every message to the central 'messages' table for history.
@@ -154,7 +169,10 @@ class ChatServer implements MessageComponentInterface
             $payload_json,
             $status,
         );
-        $stmt->execute();
+        if ($stmt->execute()) {
+            return $conn->insert_id;
+        }
+        return false;
     }
 
     private function isSenderBlocked($sender_id, $receiver_id)

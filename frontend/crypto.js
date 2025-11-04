@@ -292,6 +292,14 @@
     }
   }
 
+  function generateClientMessageId() {
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
+  }
+
   // Create a single instance and attach it to the app namespace
   app.crypto = new E2EECrypto();
+  app.crypto.generateClientMessageId = generateClientMessageId;
 })((window.app = window.app || {}));

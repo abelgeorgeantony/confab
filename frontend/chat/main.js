@@ -350,6 +350,8 @@
               const dateString = msg.created_at; // ISO 8601 formatted date string
               const timestamp_parsed = Date.parse(dateString);
               app.storage.saveMessageLocally(
+                msg.id,
+                null,
                 contactId,
                 sender,
                 decryptedPayload,

@@ -719,6 +719,11 @@
         app.ui.updateUnreadBadge(contactId);
       }
     });
+
+    document.addEventListener("messageIDReceived", (e) => {
+      const { chat_id, client_message_id, message_id } = e.detail;
+      app.storage.updateClientMessageId(chat_id, client_message_id, message_id);
+    });
   }
 
   // Expose functions on the global app object.

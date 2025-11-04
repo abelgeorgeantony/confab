@@ -81,7 +81,13 @@
     console.log(messages);
     messages.forEach((m) => {
       console.log(m);
-      displayMessage(m.sender, m.payload, m.timestamp, m.messageType);
+      displayMessage(
+        m.messageId,
+        m.sender,
+        m.payload,
+        m.timestamp,
+        m.messageType,
+      );
     });
 
     app.state.currentChatUser = contact.id;
@@ -155,9 +161,16 @@
     const sendTextMessageAction = async () => {
       sendTextButton.disabled = true;
       const textMessage = messageInput.value;
-      displayMessage("me", textMessage);
-      await app.websocket.sendTextMessage(contact.id);
-      app.storage.saveMessageLocally(contact.id, "me", textMessage);
+      const clientMessageId = app.crypto.generateClientMessageId();
+      displayMessage(clientMessageId, "me", textMessage);
+      await app.websocket.sendTextMessage(contact.id, clientMessageId);
+      app.storage.saveMessageLocally(
+        null,
+        clientMessageId,
+        contact.id,
+        "me",
+        textMessage,
+      );
       sendTextButton.disabled = false;
       updateButtonVisibility();
       //messageInput.focus();
@@ -188,11 +201,13 @@
    * @param {number} [timestamp=Date.now()] - The message timestamp.
    */
   function displayMessage(
+    messageId,
     sender,
     content,
     timestamp = Date.now(),
     messageType = "text",
   ) {
+    console.log(messageId);
     const messagesContainer = document.getElementById("messages");
     const msgDiv = document.createElement("div");
     msgDiv.classList.add("message", sender === "me" ? "outgoing" : "incoming");
@@ -229,6 +244,7 @@
       minute: "2-digit",
     });
     msgDiv.appendChild(timeSpan);
+    msgDiv.dataset.message_id = messageId;
 
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -392,6 +408,12 @@
       const copyBtn = document.getElementById("copy-message-btn");
       copyBtn.onclick = () => {
         navigator.clipboard.writeText(messageText);
+        popup.classList.add("hidden");
+        overlay.classList.add("hidden");
+      };
+      const deleteBtn = document.getElementById("delete-message-btn");
+      deleteBtn.onclick = () => {
+        msgDiv.remove();
         popup.classList.add("hidden");
         overlay.classList.add("hidden");
       };

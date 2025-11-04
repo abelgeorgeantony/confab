@@ -20,7 +20,7 @@ global $conn;
 
 // Fetch all messages for the user that are in a 'queued' state
 $stmt = $conn->prepare(
-    "SELECT id, sender_id, message_type, payload, created_at FROM messages WHERE receiver_id = ? AND status = 'queued' ORDER BY created_at ASC",
+    "SELECT * FROM messages WHERE receiver_id = ? AND status = 'queued' ORDER BY created_at ASC",
 );
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -31,6 +31,7 @@ $message_ids = [];
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $messages[] = [
+            "id" => $row["id"],
             "sender_id" => $row["sender_id"],
             "message_type" => $row["message_type"],
             "payload" => $row["payload"],
