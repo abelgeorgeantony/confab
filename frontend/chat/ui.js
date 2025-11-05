@@ -450,6 +450,7 @@
         overlay.classList.add("hidden");
       };
       const forwardBtn = document.getElementById("forward-message-btn");
+      forwardBtn.addEventListener("click", () => {});
       const editBtn = document.getElementById("edit-message-btn");
 
       if (msgDiv.dataset.message_type === "voice") {
