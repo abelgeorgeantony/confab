@@ -105,10 +105,8 @@
     document.getElementById("chat-list").classList.add("slideout");
 
     const messages = app.storage.getLocalMessages(contact.id);
-    console.log(messages);
     let pastMessageDate = null;
     messages.forEach((m) => {
-      console.log(m);
       const currentMessageDate = new Date(m.timestamp);
       if (pastMessageDate === null) {
         addDateHeader(currentMessageDate);
@@ -244,9 +242,15 @@
   ) {
     const messagesContainer = document.getElementById("messages");
     const msgDiv = document.createElement("div");
+    const forwardedSpan = document.createElement("span");
+    forwardedSpan.classList.add("forwarded-indicator");
+    forwardedSpan.textContent = "Forwarded Message";
+    if (messageType === "forward-text" || messageType === "forward-voice") {
+      msgDiv.appendChild(forwardedSpan);
+    }
     msgDiv.classList.add("message", sender === "me" ? "outgoing" : "incoming");
 
-    if (messageType === "voice") {
+    if (messageType === "voice" || messageType === "forward-voice") {
       const placeholder = document.createElement("div");
       placeholder.classList.add("message-text", "voice-placeholder");
       placeholder.textContent = "Loading voice message...";
@@ -291,7 +295,7 @@
    * @returns {Promise<HTMLAudioElement>} A promise that resolves to the audio element.
    */
   async function decryptAndCreateAudioPlayer(payload, sender) {
-    // 1. Decrypt the entire voice payload using the new crypto utility
+    // 1. Decrypt the entire voice payload using the crypto utility
     const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
       payload,
       app.state.myPrivateKey,
@@ -434,6 +438,7 @@
     const modalCloseBtn = document.getElementById("forward-message-close-btn");
 
     console.log("Hi");
+    contactList.innerHTML = "";
     app.state.allContacts.forEach((contact) => {
       const contactDiv = document.createElement("div");
       contactDiv.className = "forward-list-contact-card";
@@ -459,7 +464,18 @@
 
       contactList.appendChild(contactDiv);
     });
-    forwardContent.value = msgText;
+
+    if (
+      msgDiv.dataset.message_type === "text" ||
+      msgDiv.dataset.message_type === "forward-text"
+    ) {
+      forwardContent.value = msgText;
+    } else if (
+      msgDiv.dataset.message_type === "voice" ||
+      msgDiv.dataset.message_type === "forward-voice"
+    ) {
+      forwardContent.value = "Voice Message";
+    }
     modal.classList.remove("hidden");
 
     sendForwardBtn.onclick = () => {
@@ -471,11 +487,28 @@
         const selectedContacts = checkedContacts.map(
           (checkbox) => checkbox.dataset.contactId,
         );
-        app.websocket.forwardMessage(selectedContacts);
+        if (msgDiv.dataset.message_type === "text") {
+          app.websocket.forwardMessage(selectedContacts, msgText);
+        } else {
+          const key = `chat_user_${app.state.currentChatUser}`;
+          const messages = JSON.parse(localStorage.getItem(key)) || [];
+          const messageIndex = messages.findIndex(
+            (msg) =>
+              Number(msg.messageId) === Number(msgDiv.dataset.message_id),
+          );
+          if (messageIndex !== -1) {
+            const audio_payload = messages[messageIndex].payload;
+            selectedContacts.forEach(async (contactId) => {
+              await app.events.sendVoiceMessage(true, audio_payload, contactId);
+            });
+          }
+        }
+        document.getElementById("forward-message-close-btn").click();
       }
     };
     modalCloseBtn.onclick = () => {
       modal.classList.add("hidden");
+      document.getElementById("modal-overlay").classList.add("hidden");
       contactList.innerHTML = "";
     };
   }
@@ -489,6 +522,7 @@
     let pressTimer;
 
     const showPopup = () => {
+      console.log(msgDiv);
       const popup = document.getElementById("message-actions-popup");
       const overlay = document.getElementById("message-actions-overlay");
 
@@ -539,6 +573,7 @@
       };
       const forwardBtn = document.getElementById("forward-message-btn");
       forwardBtn.addEventListener("click", () => {
+        document.getElementById("modal-overlay").classList.remove("hidden");
         openForwardMessageModal(msgDiv, messageText);
         popup.classList.add("hidden");
         overlay.classList.add("hidden");

@@ -339,21 +339,60 @@
     return app.crypto.audioBufferToWav(renderedBuffer);
   }
 
+  async function fetchAudioBlobFromUrl(url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.blob();
+    } catch (error) {
+      console.error("Error fetching audio blob from URL:", error);
+      return null;
+    }
+  }
+
   // --- Main Send Logic ---
-  async function sendVoiceMessage() {
-    if (!audioBlob || !app.state.currentChatUser) return;
+  async function sendVoiceMessage(
+    toForward = false,
+    payload = null,
+    forward_recipientId = null,
+  ) {
+    if (!toForward) {
+      if (!audioBlob || !app.state.currentChatUser) {
+        return;
+      }
+    }
 
     const sendButton = document.getElementById("send-voice-message-btn");
     sendButton.disabled = true;
 
     try {
-      const recipientId = app.state.currentChatUser;
-      const activeFilter =
-        document.querySelector(".filter-btn.active").dataset.filter;
+      let recipientId = null;
+      let activeFilter = null;
+      if (toForward) {
+        recipientId = forward_recipientId;
+        activeFilter = "none";
+      } else {
+        recipientId = app.state.currentChatUser;
+        activeFilter =
+          document.querySelector(".filter-btn.active").dataset.filter;
+      }
 
       // 1. Process and Encode audio to a WAV blob
-      const wavBlob = await processAndEncodeAudio(audioBlob, activeFilter);
+      let wavBlob;
+      if (toForward && payload) {
+        //audioBlob = await fetchAudioBlobFromUrl(url);
+        const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
+          payload,
+          app.state.myPrivateKey,
+        );
+        wavBlob = new Blob([decryptedWavBuffer], { type: "audio/wav" });
+      } else {
+        wavBlob = await processAndEncodeAudio(audioBlob, activeFilter);
+      }
 
+      console.log("Hi works perfectly till here");
       // 5. Proceed with encryption and upload in the background
       const wavArrayBuffer = await wavBlob.arrayBuffer();
       const recipientPublicKeyJwk = app.state.publicKeyCache[recipientId];
@@ -404,14 +443,27 @@
         ],
       };
       const clientMessageId = app.crypto.generateClientMessageId();
-      app.ui.displayMessage(
-        clientMessageId,
-        "me",
-        localPayload,
-        Date.now(),
-        "voice",
-      );
-
+      if (
+        toForward &&
+        Number(recipientId) === Number(app.state.currentChatUser)
+      ) {
+        app.ui.displayMessage(
+          clientMessageId,
+          "me",
+          localPayload,
+          Date.now(),
+          "forward-voice",
+        );
+      }
+      if (!toForward) {
+        app.ui.displayMessage(
+          clientMessageId,
+          "me",
+          localPayload,
+          Date.now(),
+          "voice",
+        );
+      }
       const formData = new FormData();
       formData.append("token", getCookie("auth_token"));
       formData.append("voiceMessage", encryptedBlob, "voice.bin");
@@ -443,26 +495,41 @@
         timestamp: Date.now(),
       };
 
-      // This is a fire-and-forget, no need to await the full send logic
-      app.websocket.send(
-        recipientId,
-        pointerPayload,
-        clientMessageId,
-        "🎤 Voice Message",
-        "voice",
-      );
-
-      // 3. Save to local storage
-      //TO.DO Fix this
-      app.storage.saveMessageLocally(
-        null,
-        clientMessageId,
-        recipientId,
-        "me",
-        pointerPayload,
-        Date.now(),
-        "voice",
-      );
+      if (toForward) {
+        app.websocket.send(
+          recipientId,
+          pointerPayload,
+          clientMessageId,
+          "🎤 Voice Message",
+          "forward-voice",
+        );
+        app.storage.saveMessageLocally(
+          null,
+          clientMessageId,
+          recipientId,
+          "me",
+          pointerPayload,
+          Date.now(),
+          "forward-voice",
+        );
+      } else {
+        app.websocket.send(
+          recipientId,
+          pointerPayload,
+          clientMessageId,
+          "🎤 Voice Message",
+          "voice",
+        );
+        app.storage.saveMessageLocally(
+          null,
+          clientMessageId,
+          recipientId,
+          "me",
+          pointerPayload,
+          Date.now(),
+          "voice",
+        );
+      }
       // 4. Reset the recording UI now that the local part is done
       showInitialUI();
 
@@ -533,6 +600,10 @@
       switch (message_type) {
         case "voice":
           messageForDisplay = "🎤 Voice Message";
+          contentForUI = payload; // Pass the pointer payload directly to the UI
+          break;
+        case "forward-voice":
+          messageForDisplay = "🎤 Forwarded Voice Message";
           contentForUI = payload; // Pass the pointer payload directly to the UI
           break;
 
@@ -621,7 +692,11 @@
         const lastMsg = app.storage.getLastMessage(contact.id);
         let lastMsgText;
         if (lastMsg) {
-          if (lastMsg.messageType === "voice") {
+          console.log(lastMsg);
+          if (
+            lastMsg.messageType === "voice" ||
+            lastMsg.messageType === "forward-voice"
+          ) {
             lastMsgText = "🎤 Voice Message";
           } else {
             lastMsgText = lastMsg.payload.replace(
@@ -739,6 +814,7 @@
   }
 
   // Expose functions on the global app object.
+  app.events.sendVoiceMessage = sendVoiceMessage;
   app.events.trigger = triggerEvent;
   app.events.initialize = initializeEventListeners;
 })(app);

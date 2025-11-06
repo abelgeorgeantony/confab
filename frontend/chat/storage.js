@@ -70,10 +70,12 @@
       messages[messageIndex].messageId = messageId;
       messages[messageIndex].clientMessageId = 0;
       localStorage.setItem(key, JSON.stringify(messages));
-      const element = document.querySelector(
-        '[data-message_id="' + clientMessageId + '"]',
-      );
-      element.dataset.message_id = messageId;
+      if (chatId === app.state.currentChatUser) {
+        const element = document.querySelector(
+          '[data-message_id="' + clientMessageId + '"]',
+        );
+        element.dataset.message_id = messageId;
+      }
     }
   }
 

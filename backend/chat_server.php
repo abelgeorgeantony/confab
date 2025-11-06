@@ -87,6 +87,8 @@ class ChatServer implements MessageComponentInterface
             return;
         }
 
+        print_r($data);
+
         $sender_id = $this->userConnections[$conn->resourceId];
         $receiver_id = $data["receiver_id"] ?? null;
         $client_message_id = $data["client_message_id"] ?? null;

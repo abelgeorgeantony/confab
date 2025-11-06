@@ -778,3 +778,9 @@ body {
     flex-direction: row;
     align-items: center;
 }
+
+.forwarded-indicator {
+    display: block;
+    font-size: 0.75em;
+    opacity: 0.8;
+}

@@ -373,7 +373,10 @@
               const payload = JSON.parse(msg.payload);
               let decryptedPayload;
 
-              if (msg.message_type === "text") {
+              if (
+                msg.message_type === "text" ||
+                msg.message_type === "forward-text"
+              ) {
                 try {
                   if (!app.state.myPrivateKey)
                     throw new Error("Private key not loaded.");

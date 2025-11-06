@@ -170,11 +170,20 @@
     }
   }
 
-  function forwardMessage(selectedContacts) {
+  function forwardMessage(selectedContacts, msgText) {
     console.log("Hi");
     const clientMessageId = app.crypto.generateClientMessageId();
     selectedContacts.forEach(async (contactId) => {
       await sendTextMessage(contactId, clientMessageId, true);
+      app.storage.saveMessageLocally(
+        null,
+        clientMessageId,
+        contactId,
+        "me",
+        msgText,
+        Date.now(),
+        "forward-text",
+      );
       //displayMessage
     });
   }
