@@ -99,8 +99,17 @@
    * @param {number} contactId - The ID of the recipient.
    * @param {number} clientMessageId - The ID of the message in the client.
    */
-  async function sendTextMessage(contactId, clientMessageId) {
-    const input = document.getElementById("message-input");
+  async function sendTextMessage(
+    contactId,
+    clientMessageId,
+    toForward = false,
+  ) {
+    let input;
+    if (!toForward) {
+      input = document.getElementById("message-input");
+    } else {
+      input = document.getElementById("forward-message-input");
+    }
     const message = input.value.trim();
     if (!message) return;
 
@@ -153,12 +162,26 @@
 
     input.value = ""; // Clear input after preparing message
 
-    // Use the generic send function to deliver the message
-    await send(contactId, payload, clientMessageId, message, "text");
+    if (!toForward) {
+      // Use the generic send function to deliver the message
+      await send(contactId, payload, clientMessageId, message, "text");
+    } else {
+      await send(contactId, payload, clientMessageId, message, "forward-text");
+    }
+  }
+
+  function forwardMessage(selectedContacts) {
+    console.log("Hi");
+    const clientMessageId = app.crypto.generateClientMessageId();
+    selectedContacts.forEach(async (contactId) => {
+      await sendTextMessage(contactId, clientMessageId, true);
+      //displayMessage
+    });
   }
 
   // Expose functions on the global app object.
   app.websocket.connect = connectWebSocket;
   app.websocket.send = send;
   app.websocket.sendTextMessage = sendTextMessage;
+  app.websocket.forwardMessage = forwardMessage;
 })(app);

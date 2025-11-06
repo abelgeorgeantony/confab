@@ -741,8 +741,40 @@ body {
     display: flex;
     justify-content: center;
 }
+.current-message-date-floating {
+    position: sticky;
+    top: 0px;
+}
 .message-date {
     border-radius: 10px;
     padding: 7px;
     background-color: var(--chat-incoming-msg-bg);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#forward-message-modal {
+    max-width: 350px;
+    z-index: 4000;
+}
+.forward-modal-footer {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+}
+.forward-modal-footer input,
+.forward-modal-footer button {
+    margin: 0px;
+}
+
+.forward-list-contact-card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 6px;
+    padding-right: 35px;
+}
+.forward-list-contact-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }

@@ -261,6 +261,32 @@
             <!-- Main Modal Overlay -->
             <div id="modal-overlay" class="modal-overlay hidden"></div>
 
+            <!--- Forward Message Modal -->
+            <div id="forward-message-modal" class="modal hidden">
+                <div class="modal-header">
+                    <h2>Forward To:</h2>
+                    <button id="forward-message-close-btn" class="close-button">
+                        &times;
+                    </button>
+                </div>
+                <div id="forward-contact-list"></div>
+                <div class="forward-modal-footer">
+                    <input
+                        type="text"
+                        id="forward-message-input"
+                        placeholder="Enter the message to be forwarded"
+                        class="forward-input"
+                    />
+                    <button
+                        type="button"
+                        id="send-forward-message-btn"
+                        class="material-icons"
+                    >
+                        send
+                    </button>
+                </div>
+            </div>
+
             <!-- Add Contact Modal -->
             <div id="add-contact-modal" class="modal hidden">
                 <div class="modal-header">

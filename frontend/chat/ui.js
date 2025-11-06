@@ -271,20 +271,11 @@
     const timeSpan = document.createElement("span");
     timeSpan.classList.add("message-time");
     const date = new Date(timestamp);
-    const hour = date.getHours();
-    let meridiem;
-    if (hour >= 0 && hour < 12) {
-      meridiem = "AM";
-    } else {
-      meridiem = "PM";
-    }
-    timeSpan.textContent =
-      date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }) +
-      " " +
-      meridiem;
+    timeSpan.textContent = date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
     msgDiv.appendChild(timeSpan);
     msgDiv.dataset.message_id = messageId;
     msgDiv.dataset.message_type = messageType;
@@ -434,6 +425,61 @@
     return playerWrapper;
   }
 
+  function openForwardMessageModal(msgDiv, msgText) {
+    console.log("openForwardMessageModal");
+    const modal = document.getElementById("forward-message-modal");
+    const contactList = document.getElementById("forward-contact-list");
+    const forwardContent = document.getElementById("forward-message-input");
+    const sendForwardBtn = document.getElementById("send-forward-message-btn");
+    const modalCloseBtn = document.getElementById("forward-message-close-btn");
+
+    console.log("Hi");
+    app.state.allContacts.forEach((contact) => {
+      const contactDiv = document.createElement("div");
+      contactDiv.className = "forward-list-contact-card";
+      contactDiv.setAttribute("data-contact-id", contact.id);
+      const useravatar = contact.profile_picture_url
+        ? `<img src="/${contact.profile_picture_url}" class="contact-avatar" data-contact-id="${contact.id}">`
+        : `<div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>`;
+      contactDiv.innerHTML = `
+        <div class="forward-list-contact-info">
+        ${useravatar}
+            <div class="contact-name">${contact.display_name}</div>
+        </div>
+        <input type="checkbox" class="forward-checkbox" data-contact-id="${contact.id}">
+      `;
+      contactDiv.onclick = () => {
+        const checkbox = contactDiv.querySelector(".forward-checkbox");
+        if (checkbox.checked) {
+          checkbox.checked = false;
+        } else {
+          checkbox.checked = true;
+        }
+      };
+
+      contactList.appendChild(contactDiv);
+    });
+    forwardContent.value = msgText;
+    modal.classList.remove("hidden");
+
+    sendForwardBtn.onclick = () => {
+      console.log("Send button clicked");
+      const checkedContacts = Array.from(
+        document.querySelectorAll(".forward-checkbox:checked"),
+      );
+      if (checkedContacts.length > 0) {
+        const selectedContacts = checkedContacts.map(
+          (checkbox) => checkbox.dataset.contactId,
+        );
+        app.websocket.forwardMessage(selectedContacts);
+      }
+    };
+    modalCloseBtn.onclick = () => {
+      modal.classList.add("hidden");
+      contactList.innerHTML = "";
+    };
+  }
+
   /**
    * Enables the long-press gesture on a message bubble to show actions.
    * @param {HTMLElement} msgDiv - The message bubble element.
@@ -492,7 +538,11 @@
         overlay.classList.add("hidden");
       };
       const forwardBtn = document.getElementById("forward-message-btn");
-      forwardBtn.addEventListener("click", () => {});
+      forwardBtn.addEventListener("click", () => {
+        openForwardMessageModal(msgDiv, messageText);
+        popup.classList.add("hidden");
+        overlay.classList.add("hidden");
+      });
       const editBtn = document.getElementById("edit-message-btn");
 
       if (msgDiv.dataset.message_type === "voice") {
