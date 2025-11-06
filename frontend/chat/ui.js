@@ -46,6 +46,32 @@
     return !!app.state.chatState[contactId];
   }
 
+  function addDateHeader(date) {
+    const dateContainer = document.createElement("div");
+    dateContainer.classList.add("message-date-container");
+    const dateElement = document.createElement("span");
+    dateElement.classList.add("message-date");
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    let dateText = "1000 years from now";
+    if (date.toLocaleDateString() === today.toLocaleDateString()) {
+      dateText = "Today";
+    } else if (date.toLocaleDateString() === yesterday.toLocaleDateString()) {
+      dateText = "Yesterday";
+    } else {
+      dateText =
+        date.toLocaleDateString("en-US", { weekday: "short" }) +
+        ", " +
+        date.toLocaleDateString();
+    }
+
+    dateElement.textContent = dateText;
+    dateContainer.appendChild(dateElement);
+    document.getElementById("messages").appendChild(dateContainer);
+  }
+
   /**
    * Opens a chat window with a specific contact.
    * @param {Object} contact - The contact object.
@@ -80,8 +106,15 @@
 
     const messages = app.storage.getLocalMessages(contact.id);
     console.log(messages);
+    let pastMessageDate = null;
     messages.forEach((m) => {
       console.log(m);
+      const currentMessageDate = new Date(m.timestamp);
+      if (pastMessageDate === null) {
+        addDateHeader(currentMessageDate);
+      } else if (pastMessageDate.getDate() < currentMessageDate.getDate()) {
+        addDateHeader(currentMessageDate);
+      }
       displayMessage(
         m.messageId,
         m.sender,
@@ -89,6 +122,7 @@
         m.timestamp,
         m.messageType,
       );
+      pastMessageDate = currentMessageDate;
     });
 
     app.state.currentChatUser = contact.id;
@@ -236,13 +270,21 @@
 
     const timeSpan = document.createElement("span");
     timeSpan.classList.add("message-time");
-    timeSpan.textContent = new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    });
+    const date = new Date(timestamp);
+    const hour = date.getHours();
+    let meridiem;
+    if (hour >= 0 && hour < 12) {
+      meridiem = "AM";
+    } else {
+      meridiem = "PM";
+    }
+    timeSpan.textContent =
+      date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }) +
+      " " +
+      meridiem;
     msgDiv.appendChild(timeSpan);
     msgDiv.dataset.message_id = messageId;
     msgDiv.dataset.message_type = messageType;
