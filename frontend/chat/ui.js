@@ -580,12 +580,18 @@
       });
       const editBtn = document.getElementById("edit-message-btn");
 
-      if (msgDiv.dataset.message_type === "voice") {
+      if (
+        msgDiv.dataset.message_type === "voice" ||
+        msgDiv.dataset.message_type === "forward-voice"
+      ) {
         copyBtn.classList.add("hidden");
         editBtn.classList.add("hidden");
-      } else if (msgDiv.dataset.message_type === "text") {
+      } else if (
+        msgDiv.dataset.message_type === "text" ||
+        msgDiv.dataset.message_type === "forward-text"
+      ) {
         copyBtn.classList.remove("hidden");
-        editBtn.classList.remove("hidden");
+        editBtn.classList.add("hidden");
       }
 
       const clickOutsideHandler = (event) => {
