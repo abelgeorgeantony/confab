@@ -173,7 +173,7 @@
     async decryptVoicePayload(payload, privateKey) {
       // 1. Decrypt AES key
       const myKeyData = payload.keys.find(
-        (k) => Number(k.userId) === Number(app.state.myId),
+        (k) => Number(k.userId) === Number(app.state.myUserId),
       );
       //return;
       const encryptedKey = this.base64ToArrayBuffer(myKeyData.key);

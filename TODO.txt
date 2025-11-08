@@ -1,0 +1,7 @@
+To Fix:
+2) Cannot forward a forwarded message.
+
+To Implement:
+1) Message seen/delivered status(Need to first properly implement message status tracking)
+2) Voice filters
+3) Disable message sending if the user has blocked the contact

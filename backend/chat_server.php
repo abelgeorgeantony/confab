@@ -123,6 +123,7 @@ class ChatServer implements MessageComponentInterface
                     "type" => "message_saved_receipt",
                     "receiver_id" => $receiver_id,
                     "id" => $message_id, // This is the ID from the server
+                    "message_status" => "queued",
                     "client_message_id" => $client_message_id, // This is the original ID from the client
                 ]),
             );

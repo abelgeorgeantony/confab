@@ -371,6 +371,7 @@
       let recipientId = null;
       let activeFilter = null;
       if (toForward) {
+        console.log("Forwarding voice message");
         recipientId = forward_recipientId;
         activeFilter = "none";
       } else {
@@ -382,7 +383,6 @@
       // 1. Process and Encode audio to a WAV blob
       let wavBlob;
       if (toForward && payload) {
-        //audioBlob = await fetchAudioBlobFromUrl(url);
         const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
           payload,
           app.state.myPrivateKey,
@@ -392,7 +392,6 @@
         wavBlob = await processAndEncodeAudio(audioBlob, activeFilter);
       }
 
-      console.log("Hi works perfectly till here");
       // 5. Proceed with encryption and upload in the background
       const wavArrayBuffer = await wavBlob.arrayBuffer();
       const recipientPublicKeyJwk = app.state.publicKeyCache[recipientId];
@@ -437,7 +436,7 @@
             key: app.crypto.arrayBufferToBase64(encryptedAesKeyForReceiver),
           },
           {
-            userId: app.state.myId,
+            userId: app.state.myUserId,
             key: app.crypto.arrayBufferToBase64(encryptedAesKeyForSender),
           },
         ],
@@ -488,7 +487,7 @@
             key: app.crypto.arrayBufferToBase64(encryptedAesKeyForReceiver),
           },
           {
-            userId: app.state.myId,
+            userId: app.state.myUserId,
             key: app.crypto.arrayBufferToBase64(encryptedAesKeyForSender),
           },
         ],
@@ -565,7 +564,9 @@
     cancelRecordingBtn.addEventListener("click", showInitialUI);
     playPauseBtn.addEventListener("click", togglePlayback);
     deleteRecordingBtn.addEventListener("click", showInitialUI);
-    sendVoiceMessageBtn.addEventListener("click", sendVoiceMessage);
+    sendVoiceMessageBtn.addEventListener("click", () => {
+      sendVoiceMessage();
+    });
 
     document.addEventListener("messageReceived", async (e) => {
       console.log("RAW MESSAGE RECEIVED:", e.detail); // Enhanced debugging
@@ -579,7 +580,7 @@
       if (!app.state.myPrivateKey) throw new Error("Private key not loaded.");
 
       const myKeyData = payload.keys.find(
-        (k) => Number(k.userId) === Number(app.state.myId),
+        (k) => Number(k.userId) === Number(app.state.myUserId),
       );
       if (!myKeyData)
         throw new Error("No key found for the user in the payload.");

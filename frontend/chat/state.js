@@ -6,6 +6,7 @@ var app = {
   state: {
     ws: null,
     unreadCounts: {},
+    myUserId: null,
     currentChatUser: null,
     chatState: {},
     allContacts: [],

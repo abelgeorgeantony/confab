@@ -28,6 +28,7 @@
     app.state.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "message") {
+        console.log(data);
         app.events.trigger("messageReceived", {
           senderId: data.from,
           message_id: data.id,
@@ -153,7 +154,7 @@
           key: app.crypto.arrayBufferToBase64(encryptedAesKeyForReceiver),
         },
         {
-          userId: app.state.myId,
+          userId: app.state.myUserId,
           key: app.crypto.arrayBufferToBase64(encryptedAesKeyForSender),
         },
       ],

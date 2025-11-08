@@ -37,7 +37,7 @@ CREATE TABLE messages (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sender_id INT NOT NULL,
     receiver_id INT NOT NULL,
-    message_type ENUM('text', 'voice', 'image', 'document') NOT NULL DEFAULT 'text',
+    message_type ENUM('text', 'voice', 'forward-text', 'forward-voice') NOT NULL DEFAULT 'text',
     payload TEXT NOT NULL,
     status ENUM('queued', 'delivered', 'read') NOT NULL DEFAULT 'queued',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -119,6 +119,7 @@
             .classList.remove("hidden");
           document.getElementById("block-user-btn").classList.add("hidden");
           document.getElementById("add-user-btn").classList.add("hidden");
+          // block message sending
         } else {
           console.error("Failed to block user:", data.message);
           alert("Error blocking user: " + data.message);
@@ -271,7 +272,7 @@
   async function main() {
     // Ensure user is authenticated before proceeding.
     Loader.start("Checking if you are a terrorist");
-    const myId = await requireAuth();
+    app.state.myUserId = await requireAuth();
 
     // Fetch and store user's own public key
     const token = getCookie("auth_token");
@@ -334,9 +335,9 @@
 
     if (hasChatHistory) {
       Loader.addMessage("Reading your unread messages");
-      await app.api.loadOfflineMessages();
+      await app.api.fetchOfflineMessages();
     } else if (!hasChatHistory) {
-      if (!myId) {
+      if (!app.state.myUserId) {
         console.error("User ID not set, cannot fetch history.");
         return;
       }
@@ -345,7 +346,9 @@
         "No chat history found in local storage, fetching from server...",
       );
       Loader.addMessage("Loading your messages");
-      const historyToken = getCookie("auth_token");
+
+      app.api.fetchAllMessages();
+      /*const historyToken = getCookie("auth_token");
       const historyFormData = new URLSearchParams();
       historyFormData.append("token", historyToken);
 
@@ -368,8 +371,8 @@
           if (data.success) {
             for (const msg of data.messages) {
               const contactId =
-                msg.sender_id == myId ? msg.receiver_id : msg.sender_id;
-              const sender = msg.sender_id == myId ? "me" : "them";
+                msg.sender_id == app.state.myUserId ? msg.receiver_id : msg.sender_id;
+              const sender = msg.sender_id == app.state.myUserId ? "me" : "them";
               const payload = JSON.parse(msg.payload);
               let decryptedPayload;
 
@@ -381,7 +384,7 @@
                   if (!app.state.myPrivateKey)
                     throw new Error("Private key not loaded.");
                   const myKeyData = payload.keys.find(
-                    (k) => Number(k.userId) === Number(myId),
+                    (k) => Number(k.userId) === Number(app.state.myUserId),
                   );
                   if (!myKeyData)
                     throw new Error(
@@ -436,7 +439,7 @@
           } else {
             console.error("Failed to fetch all messages:", data.error);
           }
-        });
+          });*/
     }
 
     Loader.addMessage("Waking up the carrier pigeon");
