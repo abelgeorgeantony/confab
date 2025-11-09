@@ -385,6 +385,12 @@ body {
     /*padding-bottom: 220px;*/
 }
 
+#user-blocked-banner {
+    background-color: var(--chat-header-bg);
+    border-top: 1px solid var(--border-color);
+    z-index: 2;
+    padding: 10px;
+}
 #message-form {
     /*width: 70.7vw;
     position: fixed;

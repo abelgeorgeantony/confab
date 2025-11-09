@@ -228,6 +228,21 @@
     document.querySelectorAll(".opened").forEach((element) => {
       element.classList.remove("opened");
     });
+
+    document.getElementById("user-blocked-banner").innerText =
+      contact.display_name +
+      " is blocked. Unblock them first to message them or receive messages from them.";
+    if (contact.status === "contact") {
+      document.getElementById("message-form").classList.remove("hidden");
+      document.getElementById("user-blocked-banner").classList.add("hidden");
+    } else if (contact.status === "blocked") {
+      document.getElementById("message-form").classList.add("hidden");
+      document.getElementById("user-blocked-banner").classList.remove("hidden");
+    } else if (contact.status === "pending") {
+      document.getElementById("message-form").classList.remove("hidden");
+      document.getElementById("user-blocked-banner").classList.add("hidden");
+    }
+
     document
       .getElementById("user-list")
       .querySelector(`[data-contact-id="${contact.id}"]`)

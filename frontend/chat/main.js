@@ -119,7 +119,11 @@
             .classList.remove("hidden");
           document.getElementById("block-user-btn").classList.add("hidden");
           document.getElementById("add-user-btn").classList.add("hidden");
-          // block message sending
+
+          document.getElementById("message-form").classList.add("hidden");
+          document
+            .getElementById("user-blocked-banner")
+            .classList.remove("hidden");
         } else {
           console.error("Failed to block user:", data.message);
           alert("Error blocking user: " + data.message);
@@ -146,6 +150,11 @@
           document.getElementById("block-user-btn").classList.remove("hidden");
           document.getElementById("unblock-user-btn").classList.add("hidden");
           document.getElementById("add-user-btn").classList.remove("hidden");
+
+          document.getElementById("message-form").classList.remove("hidden");
+          document
+            .getElementById("user-blocked-banner")
+            .classList.add("hidden");
         } else {
           console.error("Failed to unblock user:", data.message);
           alert("Error unblocking user: " + data.message);
