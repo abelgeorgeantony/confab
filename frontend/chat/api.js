@@ -67,6 +67,7 @@
       })
       .then(async (data) => {
         if (data.success) {
+          console.log(data);
           for (const msg of data.messages) {
             const contactId =
               msg.sender_id == app.state.myUserId
@@ -126,6 +127,7 @@
               contactId,
               sender,
               decryptedPayload,
+              msg.status,
               timestamp_parsed,
               msg.message_type,
             );

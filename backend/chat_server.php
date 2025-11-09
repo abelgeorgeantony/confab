@@ -39,6 +39,10 @@ class ChatServer implements MessageComponentInterface
                 $this->handleMessage($conn, $data);
                 break;
 
+            case "message_received_ack":
+                $this->handleMessageAcknowledgement($conn, $data, "delivered");
+                break;
+
             default:
                 error_log("⚠️ Unknown message type: {$data["type"]}");
         }
@@ -149,6 +153,48 @@ class ChatServer implements MessageComponentInterface
         }
     }
 
+    private function handleMessageAcknowledgement(
+        ConnectionInterface $conn,
+        array $data,
+        $status,
+    ) {
+        if (!isset($this->userConnections[$conn->resourceId])) {
+            error_log("⛔ Acknowledgement rejected: sender not authenticated");
+            return;
+        }
+
+        $receiver_id = $this->userConnections[$conn->resourceId];
+        $sender_id = $data["sender_id"] ?? null;
+        $message_id = $data["id"] ?? null;
+        $message_type = $data["message_type"] ?? null;
+
+        $success = $this->updateMessageStatus(
+            $sender_id,
+            $receiver_id,
+            $message_id,
+            $message_type,
+            $status,
+        );
+        if ($success) {
+            if (isset($this->onlineUsers[$sender_id])) {
+                $this->onlineUsers[$sender_id]->send(
+                    json_encode([
+                        "type" => "message_status_ack",
+                        "id" => $message_id,
+                        "receiver_id" => $receiver_id,
+                        "message_status" => $status,
+                    ]),
+                );
+                error_log(
+                    "📨 Delivered message from $sender_id → $receiver_id (online)",
+                );
+            }
+        } else {
+            error_log("❌ Failed to update message status");
+            return false;
+        }
+    }
+
     // Saves a copy of every message to the central 'messages' table for history.
     private function backupMessage(
         $sender_id,
@@ -175,6 +221,37 @@ class ChatServer implements MessageComponentInterface
         );
         if ($stmt->execute()) {
             return $conn->insert_id;
+        }
+        return false;
+    }
+
+    private function updateMessageStatus(
+        $sender_id,
+        $receiver_id,
+        $message_id,
+        $message_type,
+        $status,
+    ) {
+        error_log("Updating message status");
+        require __DIR__ . "/config.php";
+        global $conn;
+        // Need to add checks which only allow the status to be upgraded updwards. That is, a sent message
+        // shouldn't be updates to delivered or queued status.
+
+        // update
+        $stmt = $conn->prepare(
+            "UPDATE messages SET status = ? WHERE id = ? AND sender_id = ? AND receiver_id = ? AND message_type = ?",
+        );
+        $stmt->bind_param(
+            "siiis",
+            $status,
+            $message_id,
+            $sender_id,
+            $receiver_id,
+            $message_type,
+        );
+        if ($stmt->execute()) {
+            return true;
         }
         return false;
     }

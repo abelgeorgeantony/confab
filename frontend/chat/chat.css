@@ -264,6 +264,9 @@ body {
 .contact-card:hover {
     background: var(--input-bg);
 }
+.opened {
+    background: var(--input-bg);
+}
 .contact-avatar {
     width: 45px;
     height: 45px;
@@ -457,12 +460,21 @@ body {
 .message-text {
     white-space: pre-wrap;
 }
+.message-footer {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    margin-top: 4px;
+}
 .message-time {
-    display: block;
     font-size: 0.75em;
     opacity: 0.8;
     margin-top: 4px;
+    margin-right: 10px;
     text-align: right;
+}
+.message-status {
+    font-size: 0.7em !important;
 }
 
 /* === Mobile Responsive Layout === */

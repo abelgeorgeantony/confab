@@ -16,6 +16,7 @@
     contactId,
     sender,
     payload,
+    msgStatus = "pending",
     timestamp = Date.now(),
     messageType = "text",
   ) {
@@ -35,6 +36,7 @@
       messageType,
       payload,
       timestamp,
+      msgStatus,
     });
     localStorage.setItem(key, JSON.stringify(messages));
 
@@ -59,7 +61,12 @@
     });
   }
 
-  function updateClientMessageId(chatId, clientMessageId, messageId) {
+  function updateClientMessageId(
+    chatId,
+    clientMessageId,
+    messageId,
+    messageStatus,
+  ) {
     const key = `chat_user_${chatId}`;
     const messages = JSON.parse(localStorage.getItem(key)) || [];
 
@@ -69,12 +76,51 @@
     if (messageIndex !== -1) {
       messages[messageIndex].messageId = messageId;
       messages[messageIndex].clientMessageId = 0;
+      messages[messageIndex].msgStatus = messageStatus;
       localStorage.setItem(key, JSON.stringify(messages));
       if (chatId === app.state.currentChatUser) {
         const element = document.querySelector(
           '[data-message_id="' + clientMessageId + '"]',
         );
         element.dataset.message_id = messageId;
+        const statusSpan = element.querySelector(".message-status");
+        if (messageStatus === "pending") {
+          statusSpan.textContent = "sending";
+        } else if (messageStatus === "queued") {
+          statusSpan.textContent = "check";
+        } else if (messageStatus === "delivered") {
+          statusSpan.textContent = "check check";
+        } else if (messageStatus === "read") {
+          statusSpan.textContent = "Read";
+        }
+      }
+    }
+  }
+
+  function updateMessageStatus(chatId, messageId, messageStatus) {
+    const key = `chat_user_${chatId}`;
+    const messages = JSON.parse(localStorage.getItem(key)) || [];
+
+    const messageIndex = messages.findIndex(
+      (msg) => Number(msg.messageId) === Number(messageId),
+    );
+    if (messageIndex !== -1) {
+      messages[messageIndex].msgStatus = messageStatus;
+      localStorage.setItem(key, JSON.stringify(messages));
+      if (Number(chatId) === Number(app.state.currentChatUser)) {
+        const element = document.querySelector(
+          '[data-message_id="' + messageId + '"]',
+        );
+        const statusSpan = element.querySelector(".message-status");
+        if (messageStatus === "pending") {
+          statusSpan.textContent = "sending";
+        } else if (messageStatus === "queued") {
+          statusSpan.textContent = "check";
+        } else if (messageStatus === "delivered") {
+          statusSpan.textContent = "check check";
+        } else if (messageStatus === "read") {
+          statusSpan.textContent = "Read";
+        }
       }
     }
   }
@@ -119,6 +165,7 @@
   // Expose these functions on the global app object.
   app.storage.saveMessageLocally = saveMessageLocally;
   app.storage.updateClientMessageId = updateClientMessageId;
+  app.storage.updateMessageStatus = updateMessageStatus;
   app.storage.deleteLocalMessage = deleteLocalMessage;
   app.storage.getLocalMessages = getLocalMessages;
   app.storage.getLastMessage = getLastMessage;

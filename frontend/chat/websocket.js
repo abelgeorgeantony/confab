@@ -27,6 +27,7 @@
     // When a message arrives, trigger the global message handler event.
     app.state.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log(data);
       if (data.type === "message") {
         console.log(data);
         app.events.trigger("messageReceived", {
@@ -35,11 +36,28 @@
           message_type: data.message_type, // Pass the type
           payload: data.payload,
         });
+        app.state.ws.send(
+          JSON.stringify({
+            type: "message_received_ack",
+            sender_id: data.from,
+            id: data.id,
+            message_type: data.message_type,
+          }),
+        );
       } else if (data.type === "message_saved_receipt") {
         app.events.trigger("messageIDReceived", {
           chat_id: data.receiver_id,
           client_message_id: data.client_message_id,
           message_id: data.id,
+          message_status: data.message_status,
+        });
+      } else if (data.type === "message_status_ack") {
+        console.log(data.type);
+        console.log(data.message_status);
+        app.events.trigger("messageStatusACK", {
+          chat_id: data.receiver_id,
+          message_id: data.id,
+          message_status: data.message_status,
         });
       }
     };
@@ -182,6 +200,7 @@
         contactId,
         "me",
         msgText,
+        "pending",
         Date.now(),
         "forward-text",
       );

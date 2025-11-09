@@ -117,6 +117,7 @@
         m.messageId,
         m.sender,
         m.payload,
+        m.msgStatus,
         m.timestamp,
         m.messageType,
       );
@@ -224,6 +225,13 @@
     } else {
       messageInput.value = "";
     }
+    document.querySelectorAll(".opened").forEach((element) => {
+      element.classList.remove("opened");
+    });
+    document
+      .getElementById("user-list")
+      .querySelector(`[data-contact-id="${contact.id}"]`)
+      .classList.add("opened");
     showStatusBarBackButton(goBackToList);
   }
 
@@ -237,6 +245,7 @@
     messageId,
     sender,
     content,
+    messageStatus,
     timestamp = Date.now(),
     messageType = "text",
   ) {
@@ -272,6 +281,9 @@
       msgDiv.appendChild(textSpan);
     }
 
+    const msgFooter = document.createElement("div");
+    msgFooter.classList.add("message-footer");
+
     const timeSpan = document.createElement("span");
     timeSpan.classList.add("message-time");
     const date = new Date(timestamp);
@@ -280,7 +292,23 @@
       minute: "2-digit",
       hour12: true,
     });
-    msgDiv.appendChild(timeSpan);
+    msgFooter.appendChild(timeSpan);
+    if (sender === "me") {
+      const statusSpan = document.createElement("span");
+      statusSpan.classList.add("material-icons");
+      statusSpan.classList.add("message-status");
+      if (messageStatus === "pending") {
+        statusSpan.textContent = "sending";
+      } else if (messageStatus === "queued") {
+        statusSpan.textContent = "check";
+      } else if (messageStatus === "delivered") {
+        statusSpan.textContent = "check check";
+      } else if (messageStatus === "read") {
+        statusSpan.textContent = "check check";
+      }
+      msgFooter.appendChild(statusSpan);
+    }
+    msgDiv.appendChild(msgFooter);
     msgDiv.dataset.message_id = messageId;
     msgDiv.dataset.message_type = messageType;
     enableLongPress(msgDiv, content);

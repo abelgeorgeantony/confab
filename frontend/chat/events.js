@@ -508,6 +508,7 @@
           recipientId,
           "me",
           pointerPayload,
+          "pending",
           Date.now(),
           "forward-voice",
         );
@@ -525,6 +526,7 @@
           recipientId,
           "me",
           pointerPayload,
+          "pending",
           Date.now(),
           "voice",
         );
@@ -641,6 +643,7 @@
         senderId,
         "them",
         contentForUI,
+        null,
         payload.timestamp || Date.now(),
         message_type || "text", // Ensure we save a type
       );
@@ -809,8 +812,18 @@
     });
 
     document.addEventListener("messageIDReceived", (e) => {
-      const { chat_id, client_message_id, message_id } = e.detail;
-      app.storage.updateClientMessageId(chat_id, client_message_id, message_id);
+      const { chat_id, client_message_id, message_id, message_status } =
+        e.detail;
+      app.storage.updateClientMessageId(
+        chat_id,
+        client_message_id,
+        message_id,
+        message_status,
+      );
+    });
+    document.addEventListener("messageStatusACK", (e) => {
+      const { chat_id, message_id, message_status } = e.detail;
+      app.storage.updateMessageStatus(chat_id, message_id, message_status);
     });
   }
 
