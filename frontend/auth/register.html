@@ -1,113 +1,237 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Confab</title>
-    <link rel="stylesheet" href="../base.css">
-    <link rel="stylesheet" href="auth.css">
-    <link
-        href="https://fonts.googleapis.com/icon?family=Material+Icons"
-        rel="stylesheet"
-    />
-</head>
-<body class="auth-page" onload="redirectIfAuthenticated()">
-  <div class="status-bar">
-    <div class="status-bar-left">
-      <button id="status-bar-back-btn" class="status-bar-back-btn" style="display: none;"><span class="material-icons">keyboard_backspace</span></button>
-      <span class="connection-status" id="connection-status"></span>
-    </div>
-    <label class="theme-toggle-switch">
-      <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
-      <span class="slider"></span>
-    </label>
-  </div>
-  <div class"page-wrapper">
-<div class="form-container">
-    <!-- Step 1: Basic Info -->
-    <div id="step1" class="step active">
-        <h2>Step 1: Create Your Account</h2>
-        <form id="form-step1" onsubmit="handleStep1(event)">
-	    <div id="input-container">
-            <label for="reg_username">Username:</label>
-            <input type="text" id="reg_username" placeholder="Choose a unique username" required>
-            <div id="username-feedback" class="feedback"></div>
-	    </div>
-
-        <div id="input-container">
-	        <label for="reg_email">Email:</label>
-            <input type="email" id="reg_email" placeholder="Your email address" required>
-            <div id="email-feedback" class="feedback"></div>
-	    </div>
-
-        <div id="input-container">
-            <label for="reg_pass">Password:</label>
-            <div class="password-container">
-                <input type="password" id="reg_pass" class="password-input" placeholder="Create a strong password" onkeyup="validatePassword(this)" required>
-                <button type="button" class="password-eye material-icons" onclick="togglePassVisibility(this)">visibility</button>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Register - Confab</title>
+        <link rel="stylesheet" href="../base.css" />
+        <link rel="stylesheet" href="auth.css" />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+    </head>
+    <body class="auth-page" onload="redirectIfAuthenticated()">
+        <div class="status-bar">
+            <div class="status-bar-left">
+                <button
+                    id="status-bar-back-btn"
+                    class="status-bar-back-btn"
+                    style="display: none"
+                >
+                    <span class="material-icons">keyboard_backspace</span>
+                </button>
+                <span class="connection-status" id="connection-status"></span>
             </div>
-            <div id="password-feedback" class="feedback"></div>
-            <p class="warning-text"><b>WARNING:</b> If you forget your password, you will lose access to all your old messages.</p>
-	    </div>
+            <label class="theme-toggle-switch">
+                <input
+                    type="checkbox"
+                    id="theme-toggle-checkbox"
+                    onchange="toggleTheme()"
+                />
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="page-wrapper">
+            <div class="form-container">
+                <!-- Step 1: Basic Info -->
+                <div id="step1" class="step active">
+                    <h2>Step 1: Create Your Account</h2>
+                    <form id="form-step1" onsubmit="handleStep1(event)">
+                        <div id="input-container">
+                            <label for="reg_username">Username:</label>
+                            <input
+                                type="text"
+                                id="reg_username"
+                                placeholder="Choose a unique username"
+                                required
+                            />
+                            <div id="username-feedback" class="feedback"></div>
+                        </div>
 
-            <button type="submit">Continue</button>
-            <p class="auth-links"><a href="login.html">Already have an account?</a></p>
-        </form>
-    </div>
+                        <div id="input-container">
+                            <label for="reg_email">Email:</label>
+                            <input
+                                type="email"
+                                id="reg_email"
+                                placeholder="Your email address"
+                                required
+                            />
+                            <div id="email-feedback" class="feedback"></div>
+                        </div>
 
-    <!-- Step 2: Email Verification -->
-    <div id="step2" class="step">
-        <h2>Step 2: Verify Your Email</h2>
-        <p>We've sent a 6-digit code to <b id="verification-email-display"></b>. Please enter it below.</p>
-        <form id="form-step2" onsubmit="handleStep2(event)">
-	    <div id="input-container">
-            <label for="verification_code_1">Verification Code:</label>
-            <div class="code-container" id="code-inputs">
-                <input type="text" inputmode="numeric" pattern="[0-9]*" class="code-input" id="verification_code_1" maxlength="1" required>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" class="code-input" id="verification_code_2" maxlength="1" required>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" class="code-input" id="verification_code_3" maxlength="1" required>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" class="code-input" id="verification_code_4" maxlength="1" required>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" class="code-input" id="verification_code_5" maxlength="1" required>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" class="code-input" id="verification_code_6" maxlength="1" required>
+                        <div id="input-container">
+                            <label for="reg_pass">Password:</label>
+                            <div class="password-container">
+                                <input
+                                    type="password"
+                                    id="reg_pass"
+                                    class="password-input"
+                                    placeholder="Create a strong password"
+                                    onkeyup="validatePassword(this); safeguardContinueButton();"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    class="password-eye material-icons"
+                                    onclick="togglePassVisibility(this)"
+                                >
+                                    visibility
+                                </button>
+                            </div>
+                            <div id="password-feedback" class="feedback"></div>
+                            <p class="warning-text">
+                                <b>WARNING:</b> If you forget your password, you
+                                will lose access to all your old messages.
+                            </p>
+                        </div>
+
+                        <button type="submit" id="continue-button">
+                            Continue
+                        </button>
+                        <p class="auth-links">
+                            <a href="login.html">Already have an account?</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Step 2: Email Verification -->
+                <div id="step2" class="step">
+                    <h2>Step 2: Verify Your Email</h2>
+                    <p>
+                        We've sent a 6-digit code to
+                        <b id="verification-email-display"></b>. Please enter it
+                        below.
+                    </p>
+                    <form id="form-step2" onsubmit="handleStep2(event)">
+                        <div id="input-container">
+                            <label for="verification_code_1"
+                                >Verification Code:</label
+                            >
+                            <div class="code-container" id="code-inputs">
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    class="code-input"
+                                    id="verification_code_1"
+                                    maxlength="1"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    class="code-input"
+                                    id="verification_code_2"
+                                    maxlength="1"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    class="code-input"
+                                    id="verification_code_3"
+                                    maxlength="1"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    class="code-input"
+                                    id="verification_code_4"
+                                    maxlength="1"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    class="code-input"
+                                    id="verification_code_5"
+                                    maxlength="1"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    class="code-input"
+                                    id="verification_code_6"
+                                    maxlength="1"
+                                    required
+                                />
+                            </div>
+                            <!-- A hidden input to hold the combined code for submission -->
+                            <input
+                                type="hidden"
+                                id="verification_code"
+                                name="verification_code"
+                                maxlength="6"
+                            />
+                        </div>
+                        <button type="submit">Verify & Continue</button>
+                        <p class="auth-links" style="margin-top: 15px">
+                            Didn't get a code?
+                            <a
+                                href="#"
+                                id="resend-link"
+                                onclick="resendVerificationCode(event)"
+                                >Resend Code</a
+                            >
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Step 3: Profile Setup -->
+                <div id="step3" class="step">
+                    <h2>Step 3: Set Up Your Profile</h2>
+                    <form id="form-step3" onsubmit="handleStep3(event)">
+                        <img
+                            id="pfp-preview"
+                            src="https://placehold.co/120x120/f0f0f0/ccc?text=Upload"
+                            alt="Profile Preview"
+                            onclick="document.getElementById('pfp_input').click()"
+                        />
+                        <input
+                            type="file"
+                            id="pfp_input"
+                            accept="image/*"
+                            style="display: none"
+                        />
+
+                        <div id="input-container">
+                            <label for="reg_name">Display Name:</label>
+                            <input
+                                type="text"
+                                id="reg_name"
+                                placeholder="How you'll appear to others"
+                                required
+                            />
+                        </div>
+
+                        <div id="input-container">
+                            <label for="reg_bio">Bio:</label>
+                            <textarea
+                                id="reg_bio"
+                                rows="3"
+                                placeholder="Tell us a little about yourself..."
+                            ></textarea>
+                        </div>
+
+                        <button type="submit">Finish & Start Chatting</button>
+                    </form>
+                </div>
+
+                <!-- Global Error/Success Message Area -->
+                <p id="message-area" style="margin-top: 15px"></p>
             </div>
-            <!-- A hidden input to hold the combined code for submission -->
-            <input type="hidden" id="verification_code" name="verification_code" maxlength="6">
-	    </div>
-            <button type="submit">Verify & Continue</button>
-	        <p class="auth-links" style="margin-top: 15px;">
-                Didn't get a code? <a href="#" id="resend-link" onclick="resendVerificationCode(event)">Resend Code</a>
-            </p>
-        </form>
-    </div>
-
-    <!-- Step 3: Profile Setup -->
-    <div id="step3" class="step">
-        <h2>Step 3: Set Up Your Profile</h2>
-        <form id="form-step3" onsubmit="handleStep3(event)">
-            <img id="pfp-preview" src="https://placehold.co/120x120/f0f0f0/ccc?text=Upload" alt="Profile Preview" onclick="document.getElementById('pfp_input').click()">
-            <input type="file" id="pfp_input" accept="image/*" style="display:none;">
-
-	    <div id="input-container">
-            <label for="reg_name">Display Name:</label>
-            <input type="text" id="reg_name" placeholder="How you'll appear to others" required>
-	    </div>
-
-	    <div id="input-container">
-            <label for="reg_bio">Bio:</label>
-            <textarea id="reg_bio" rows="3" placeholder="Tell us a little about yourself..."></textarea>
-	    </div>
-
-            <button type="submit">Finish & Start Chatting</button>
-        </form>
-    </div>
-
-    <!-- Global Error/Success Message Area -->
-    <p id="message-area" style="margin-top: 15px;"></p>
-</div>
-  </div>
-<script src="../chat/state.js" defer></script>
-<script src="../utils.js" defer></script>
-<script src="../crypto.js" defer></script>
-<script src="auth.js" defer></script>
-</body>
+        </div>
+        <script src="../chat/state.js" defer></script>
+        <script src="../utils.js" defer></script>
+        <script src="../crypto.js" defer></script>
+        <script src="auth.js" defer></script>
+    </body>
 </html>

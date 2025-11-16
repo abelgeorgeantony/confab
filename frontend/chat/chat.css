@@ -106,7 +106,7 @@ body {
     border: none;
     cursor: pointer;
     margin: 0;
-    padding: 0;
+    padding: 0px 5px 0px 5px;
     line-height: 1;
 }
 .close-button:hover {
@@ -561,6 +561,13 @@ body {
 }
 
 /* === Voice Message UI === */
+#voice-loading {
+    text-align: center;
+    height: 175px;
+    width: 548px;
+    color: var(--text-color-light);
+}
+
 #voice-ui-wrapper {
     flex: 1;
     display: flex;

@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Get the local IP address
-IP_ADDRESS=$(hostname -I | awk '{print $1}')
+echo $1;
+if [[ "$1" == "local" ]]; then
+  IP_ADDRESS="localhost:7000";
+else
+  # Get the local IP address
+  IP_ADDRESS=$(hostname -I | awk '{print $1}')
+fi
 
 # Check if IP address is retrieved
 if [ -z "$IP_ADDRESS" ]; then

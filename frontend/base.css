@@ -311,9 +311,11 @@ button {
     cursor: pointer;
     transition: background-color 0.2s;
 }
-
 button:hover {
-    background: var(--primary-color-hover);
+    background: var(--shadow-color);
+}
+button:disabled {
+    background: var(--primary-color);
 }
 
 .logout-btn {

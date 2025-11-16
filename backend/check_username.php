@@ -7,9 +7,12 @@ $username = $data["username"] ?? "";
 if (!is_string($username)) {
     $username = (string) $username;
 }
+$username = trim($username);
+
+error_log("Checking username: $username");
 
 if (strlen($username) < 3) {
-    echo json_encode(["exists" => false]);
+    echo json_encode(["exists" => true]);
     exit();
 }
 

@@ -37,7 +37,10 @@
     }
 
     function closeCurrentModal() {
+      console.log("Closing modal");
       if (modalStack.length === 0) return;
+
+      console.log("Closing modal");
 
       const modalToClose = modalStack.pop();
       modalToClose.classList.add("hidden");
@@ -82,7 +85,6 @@
             <button id="block-user-btn" class="button button-danger">Block</button>
             <button id="unblock-user-btn" class="button button-danger">Unblock</button>
         `;
-      openModal(profileModal);
 
       document.getElementById("add-user-btn").onclick = (e) => {
         if (addContact(e.target.getAttribute("data-username"))) {
@@ -94,7 +96,11 @@
           app.state.publicKeyCache[user.id] = JSON.parse(user.public_key);
         }
         app.ui.openChatWith(user);
-        while (modalStack.length > 0) closeCurrentModal();
+        console.log("hi");
+        console.log(modalStack.length);
+        while (modalStack.length > 0) {
+          closeCurrentModal();
+        }
       };
       document.getElementById("block-user-btn").onclick = async (e) => {
         const response = await fetch(API + "block_user.php", {
@@ -178,6 +184,7 @@
       if (Number(app.state.currentChatUser) === Number(user.id)) {
         document.getElementById("message-user-btn").classList.add("hidden");
       }
+      openModal(profileModal);
     }
 
     function closeProfileModal() {

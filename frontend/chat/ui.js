@@ -106,23 +106,35 @@
 
     const messages = app.storage.getLocalMessages(contact.id);
     let pastMessageDate = null;
-    messages.forEach((m) => {
-      const currentMessageDate = new Date(m.timestamp);
-      if (pastMessageDate === null) {
-        addDateHeader(currentMessageDate);
-      } else if (pastMessageDate.getDate() < currentMessageDate.getDate()) {
-        addDateHeader(currentMessageDate);
-      }
-      displayMessage(
-        m.messageId,
-        m.sender,
-        m.payload,
-        m.msgStatus,
-        m.timestamp,
-        m.messageType,
+    if (messages.length > 0) {
+      messages.forEach((m) => {
+        const currentMessageDate = new Date(m.timestamp);
+        if (pastMessageDate === null) {
+          addDateHeader(currentMessageDate);
+        } else if (pastMessageDate.getDate() < currentMessageDate.getDate()) {
+          addDateHeader(currentMessageDate);
+        }
+        displayMessage(
+          m.messageId,
+          m.sender,
+          m.payload,
+          m.msgStatus,
+          m.timestamp,
+          m.messageType,
+        );
+        pastMessageDate = currentMessageDate;
+      });
+    } else {
+      console.log(
+        document.getElementById("empty-messages-chat-info").classList,
       );
-      pastMessageDate = currentMessageDate;
-    });
+      document
+        .getElementById("empty-messages-chat-info")
+        .classList.remove("hidden");
+      console.log(
+        document.getElementById("empty-messages-chat-info").classList,
+      );
+    }
 
     app.state.currentChatUser = contact.id;
     // Clear unread count for this chat.
@@ -232,21 +244,24 @@
     document.getElementById("user-blocked-banner").innerText =
       contact.display_name +
       " is blocked. Unblock them first to message them or receive messages from them.";
-    if (contact.status === "contact") {
+    if (
+      contact.status === "contact" ||
+      contact.status === "pending" ||
+      contact.status === "not_contact"
+    ) {
       document.getElementById("message-form").classList.remove("hidden");
       document.getElementById("user-blocked-banner").classList.add("hidden");
     } else if (contact.status === "blocked") {
       document.getElementById("message-form").classList.add("hidden");
       document.getElementById("user-blocked-banner").classList.remove("hidden");
-    } else if (contact.status === "pending") {
-      document.getElementById("message-form").classList.remove("hidden");
-      document.getElementById("user-blocked-banner").classList.add("hidden");
     }
 
-    document
+    const current_contact_card = document
       .getElementById("user-list")
-      .querySelector(`[data-contact-id="${contact.id}"]`)
-      .classList.add("opened");
+      .querySelector(`[data-contact-id="${contact.id}"]`);
+    if (current_contact_card) {
+      current_contact_card.classList.add("opened");
+    }
     showStatusBarBackButton(goBackToList);
   }
 
@@ -264,6 +279,15 @@
     timestamp = Date.now(),
     messageType = "text",
   ) {
+    if (
+      !document
+        .getElementById("empty-messages-chat-info")
+        .classList.contains("hidden")
+    ) {
+      document
+        .getElementById("empty-messages-chat-info")
+        .classList.add("hidden");
+    }
     const messagesContainer = document.getElementById("messages");
     const msgDiv = document.createElement("div");
     const forwardedSpan = document.createElement("span");

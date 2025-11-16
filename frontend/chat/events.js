@@ -3,7 +3,7 @@
 // It attaches its functions to the 'app.events' namespace.
 
 (function (app) {
-  // --- Voice Message Variables ---
+  /*// --- Voice Message Variables ---
   let mediaRecorder;
   let audioChunks = [];
   let audioBlob = null;
@@ -16,7 +16,24 @@
   let highpassFilter = null;
   let audioContext = null;
   let sourceNode = null;
-  let isAudioGraphInitialized = false;
+  let isAudioGraphInitialized = false;*/
+
+  // --- Voice Message Variables ---
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let originalAudioBlob = null; // Store the initial raw audio blob (webm)
+  let originalAudioBuffer = null; // Store the decoded raw audio buffer
+  let currentPlaybackAudioUrl = null; // URL for the currently loaded audio in wavesurfer
+  let timerInterval = null;
+  let seconds = 0;
+  let totalDurationFormatted = "0:00";
+  let wavesurfer = null;
+  let currentActiveFilter = "none"; // To keep track of the selected filter
+  let lowpassFilter = null; // These can remain for potential future real-time effects or initial setup
+  let highpassFilter = null;
+  let audioContext = null; // Global AudioContext for real-time effects (if any, like simple pitch shift)
+  let sourceNode = null; // Connected to wavesurfer's media element for real-time processing
+  let isAudioGraphInitialized = false; // Flag to ensure AudioContext setup once
 
   // --- UI Elements ---
   const messagesContainer = document.getElementById("messages");
@@ -52,7 +69,7 @@
     document.dispatchEvent(new CustomEvent(name, { detail }));
   }
 
-  function applyFilter(filterType) {
+  /*function applyFilter(filterType) {
     if (!isAudioGraphInitialized) return;
 
     // Reset pitch and playback rate
@@ -86,6 +103,29 @@
       // 'none'
       sourceNode.connect(audioContext.destination);
     }
+  }*/
+  async function applyFilter(filterType) {
+    currentActiveFilter = filterType; // Update the globally active filter
+
+    // Update UI for active filter button
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+    document
+      .querySelector(`.filter-btn[data-filter="${filterType}"]`)
+      .classList.add("active");
+
+    if (originalAudioBuffer) {
+      // If there's an active recording, re-process and load the filtered audio for playback
+      await loadFilteredAudioForPlayback(currentActiveFilter);
+    } else {
+      // If no recording is active, we just update the visual selection of the filter button.
+      // No audio to apply filter to yet.
+      console.log(`Filter selected: ${filterType}, but no audio recorded yet.`);
+    }
+    // Note: For complex offline filters like 'ghost' and 'optimusprime',
+    // real-time AudioNode manipulation is not performed here.
+    // The effect is applied by re-rendering the entire buffer via loadFilteredAudioForPlayback.
   }
 
   function updateWaveformColors() {
@@ -129,6 +169,7 @@
 
   function showInitialUI() {
     voiceUiWrapper.classList.add("hidden");
+    document.getElementById("voice-loading").classList.add("hidden");
     messageInput.classList.remove("hidden");
     document.getElementById("emoji-button").classList.remove("hidden");
     recordButton.classList.remove("hidden");
@@ -136,7 +177,7 @@
     messagesContainer.classList.remove("voice-ui-active");
   }
 
-  function resetRecordingState() {
+  /*function resetRecordingState() {
     if (
       mediaRecorder &&
       (mediaRecorder.state === "recording" || mediaRecorder.state === "paused")
@@ -164,6 +205,62 @@
     totalDurationFormatted = "0:00";
     playbackTimer.textContent = "0:00 / 0:00";
     playPauseBtn.textContent = "play_arrow";
+  }*/
+  function resetRecordingState() {
+    // Stop recording if active
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+    // Stop all tracks to release microphone if stream is still active
+    if (mediaRecorder && mediaRecorder.stream) {
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+    }
+
+    if (wavesurfer) {
+      wavesurfer.destroy(); // Clean up wavesurfer instance
+      wavesurfer = null;
+    }
+
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    seconds = 0;
+    audioChunks = [];
+    originalAudioBlob = null; // Clear original audio blob
+    originalAudioBuffer = null; // Clear original audio buffer
+    if (currentPlaybackAudioUrl) {
+      URL.revokeObjectURL(currentPlaybackAudioUrl); // Clean up the URL
+      currentPlaybackAudioUrl = null;
+    }
+    totalDurationFormatted = "0:00";
+    recordingTimer.textContent = "0:00";
+    playbackTimer.textContent = "0:00 / 0:00";
+    playPauseBtn.textContent = "play_arrow"; // Reset play button icon
+    currentActiveFilter = "none"; // Reset active filter to none
+
+    // Reset AudioContext related variables (if they exist)
+    if (audioContext) {
+      // If `sourceNode` is connected, disconnect it.
+      if (sourceNode) {
+        sourceNode.disconnect();
+        sourceNode = null;
+      }
+      // The audioContext itself can often be reused, but ensure its state is clean.
+      // For simplicity, we'll let `loadFilteredAudioForPlayback` handle its initialization
+      // or reconnection when needed, ensuring `isAudioGraphInitialized` is reset.
+      isAudioGraphInitialized = false;
+    }
+
+    // Clear filter nodes if they exist
+    lowpassFilter = null;
+    highpassFilter = null;
+    // Also ensure any filter specific UI is reset if present.
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+    document
+      .querySelector('.filter-btn[data-filter="none"]')
+      .classList.add("active");
   }
 
   // --- Recording Logic ---
@@ -171,8 +268,8 @@
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       showRecordingUI();
-      waveformContainer.style.display = "none";
-      audioFiltersContainer.style.display = "none";
+      waveformContainer.classList.add("hidden");
+      audioFiltersContainer.classList.add("hidden");
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.start();
 
@@ -189,7 +286,7 @@
         audioChunks.push(event.data);
       });
 
-      mediaRecorder.onstop = () => {
+      /*mediaRecorder.onstop = () => {
         audioBlob = new Blob(audioChunks, { type: "audio/webm" });
         audioUrl = URL.createObjectURL(audioBlob);
         stream.getTracks().forEach((track) => track.stop()); // Release microphone
@@ -234,6 +331,23 @@
           });
         }
         wavesurfer.load(audioUrl);
+      };*/
+      mediaRecorder.onstop = async () => {
+        // Make onstop async
+        originalAudioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        stream.getTracks().forEach((track) => track.stop()); // Release microphone
+
+        // Decode the original audio once into an AudioBuffer
+        const tempAudioContext = new AudioContext();
+        const arrayBuffer = await originalAudioBlob.arrayBuffer();
+        originalAudioBuffer =
+          await tempAudioContext.decodeAudioData(arrayBuffer);
+
+        // Load the audio into Wavesurfer with the current (default "none") filter
+        // The wavesurfer initialization logic is now mostly handled within loadFilteredAudioForPlayback
+        await loadFilteredAudioForPlayback(currentActiveFilter);
+
+        showPlaybackUI(); // Now show playback UI after audio is loaded
       };
     } catch (err) {
       console.error("Could not start recording:", err);
@@ -273,8 +387,8 @@
       mediaRecorder.stop();
     }
     clearInterval(timerInterval);
-    waveformContainer.style.display = "unset";
-    audioFiltersContainer.style.display = "unset";
+    waveformContainer.classList.remove("hidden");
+    audioFiltersContainer.classList.remove("hidden");
     showPlaybackUI();
   }
 
@@ -299,11 +413,23 @@
   }
 
   // --- Audio Processing ---
-  async function processAndEncodeAudio(sourceBlob, filterType) {
+  /*async function processAndEncodeAudio(sourceBlob, filterType) {
     const tempAudioContext = new AudioContext();
     const response = await fetch(URL.createObjectURL(sourceBlob));
     const arrayBuffer = await response.arrayBuffer();
     const decodedData = await tempAudioContext.decodeAudioData(arrayBuffer);
+
+    if (filterType === "ghost") {
+      const transformedBuffer =
+        await app.audioFilters.reverseReverbTransform(arrayBuffer);
+      return app.crypto.audioBufferToWav(transformedBuffer);
+    } else if (filterType === "optimusprime") {
+      // Assuming optimusPrimeTransform is also a self-contained OfflineAudioContext filter
+      // You will need to implement app.audioFilters.optimusPrimeTransform in audiofilters.js
+      const transformedBuffer =
+        await app.audioFilters.optimusPrimeTransform(arrayBuf);
+      return app.crypto.audioBufferToWav(transformedBuffer);
+    }
 
     const offlineCtx = new OfflineAudioContext(
       decodedData.numberOfChannels,
@@ -337,6 +463,151 @@
     source.start(0);
     const renderedBuffer = await offlineCtx.startRendering();
     return app.crypto.audioBufferToWav(renderedBuffer);
+  }*/
+  /**
+   * Processes an AudioBuffer with a given filter and returns a WAV Blob.
+   * This is used for both playback preview and final sending.
+   * @param {AudioBuffer} sourceAudioBuffer - The raw AudioBuffer to process.
+   * @param {string} filterType - The type of filter to apply.
+   * @returns {Promise<Blob>} A promise that resolves to the filtered WAV Blob.
+   */
+  async function processAndEncodeAudio(sourceAudioBuffer, filterType) {
+    document.getElementById("voice-ui-wrapper").classList.add("hidden");
+    document.getElementById("voice-loading").classList.remove("hidden");
+    // Some filters (like ghost and optimusprime) are self-contained and return
+    // an AudioBuffer directly, handling their own OfflineAudioContext.
+    // For these, we'll directly call them and convert their result to a WAV Blob.
+    if (filterType === "ghost") {
+      const transformedBuffer =
+        await app.audioFilters.reverseReverbTransform(sourceAudioBuffer);
+      document.getElementById("voice-ui-wrapper").classList.remove("hidden");
+      document.getElementById("voice-loading").classList.add("hidden");
+      return app.crypto.audioBufferToWav(transformedBuffer);
+    } else if (filterType === "astronaut") {
+      const transformedBuffer =
+        await app.audioFilters.astronautTransform(sourceAudioBuffer);
+      document.getElementById("voice-ui-wrapper").classList.remove("hidden");
+      document.getElementById("voice-loading").classList.add("hidden");
+      return app.crypto.audioBufferToWav(transformedBuffer);
+    } else if (filterType === "church") {
+      const transformedBuffer =
+        await app.audioFilters.churchTransform(sourceAudioBuffer);
+      document.getElementById("voice-ui-wrapper").classList.remove("hidden");
+      document.getElementById("voice-loading").classList.add("hidden");
+      return app.crypto.audioBufferToWav(transformedBuffer);
+    } else if (filterType === "robot1") {
+      const transformedBuffer =
+        await app.audioFilters.robot1Transform(sourceAudioBuffer);
+      document.getElementById("voice-ui-wrapper").classList.remove("hidden");
+      document.getElementById("voice-loading").classList.add("hidden");
+      return app.crypto.audioBufferToWav(transformedBuffer);
+    }
+
+    // For other filters (lowpass, highpass, talkingtom, none), we use a single OfflineAudioContext
+    const offlineCtx = new OfflineAudioContext(
+      sourceAudioBuffer.numberOfChannels,
+      sourceAudioBuffer.length,
+      sourceAudioBuffer.sampleRate,
+    );
+
+    const source = offlineCtx.createBufferSource();
+    source.buffer = sourceAudioBuffer;
+
+    let filterNode = null;
+    if (filterType === "lowpass") {
+      filterNode = offlineCtx.createBiquadFilter();
+      filterNode.type = "lowpass";
+      filterNode.frequency.value = 1000;
+      source.connect(filterNode);
+      filterNode.connect(offlineCtx.destination);
+    } else if (filterType === "highpass") {
+      filterNode = offlineCtx.createBiquadFilter();
+      filterNode.type = "highpass";
+      filterNode.frequency.value = 800;
+      source.connect(filterNode);
+      filterNode.connect(offlineCtx.destination);
+    } else if (filterType === "talkingtom") {
+      source.playbackRate.value = 1.8; // Apply pitch shift for offline rendering
+      source.connect(offlineCtx.destination);
+    } else {
+      // "none" filter or any other filter not explicitly handled
+      source.connect(offlineCtx.destination);
+    }
+
+    source.start(0);
+    const renderedBuffer = await offlineCtx.startRendering();
+    document.getElementById("voice-ui-wrapper").classList.remove("hidden");
+    document.getElementById("voice-loading").classList.add("hidden");
+    return app.crypto.audioBufferToWav(renderedBuffer);
+  }
+
+  /**
+   * Processes the original recording with the given filter and loads it into Wavesurfer for playback.
+   * @param {string} filterToApply - The filter type to apply.
+   */
+  async function loadFilteredAudioForPlayback(filterToApply) {
+    if (!originalAudioBuffer) {
+      console.warn("No original audio buffer available to load for playback.");
+      return;
+    }
+
+    // Release previous object URL to prevent memory leaks
+    if (currentPlaybackAudioUrl) {
+      URL.revokeObjectURL(currentPlaybackAudioUrl);
+    }
+
+    // Process the audio with the selected filter
+    const filteredWavBlob = await processAndEncodeAudio(
+      originalAudioBuffer,
+      filterToApply,
+    );
+    currentPlaybackAudioUrl = URL.createObjectURL(filteredWavBlob);
+
+    // (Re)initialize Wavesurfer if needed and load the filtered audio
+    if (!wavesurfer) {
+      wavesurfer = WaveSurfer.create({
+        container: waveformContainer,
+        height: "auto",
+        barWidth: 2,
+        barGap: 1,
+        dragToSeek: true,
+        plugins: [WaveSurfer.Regions.create({})],
+      });
+      // Update colors based on the current theme
+      updateWaveformColors();
+
+      wavesurfer.on("decode", () => {
+        // Only initialize AudioContext once for real-time connections if needed
+        if (!isAudioGraphInitialized) {
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+          sourceNode = audioContext.createMediaElementSource(
+            wavesurfer.getMediaElement(),
+          );
+          // Connect sourceNode to destination by default; applyFilter will manage connections
+          sourceNode.connect(audioContext.destination);
+          isAudioGraphInitialized = true;
+        }
+        // Update total duration for playback timer
+        const duration = wavesurfer.getDuration();
+        const totalMinutes = Math.floor(duration / 60);
+        const totalSeconds = Math.floor(duration % 60);
+        totalDurationFormatted = `${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
+        updatePlaybackTimer();
+      });
+
+      wavesurfer.on("timeupdate", () => {
+        updatePlaybackTimer();
+      });
+
+      wavesurfer.on("finish", () => {
+        playPauseBtn.textContent = "play_arrow";
+        wavesurfer.seekTo(0);
+        updatePlaybackTimer();
+      });
+    }
+
+    wavesurfer.load(currentPlaybackAudioUrl);
   }
 
   async function fetchAudioBlobFromUrl(url) {
@@ -359,7 +630,7 @@
     forward_recipientId = null,
   ) {
     if (!toForward) {
-      if (!audioBlob || !app.state.currentChatUser) {
+      if (!app.state.currentChatUser) {
         return;
       }
     }
@@ -383,13 +654,21 @@
       // 1. Process and Encode audio to a WAV blob
       let wavBlob;
       if (toForward && payload) {
+        // For forwarded messages, decrypt the existing payload
         const decryptedWavBuffer = await app.crypto.decryptVoicePayload(
           payload,
           app.state.myPrivateKey,
         );
         wavBlob = new Blob([decryptedWavBuffer], { type: "audio/wav" });
       } else {
-        wavBlob = await processAndEncodeAudio(audioBlob, activeFilter);
+        // For new messages, process the original recording with the currently active filter
+        if (!originalAudioBuffer) {
+          throw new Error("No recorded audio available to send.");
+        }
+        wavBlob = await processAndEncodeAudio(
+          originalAudioBuffer,
+          currentActiveFilter,
+        );
       }
 
       // 5. Proceed with encryption and upload in the background

@@ -24,8 +24,10 @@
         <script src="ui.js" defer></script>
         <script src="api.js" defer></script>
         <script src="websocket.js" defer></script>
+        <script src="audiofilters.js" defer></script>
         <script src="events.js" defer></script>
         <script src="main.js" defer></script>
+
         <script src="https://unpkg.com/wavesurfer.js@7"></script>
         <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
         <script
@@ -111,6 +113,9 @@
                             </p>
                         </div>
                     </header>
+                    <div id="empty-messages-chat-info" class="hidden">
+                        <p>No messages yet!</p>
+                    </div>
                     <div id="messages">
                         <!-- Messages will be injected here by chat.js -->
                     </div>
@@ -157,34 +162,66 @@
                             id="message-input"
                             placeholder="Type a message..."
                         ></textarea>
+                        <div id="voice-loading" class="hidden">
+                            The filter is being applied...
+                        </div>
                         <div id="voice-ui-wrapper" class="hidden">
                             <div id="audio-filters-container">
-                                <button class="filter-btn" data-filter="none">
+                                <button
+                                    type="button"
+                                    class="filter-btn"
+                                    data-filter="none"
+                                >
                                     None
                                 </button>
                                 <button
+                                    type="button"
                                     class="filter-btn"
                                     data-filter="lowpass"
                                 >
                                     Low-Pass
                                 </button>
                                 <button
+                                    type="button"
                                     class="filter-btn"
                                     data-filter="highpass"
                                 >
                                     High-Pass
                                 </button>
                                 <button
+                                    type="button"
                                     class="filter-btn"
                                     data-filter="talkingtom"
                                 >
                                     Talking Tom
                                 </button>
                                 <button
+                                    type="button"
                                     class="filter-btn"
-                                    data-filter="optimusprime"
+                                    data-filter="ghost"
                                 >
-                                    Optimus Prime
+                                    Ghost
+                                </button>
+                                <button
+                                    type="button"
+                                    class="filter-btn"
+                                    data-filter="astronaut"
+                                >
+                                    Astronaut
+                                </button>
+                                <button
+                                    type="button"
+                                    class="filter-btn"
+                                    data-filter="church"
+                                >
+                                    Church
+                                </button>
+                                <button
+                                    type="button"
+                                    class="filter-btn"
+                                    data-filter="robot1"
+                                >
+                                    Robot
                                 </button>
                             </div>
                             <div id="waveform-container"></div>

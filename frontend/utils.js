@@ -167,6 +167,7 @@ window.addEventListener("popstate", () => {
 /* * Shows a back button in the status bar.
  * @param {function} onClickAction - The function to call when the button is clicked.*/
 function showStatusBarBackButton(onClickAction) {
+  console.log("Hi");
   const backBtn = document.getElementById("status-bar-back-btn");
   if (backBtn) {
     // THE FIX: We no longer hide the status element.
@@ -180,6 +181,11 @@ function showStatusBarBackButton(onClickAction) {
     // Only push state if one doesn't already exist
     if (!history.state || !history.state.onBack) {
       history.pushState({ onBack: true }, "");
+    }
+    if (document.getElementById("empty-messages-chat-info")) {
+      document
+        .getElementById("empty-messages-chat-info")
+        .classList.add("hidden");
     }
   }
 }

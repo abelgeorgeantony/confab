@@ -27,10 +27,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (registrationForm) {
     initializeRegistrationFlow();
+    safeguardContinueButton();
     const usernameInput = document.getElementById("reg_username");
-    usernameInput.addEventListener("keyup", checkUsernameAvailability);
+    usernameInput.addEventListener("keyup", () => {
+      checkUsernameAvailability();
+      safeguardContinueButton();
+    });
     const useremailInput = document.getElementById("reg_email");
-    useremailInput.addEventListener("keyup", validateEmail);
+    useremailInput.addEventListener("keyup", () => {
+      validateEmail();
+      safeguardContinueButton();
+    });
 
     // for page 2
     const codeInputsContainer = document.getElementById("code-inputs");
@@ -126,14 +133,26 @@ function initializeRegistrationFlow() {
   }
 }
 
+const validfields = {
+  username: false,
+  email: false,
+  password: false,
+};
+
 async function checkUsernameAvailability(usernamefield = null) {
   const username =
     usernamefield || document.getElementById("reg_username").value;
   const feedbackEl = document.getElementById("username-feedback");
   if (username.length < 3) {
-    feedbackEl.textContent = "";
-    return;
+    feedbackEl.textContent = "Username must be at least 3 characters long";
+    feedbackEl.classList.remove("good");
+    feedbackEl.classList.remove("bad");
+    feedbackEl.classList.add("bad");
+    validfields.username = false;
+    return false;
   }
+
+  console.log("Checking username:", username);
 
   const res = await fetch(API + "check_username.php", {
     method: "POST",
@@ -143,11 +162,17 @@ async function checkUsernameAvailability(usernamefield = null) {
 
   if (data.exists) {
     feedbackEl.textContent = "Username is taken!";
+    feedbackEl.classList.remove("good");
+    feedbackEl.classList.remove("bad");
     feedbackEl.classList.add("bad");
+    validfields.username = false;
     return false;
   } else {
     feedbackEl.textContent = "Username is available.";
+    feedbackEl.classList.remove("good");
+    feedbackEl.classList.remove("bad");
     feedbackEl.classList.add("good");
+    validfields.username = true;
     return true;
   }
 }
@@ -161,9 +186,11 @@ function validateEmail() {
   if (!valid) {
     feedbackEl.textContent = "Enter a valid email";
     feedbackEl.classList.add("bad");
+    validfields.email = false;
   } else {
     feedbackEl.textContent = "";
     feedbackEl.classList.remove("bad");
+    validfields.email = true;
   }
 }
 
@@ -175,24 +202,28 @@ function validatePassword(passInputEl) {
   if (!pattern.test(password)) {
     feedbackEl.textContent = "Password too short or long! (>= 8 and <= 15)";
     feedbackEl.classList.add("bad");
+    validfields.password = false;
     return false;
   }
   pattern = /[A-Z]/;
   if (!pattern.test(password)) {
     feedbackEl.textContent = "Include Atleast 1 Uppercase letter!";
     feedbackEl.classList.add("bad");
+    validfields.password = false;
     return false;
   }
   pattern = /[a-z]/;
   if (!pattern.test(password)) {
     feedbackEl.textContent = "Include Atleast 1 Lowercase letter!";
     feedbackEl.classList.add("bad");
+    validfields.password = false;
     return false;
   }
   pattern = /\d/;
   if (!pattern.test(password)) {
     feedbackEl.textContent = "Include Atleast 1 number!";
     feedbackEl.classList.add("bad");
+    validfields.password = false;
     return false;
   }
   pattern = /[^a-zA-Z0-9@_]/g;
@@ -200,12 +231,24 @@ function validatePassword(passInputEl) {
   if (disallowed) {
     feedbackEl.textContent = "Disallowed characters: " + disallowed;
     feedbackEl.classList.add("bad");
+    validfields.password = false;
     return false;
   }
 
   feedbackEl.textContent = "";
   feedbackEl.classList.remove("bad");
+
+  validfields.password = true;
   return true;
+}
+
+function safeguardContinueButton() {
+  const continueButton = document.getElementById("continue-button");
+  if (validfields.username && validfields.email && validfields.password) {
+    continueButton.disabled = false;
+  } else {
+    continueButton.disabled = true;
+  }
 }
 
 // --- Main Registration Functions ---
