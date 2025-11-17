@@ -159,11 +159,16 @@
 
     const updateButtonVisibility = () => {
       const isVoiceUIVisible = !voiceUiWrapper.classList.contains("hidden");
+      const isVoiceLoadingVisible = !document
+        .getElementById("voice-loading")
+        .classList.contains("hidden");
       const isInputEmpty = messageInput.value.trim() === "";
       const isEmojiPickerVisible =
         !emojiPickerContainer.classList.contains("hidden");
 
-      if (isVoiceUIVisible) {
+      console.log("isVoiceUIVisible:", isVoiceUIVisible);
+
+      if (isVoiceUIVisible || isVoiceLoadingVisible) {
         sendTextButton.classList.add("hidden");
         recordButton.classList.add("hidden");
         emojiButton.classList.add("hidden");

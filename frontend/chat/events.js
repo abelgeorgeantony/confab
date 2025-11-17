@@ -3,21 +3,6 @@
 // It attaches its functions to the 'app.events' namespace.
 
 (function (app) {
-  /*// --- Voice Message Variables ---
-  let mediaRecorder;
-  let audioChunks = [];
-  let audioBlob = null;
-  let audioUrl = null;
-  let timerInterval = null;
-  let seconds = 0;
-  let totalDurationFormatted = "0:00";
-  let wavesurfer = null;
-  let lowpassFilter = null;
-  let highpassFilter = null;
-  let audioContext = null;
-  let sourceNode = null;
-  let isAudioGraphInitialized = false;*/
-
   // --- Voice Message Variables ---
   let mediaRecorder = null;
   let audioChunks = [];
@@ -721,26 +706,27 @@
         ],
       };
       const clientMessageId = app.crypto.generateClientMessageId();
-      if (
-        toForward &&
-        Number(recipientId) === Number(app.state.currentChatUser)
-      ) {
-        app.ui.displayMessage(
-          clientMessageId,
-          "me",
-          localPayload,
-          Date.now(),
-          "forward-voice",
-        );
-      }
-      if (!toForward) {
-        app.ui.displayMessage(
-          clientMessageId,
-          "me",
-          localPayload,
-          Date.now(),
-          "voice",
-        );
+      if (Number(recipientId) === Number(app.state.currentChatUser)) {
+        if (toForward) {
+          app.ui.displayMessage(
+            clientMessageId,
+            "me",
+            localPayload,
+            "pending",
+            Date.now(),
+            "forward-voice",
+          );
+        }
+        if (!toForward) {
+          app.ui.displayMessage(
+            clientMessageId,
+            "me",
+            localPayload,
+            "pending",
+            Date.now(),
+            "voice",
+          );
+        }
       }
       const formData = new FormData();
       formData.append("token", getCookie("auth_token"));
@@ -933,6 +919,7 @@
           message_id,
           "them",
           contentForUI,
+          null,
           payload.timestamp || Date.now(),
           message_type,
         );
