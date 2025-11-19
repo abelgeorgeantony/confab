@@ -23,7 +23,7 @@
     document.getElementById("messages").innerHTML = "";
     document.getElementById("chat-view-avatar").classList.add("hideavatar");
     document.getElementById("chat-title").textContent = "Select a chat";
-    document.getElementById("chat-subtitle").textContent =
+    document.getElementById("chat-subtitle-username").textContent =
       "or add a new contact to start messaging!";
     document.getElementById("send-button").onclick = async () => {
       console.log("No chat selected!");
@@ -99,8 +99,23 @@
     }
     avatarContainer.classList.remove("hideavatar");
     document.getElementById("chat-title").textContent = contact.display_name;
-    document.getElementById("chat-subtitle").textContent =
-      "@" + contact.username;
+    document.getElementById("chat-subtitle-username").textContent =
+      contact.username;
+    const userActiveStatus =
+      Number(contact.is_online) === 1 ? "online" : "offline";
+    document.getElementById("chat-subtitle-status").textContent =
+      userActiveStatus;
+    if (Number(contact.is_online) === 1) {
+      document
+        .getElementById("chat-subtitle-status")
+        .classList.remove("offline");
+      document.getElementById("chat-subtitle-status").classList.add("online");
+    } else {
+      document
+        .getElementById("chat-subtitle-status")
+        .classList.remove("online");
+      document.getElementById("chat-subtitle-status").classList.add("offline");
+    }
     document.getElementById("chat-view").classList.add("active");
     document.getElementById("chat-list").classList.add("slideout");
 
@@ -270,6 +285,30 @@
     showStatusBarBackButton(goBackToList);
   }
 
+  function handleIntersection(entries, observer) {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        // The target element is now visible in the viewport
+        console.log("Element is visible!" + entry.target.id);
+        // Execute your desired function here
+        //app.api.markMessageAsRead(entry.target.id);
+        // If you only want to execute it once, disconnect the observer
+        observer.disconnect();
+      } else {
+        // The target element is no longer visible
+        console.log("Element is not visible.");
+      }
+    });
+  }
+  const options = {
+    root: null, // The viewport is the root
+    rootMargin: "0px", // No margin around the root
+    threshold: 0.1, // Trigger when 10% of the element is visible
+  };
+  app.state.messageBubbleObserver = new IntersectionObserver(
+    handleIntersection,
+    options,
+  );
   /**
    * Creates and appends a new message bubble to the chat window.
    * @param {string} sender - Who sent the message ('me' or 'them').
@@ -358,6 +397,13 @@
     enableLongPress(msgDiv, content);
 
     messagesContainer.appendChild(msgDiv);
+
+    /*const messageBubbleInUI = document.querySelector(
+      `[data-message_id="${messageId}"]`,
+    );
+    if (messageBubbleInUI) {
+      app.state.messageBubbleObserver.observe(messageBubbleInUI);
+    }*/
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 

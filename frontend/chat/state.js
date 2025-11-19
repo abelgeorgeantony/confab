@@ -13,6 +13,7 @@ var app = {
     myPrivateKey: null,
     myPublicKey: null,
     publicKeyCache: {},
+    messageBubbleObserver: null,
   },
   // Namespace for utility functions (e.g., local storage).
   storage: {},

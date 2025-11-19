@@ -119,7 +119,8 @@
         } else if (messageStatus === "delivered") {
           statusSpan.textContent = "check check";
         } else if (messageStatus === "read") {
-          statusSpan.textContent = "Read";
+          statusSpan.textContent = "check check";
+          statusSpan.classList.add("read");
         }
       }
     }

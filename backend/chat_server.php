@@ -43,6 +43,14 @@ class ChatServer implements MessageComponentInterface
                 $this->handleMessageAcknowledgement($conn, $data, "delivered");
                 break;
 
+            case "message_read_ack":
+                $this->handleMessageAcknowledgement($conn, $data, "read");
+                break;
+
+            /*case "all_message_received_ack":
+                $this->handleAllMessageAcknowledgement($conn, $data);
+                break;*/
+
             default:
                 error_log("⚠️ Unknown message type: {$data["type"]}");
         }
@@ -57,6 +65,7 @@ class ChatServer implements MessageComponentInterface
             $user_id = $this->userConnections[$conn->resourceId];
             unset($this->onlineUsers[$user_id]);
             unset($this->userConnections[$conn->resourceId]);
+            $this->sendOfflineStatusToContacts($user_id);
             error_log("👤 User $user_id is now offline");
         }
 
@@ -77,6 +86,7 @@ class ChatServer implements MessageComponentInterface
         if ($user_id) {
             $this->onlineUsers[$user_id] = $conn;
             $this->userConnections[$conn->resourceId] = $user_id;
+            $this->sendOnlineStatusToContacts($user_id);
             error_log("✅ User $user_id registered & online");
         } else {
             error_log("❌ Invalid token for {$conn->resourceId}");
@@ -165,6 +175,7 @@ class ChatServer implements MessageComponentInterface
 
         $receiver_id = $this->userConnections[$conn->resourceId];
         $sender_id = $data["sender_id"] ?? null;
+
         $message_id = $data["id"] ?? null;
         $message_type = $data["message_type"] ?? null;
 
@@ -273,6 +284,115 @@ class ChatServer implements MessageComponentInterface
         $result = $stmt->get_result();
 
         return $result->num_rows > 0;
+    }
+
+    private function getContactsOf($user_id)
+    {
+        require __DIR__ . "/config.php";
+        global $conn;
+        $contacts = [];
+
+        $contacts_table = "contacts_" . intval($user_id);
+
+        $stmt = $conn->prepare(
+            "SELECT contact_id FROM $contacts_table WHERE status != 'blocked'",
+        );
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+
+            while ($row = $result->fetch_assoc()) {
+                $contacts[] = $row["contact_id"];
+            }
+            $stmt->close();
+            return $contacts;
+        }
+        return false;
+    }
+
+    private function sendOnlineStatusToContacts($user_id)
+    {
+        require __DIR__ . "/config.php";
+        global $conn;
+
+        $is_online = 1;
+        $stmt = $conn->prepare("UPDATE users SET is_online = ? WHERE id = ?");
+        $stmt->bind_param("ii", $is_online, $user_id); // "b" for boolean, "i" for integer
+
+        if ($stmt->execute()) {
+            error_log(
+                "✅ User $user_id is_online status updated to " .
+                    ($is_online ? "true" : "false"),
+            );
+        } else {
+            error_log(
+                "❌ Failed to update user $user_id is_online status: " .
+                    $stmt->error,
+            );
+        }
+
+        $contacts = $this->getContactsOf($user_id);
+        if (!$contacts) {
+            return false;
+        }
+
+        $statusMessage = json_encode([
+            "type" => "user_status",
+            "user_id" => $user_id,
+            "is_online" => 1,
+        ]);
+
+        foreach ($contacts as $contactId) {
+            if (isset($this->onlineUsers[$contactId])) {
+                $this->onlineUsers[$contactId]->send($statusMessage);
+                error_log(
+                    "✅ Notified user $contactId that user $user_id is online",
+                );
+            }
+        }
+        return true;
+    }
+
+    private function sendOfflineStatusToContacts($user_id)
+    {
+        require __DIR__ . "/config.php";
+        global $conn;
+
+        $is_online = 0;
+        $stmt = $conn->prepare("UPDATE users SET is_online = ? WHERE id = ?");
+        $stmt->bind_param("ii", $is_online, $user_id); // "b" for boolean, "i" for integer
+
+        if ($stmt->execute()) {
+            error_log(
+                "✅ User $user_id is_online status updated to " .
+                    ($is_online ? "true" : "false"),
+            );
+        } else {
+            error_log(
+                "❌ Failed to update user $user_id is_online status: " .
+                    $stmt->error,
+            );
+        }
+
+        $contacts = $this->getContactsOf($user_id);
+        if (!$contacts) {
+            return false;
+        }
+
+        $statusMessage = json_encode([
+            "type" => "user_status",
+            "user_id" => $user_id,
+            "is_online" => 0,
+        ]);
+
+        foreach ($contacts as $contactId) {
+            if (isset($this->onlineUsers[$contactId])) {
+                $this->onlineUsers[$contactId]->send($statusMessage);
+                error_log(
+                    "✅ Notified user $contactId that user $user_id is offline",
+                );
+            }
+        }
+        return true;
     }
 }
 

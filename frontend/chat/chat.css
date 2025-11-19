@@ -369,6 +369,19 @@ body {
     margin-bottom: 2px;
 }
 
+#chat-subtitle {
+    display: flex;
+    gap: 10px;
+}
+#chat-subtitle-status {
+}
+#chat-subtitle-status.online {
+    color: green;
+}
+#chat-subtitle-status.offline {
+    color: red;
+}
+
 #messages {
     margin-bottom: 5px;
     height: 100%;
@@ -481,6 +494,9 @@ body {
 }
 .message-status {
     font-size: 0.7em !important;
+}
+.message-status.read {
+    color: navy;
 }
 
 /* === Mobile Responsive Layout === */

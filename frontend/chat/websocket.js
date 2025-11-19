@@ -59,6 +59,34 @@
           message_id: data.id,
           message_status: data.message_status,
         });
+      } else if (data.type === "user_status") {
+        console.log(data);
+        for (contact of app.state.allContacts) {
+          if (Number(contact.id) === Number(data.user_id)) {
+            contact.is_online = data.is_online.toString();
+            if (Number(contact.id) === Number(app.state.currentChatUser)) {
+              const userActiveStatus =
+                Number(contact.is_online) === 1 ? "online" : "offline";
+              document.getElementById("chat-subtitle-status").textContent =
+                userActiveStatus;
+              if (Number(contact.is_online) === 1) {
+                document
+                  .getElementById("chat-subtitle-status")
+                  .classList.remove("offline");
+                document
+                  .getElementById("chat-subtitle-status")
+                  .classList.add("online");
+              } else {
+                document
+                  .getElementById("chat-subtitle-status")
+                  .classList.remove("online");
+                document
+                  .getElementById("chat-subtitle-status")
+                  .classList.add("offline");
+              }
+            }
+          }
+        }
       }
     };
 
@@ -208,9 +236,19 @@
     });
   }
 
+  function markMessageAsRead(chatId, messageId, messageType) {
+    app.ws.send({
+      type: "message_read_ack",
+      sender_id: chatId,
+      id: messageId,
+      message_type: messageType,
+    });
+  }
+
   // Expose functions on the global app object.
   app.websocket.connect = connectWebSocket;
   app.websocket.send = send;
   app.websocket.sendTextMessage = sendTextMessage;
   app.websocket.forwardMessage = forwardMessage;
+  app.websocket.markMessageAsRead = markMessageAsRead;
 })(app);

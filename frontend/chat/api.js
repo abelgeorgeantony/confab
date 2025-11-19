@@ -138,8 +138,39 @@
       });
   }
 
+  async function markAllMessagesAsDelivered() {
+    const token = getCookie("auth_token");
+    const res = await fetch(API + "mark_all_messages_as_delivered.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      console.log(data.message);
+    } else {
+      console.error("Failed to mark all messages as delivered:", data.error);
+    }
+  }
+  async function markMessageAsRead(chatId, messageId) {
+    const key = `chat_user_${chatId}`;
+    const messages = JSON.parse(localStorage.getItem(key)) || [];
+
+    const messageIndex = messages.findIndex(
+      (msg) => msg.messageId === messageId,
+    );
+    if (messageIndex !== -1) {
+      if (messages[messageIndex].msgStatus !== "read") {
+        const type = messages[messageIndex].messageType;
+        app.websocket.markMessageAsRead(chatId, messageId, type);
+      }
+    }
+  }
+
   // Expose functions on the global app object.
   app.api.loadContacts = loadContacts;
   app.api.fetchOfflineMessages = fetchOfflineMessages;
   app.api.fetchAllMessages = fetchAllMessages;
+  app.api.markAllMessagesAsDelivered = markAllMessagesAsDelivered;
 })(app);
